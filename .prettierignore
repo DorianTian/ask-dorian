@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+out/
+build/
+dist/
+
+# Generated
+src/generated/
+
+# Lock files
+pnpm-lock.yaml
+
+# Assets
+*.gif
+*.svg
+*.png
+*.ico
+*.ttf
+*.webp
+*.jpg
+*.jpeg
+
+# Snapshots
+*.snap
+
+# macOS
+.DS_Store
+
+# Claude
+.claude/

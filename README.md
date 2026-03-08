@@ -11,91 +11,67 @@
 
 ## What is Ask Dorian?
 
-A smart personal execution hub that captures your fragmented thoughts, links, voice memos, and screenshots — then uses AI to automatically structure them into tasks, schedules, knowledge, and next actions.
+A fragment-driven personal execution hub. Capture anything — text, voice, links, screenshots — and let AI automatically structure it into tasks, schedules, knowledge, and next actions.
 
-**Not** a note-taking app. **Not** a generic AI chatbot. It's a **fragment-driven personal execution hub**.
+**Not** a note-taking app. **Not** a generic workspace. It's about one thing: **fragments in, executable output out.**
 
-**Core Flow:** Fragment Input → AI Understanding → Task/Calendar Linking → Today's Dashboard → Weekly Review
+```
+Fragment Input → AI Skills → Tasks / Schedules / Knowledge → Execute → Review
+```
 
-## Showcase
+## Product Showcase
 
-### Today's Dashboard `[MVP]`
+### Today's Dashboard
 
-> Everything you need today: tasks, schedule, pending fragments, focus time.
+Your daily command center — tasks, schedule, pending fragments, focus time. Everything you need, zero context switching.
 
-<!-- ![Today's Dashboard](docs/screenshots/01-today.png) -->
-`📸 Screenshot coming soon`
+![Today's Dashboard](docs/screenshots/01-today.png)
 
-### Inbox `[MVP]`
+### Fragment Hub (Inbox)
 
-> Unified fragment entry — text, links, voice, screenshots. AI auto-classifies.
+The core entry point. Throw in anything — text, voice, documents, screenshots, links. Pick an AI skill, hit process. The AI pipeline handles classification, entity extraction, and action generation automatically.
 
-<!-- ![Inbox](docs/screenshots/02-inbox.png) -->
-`📸 Screenshot coming soon`
+![Fragment Hub](docs/screenshots/02-inbox.png)
 
-### Weekly Board `[MVP]`
+### AI Skills
 
-> Week-at-a-glance: priorities, free slots, important items.
+Define how AI processes your fragments. 5 built-in skills (Smart Classify, Meeting Notes, Link Summary, Schedule Extract, Task Decompose) + custom skills with editable processing pipelines.
 
-<!-- ![Weekly Board](docs/screenshots/03-weekly.png) -->
-`📸 Screenshot coming soon`
+![AI Skills](docs/screenshots/03-skills.png)
 
-### Projects `[MVP]`
+### Projects
 
-> Tasks, knowledge, and events organized by project. Context stays connected.
+Tasks, knowledge, and events organized by project context. Progress tracking, Kanban view, and activity timeline built in.
 
-<!-- ![Projects](docs/screenshots/04-projects.png) -->
-`📸 Screenshot coming soon`
-
-### Review `[MVP]`
-
-> Auto-generated weekly report: completed, delayed, key decisions, knowledge archive.
-
-<!-- ![Review](docs/screenshots/05-review.png) -->
-`📸 Screenshot coming soon`
-
-### Calendar
-
-> Full calendar view with task timeboxing via drag & drop.
-
-<!-- ![Calendar](docs/screenshots/06-calendar.png) -->
-`📸 Screenshot coming soon`
-
-### Knowledge Base
-
-> Accumulated knowledge, inspiration, and notes with full-text search.
-
-<!-- ![Knowledge](docs/screenshots/07-knowledge.png) -->
-`📸 Screenshot coming soon`
-
-### Settings
-
-> Theme, language, AI preferences, integrations, subscription.
-
-<!-- ![Settings](docs/screenshots/08-settings.png) -->
-`📸 Screenshot coming soon`
-
-### Notifications
-
-> Task reminders, pending fragments, weekly review alerts — all in one place.
-
-<!-- ![Notifications](docs/screenshots/09-notifications.png) -->
-`📸 Screenshot coming soon`
+![Projects](docs/screenshots/04-projects.png)
 
 ---
 
-## Core Features
+## Core Flow
+
+```
+┌─────────────┐    ┌──────────────┐    ┌─────────────────┐    ┌──────────┐
+│  Capture     │───→│  AI Process   │───→│  Structured     │───→│  Execute  │
+│              │    │              │    │  Output         │    │          │
+│ Text/Voice/  │    │ Classify +   │    │ Tasks +         │    │ Today +  │
+│ Doc/Screenshot│   │ Extract +    │    │ Schedules +     │    │ Calendar │
+│ /Link        │    │ Generate     │    │ Knowledge       │    │ + Review │
+└─────────────┘    └──────────────┘    └─────────────────┘    └──────────┘
+```
+
+## Features
 
 | Feature | Description |
 |---------|-------------|
-| **Unified Fragment Capture** | Text / links / voice / screenshots — one entry point |
-| **AI Classification** | Auto-detect tasks / schedules / knowledge / inspiration with confidence scoring |
-| **Today's Dashboard** | Aggregate today's tasks, schedule, meeting prep — reduce context switching |
-| **Calendar Sync** | Bi-directional task ↔ calendar linking with timeboxing |
-| **Project Attribution** | Fragments auto-linked to projects for long-term context |
-| **Weekly Review** | Auto-summarize completed items, delays, key decisions, and knowledge |
-| **i18n** | Chinese / English bilingual support |
-| **Command Palette** | `Cmd+K` for quick capture, search, and navigation (planned) |
+| **Multi-modal Capture** | Text / voice / documents / screenshots / links — one entry |
+| **AI Processing Pipeline** | 6-step pipeline: analyze → classify → extract → generate → link → validate |
+| **Configurable AI Skills** | Default + custom skills with editable pipeline steps |
+| **Today's Dashboard** | Tasks, schedule, pending fragments, focus time in one view |
+| **Project Context** | Fragments auto-linked to projects for long-term traceability |
+| **Weekly Review** | Auto-summarize: completed, delayed, decisions, knowledge |
+| **Morning Plan + Evening Review** | Daily ritual for planning and reflection |
+| **i18n** | Chinese / English |
+| **Command Palette** | `Cmd+K` quick capture, search, navigation |
 
 ## Tech Stack
 
@@ -103,13 +79,14 @@ A smart personal execution hub that captures your fragmented thoughts, links, vo
 |-------|-----------|
 | Framework | Next.js 16 (App Router) |
 | UI | React 19 + TypeScript |
-| Styling | Tailwind CSS 4 + shadcn/ui |
+| Styling | Tailwind CSS 4 + shadcn/ui (base-nova) |
 | Icons | Lucide React |
 | Charts | Recharts |
 | i18n | next-intl |
-| Backend | Node.js (Koa.js) |
-| Database | MySQL 8.0 |
-| AI | Claude API (Sonnet) |
+| Formatting | Prettier (OpenMetadata rules) |
+| Backend | Node.js (Koa.js) — planned |
+| Database | MySQL 8.0 — planned |
+| AI | Claude API (Sonnet) — planned |
 | Deployment | AWS EC2 + RDS + Cloudflare + PM2 |
 
 ## Architecture
@@ -121,14 +98,6 @@ aix-hub.com ────/                     \──→ Koa.js API (:4000)
                                             │
                                        RDS MySQL 8.0
 ```
-
-| Resource | Spec |
-|----------|------|
-| EC2 | t3.medium (2C4G), Ubuntu 24.04, Singapore (ap-southeast-1) |
-| RDS | MySQL 8.0, db.t3.micro |
-| CDN & SSL | Cloudflare (Full mode) |
-| Process Manager | PM2 |
-| Reverse Proxy | Nginx |
 
 ## Getting Started
 
@@ -151,7 +120,7 @@ pnpm dev:showcase
 ```
 ask-dorian/
 ├── packages/
-│   └── showcase/              # UI showcase (prototype pages)
+│   └── showcase/              # UI prototype (27+ routes)
 │       ├── src/
 │       │   ├── app/[locale]/  # Pages with i18n routing
 │       │   ├── components/    # Layout + shadcn/ui (28 components)
@@ -160,24 +129,30 @@ ask-dorian/
 │       │   └── messages/      # zh.json, en.json
 │       └── middleware.ts      # Locale detection & redirect
 ├── docs/
-│   └── prd-supplement.md      # PRD supplement & competitive analysis
-├── CLAUDE.md                  # Project context
+│   ├── screenshots/           # Product screenshots
+│   └── prd-supplement.md      # PRD supplement
+├── .prettierrc.yaml           # Prettier config (OpenMetadata rules)
 └── pnpm-workspace.yaml
 ```
 
 ## Roadmap
 
-- [x] UI Showcase — 10 pages with mock data
+- [x] UI Showcase — 27+ routes with mock data
 - [x] i18n — Chinese / English
-- [ ] Screenshot gallery
+- [x] AI Skills management page
+- [x] Smart Input Hub (multi-modal capture)
+- [x] Detail pages (tasks, inbox, knowledge, projects, calendar)
+- [x] Auth pages + Onboarding wizard
+- [x] Settings sub-pages (appearance, AI, integrations, subscription, data)
+- [x] Morning Plan + Evening Review dialogs
+- [x] Command Palette (`Cmd+K`)
+- [x] Prettier formatting (OpenMetadata rules)
 - [ ] Backend API (Koa.js)
 - [ ] Database schema (MySQL)
 - [ ] Auth (Email + OAuth)
 - [ ] AI classification (Claude API)
 - [ ] Google Calendar integration
 - [ ] PWA support
-- [ ] Command Palette (`Cmd+K`)
-- [ ] Daily ritual (morning plan + evening review)
 
 ## License
 

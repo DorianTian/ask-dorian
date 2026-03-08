@@ -5,7 +5,11 @@
   "scripts": {
     "dev:showcase": "pnpm --filter @ask-dorian/showcase dev",
     "build:showcase": "pnpm --filter @ask-dorian/showcase build",
-    "lint:showcase": "pnpm --filter @ask-dorian/showcase lint"
+    "lint:showcase": "pnpm --filter @ask-dorian/showcase lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.8.1"
   }
 }
-

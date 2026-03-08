@@ -1,0 +1,6 @@
+# Based on OpenMetadata formatting rules
+---
+tabWidth: 2
+jsxBracketSameLine: true
+htmlWhitespaceSensitivity: 'strict'
+singleQuote: true
