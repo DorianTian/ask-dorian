@@ -35,3 +35,8 @@ pnpm-debug.log*
 # Claude
 CLAUDE.md
 .claude/
+
+# Internal confidential docs
+docs/gtm-strategy.md
+docs/prd-supplement.md
+docs/infra.md

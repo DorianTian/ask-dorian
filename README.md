@@ -1,6 +1,6 @@
 <p align="center">
   <h1 align="center">Ask Dorian</h1>
-  <p align="center"><strong>Master Your Fragments</strong> — Turn fragmented inputs into actionable results, automatically.</p>
+  <p align="center"><strong>Stop losing fragments. Auto-convert everything into action.</strong></p>
 </p>
 
 <p align="center">
@@ -9,67 +9,82 @@
 
 ---
 
-## What is Ask Dorian?
+## The Problem
 
-A fragment-driven personal execution hub. Capture anything — text, voice, links, screenshots — and let AI automatically structure it into tasks, schedules, knowledge, and next actions.
+You receive a message — "Sync OKR next Wednesday". You think you'll add it to your calendar later. You forget.
 
-**Not** a note-taking app. **Not** a generic workspace. It's about one thing: **fragments in, executable output out.**
+You bookmark an article. Never read it again.
+
+A great idea pops up during a meeting. By the time it's over, it's gone.
+
+**Your fragments are scattered across 5+ apps, and most of them die in silence.**
+
+Notion requires you to organize. Todoist requires you to type. Calendar requires you to schedule. Every tool expects *you* to do the work.
+
+## The Solution
+
+Ask Dorian is the missing automation layer between your fragmented inputs and your organized life.
+
+**Throw anything in. AI handles the rest.**
 
 ```
-Fragment Input → AI Skills → Tasks / Schedules / Knowledge → Execute → Review
+Fragment Input → AI Classification → Tasks / Schedules / Knowledge → Execute → Review
 ```
+
+| | Notion | Todoist | Ask Dorian |
+|---|---|---|---|
+| Input | Manual pages | Manual tasks | Anything — text, voice, screenshots, links |
+| Classify | You tag it | You file it | AI does it |
+| Create tasks | You write it | You write it | AI extracts it |
+| Schedule | You set it | Partial | AI detects time and creates events |
+| Learn | Zero | Zero | AI archives knowledge automatically |
+| Learning curve | High | Medium | **Zero** |
+
+**Others say "you organize". We say "you throw it in, AI organizes".**
 
 ## Product Showcase
 
 ### Today's Dashboard
 
-Your daily command center — tasks, schedule, pending fragments, focus time. Everything you need, zero context switching.
+Your daily command center — tasks, schedule, pending fragments, focus time. Zero context switching.
 
 ![Today's Dashboard](docs/screenshots/01-today.png)
 
-### Fragment Hub (Inbox)
+### Fragment Hub
 
-The core entry point. Throw in anything — text, voice, documents, screenshots, links. Pick an AI skill, hit process. The AI pipeline handles classification, entity extraction, and action generation automatically.
+The core entry point. Text, voice, documents, screenshots, links — pick an AI skill, hit process. The 6-step AI pipeline handles classification, entity extraction, and action generation automatically.
 
 ![Fragment Hub](docs/screenshots/02-inbox.png)
 
 ### AI Skills
 
-Define how AI processes your fragments. 5 built-in skills (Smart Classify, Meeting Notes, Link Summary, Schedule Extract, Task Decompose) + custom skills with editable processing pipelines.
+Define how AI processes your fragments. 5 built-in skills + custom skills with editable processing pipelines.
 
 ![AI Skills](docs/screenshots/03-skills.png)
 
 ### Projects
 
-Tasks, knowledge, and events organized by project context. Progress tracking, Kanban view, and activity timeline built in.
+Tasks, knowledge, and events organized by project. Progress tracking and Kanban view built in.
 
 ![Projects](docs/screenshots/04-projects.png)
 
----
+## Who is this for?
 
-## Core Flow
+**Solo founders, indie developers, and content creators** who juggle multiple roles and get overwhelmed by fragmented information every day — but don't have an assistant to organize it all.
 
-```
-┌─────────────┐    ┌──────────────┐    ┌─────────────────┐    ┌──────────┐
-│  Capture     │───→│  AI Process   │───→│  Structured     │───→│  Execute  │
-│              │    │              │    │  Output         │    │          │
-│ Text/Voice/  │    │ Classify +   │    │ Tasks +         │    │ Today +  │
-│ Doc/Screenshot│   │ Extract +    │    │ Schedules +     │    │ Calendar │
-│ /Link        │    │ Generate     │    │ Knowledge       │    │ + Review │
-└─────────────┘    └──────────────┘    └─────────────────┘    └──────────┘
-```
+If you're already paying for 2-3 productivity tools and still losing track of things, Ask Dorian replaces the manual glue work between them.
 
 ## Features
 
 | Feature | Description |
 |---------|-------------|
 | **Multi-modal Capture** | Text / voice / documents / screenshots / links — one entry |
-| **AI Processing Pipeline** | 6-step pipeline: analyze → classify → extract → generate → link → validate |
-| **Configurable AI Skills** | Default + custom skills with editable pipeline steps |
-| **Today's Dashboard** | Tasks, schedule, pending fragments, focus time in one view |
-| **Project Context** | Fragments auto-linked to projects for long-term traceability |
-| **Weekly Review** | Auto-summarize: completed, delayed, decisions, knowledge |
-| **Morning Plan + Evening Review** | Daily ritual for planning and reflection |
+| **AI Processing Pipeline** | 6-step: analyze → classify → extract → generate → link → validate |
+| **Configurable AI Skills** | Default + custom skills with editable pipelines |
+| **Today's Dashboard** | Tasks, schedule, fragments, focus time in one view |
+| **Project Context** | Fragments auto-linked to projects |
+| **Weekly Review** | Auto-summarize completed, delayed, decisions, knowledge |
+| **Morning Plan + Evening Review** | Daily planning and reflection rituals |
 | **i18n** | Chinese / English |
 | **Command Palette** | `Cmd+K` quick capture, search, navigation |
 
@@ -79,80 +94,35 @@ Tasks, knowledge, and events organized by project context. Progress tracking, Ka
 |-------|-----------|
 | Framework | Next.js 16 (App Router) |
 | UI | React 19 + TypeScript |
-| Styling | Tailwind CSS 4 + shadcn/ui (base-nova) |
-| Icons | Lucide React |
-| Charts | Recharts |
+| Styling | Tailwind CSS 4 + shadcn/ui |
 | i18n | next-intl |
-| Formatting | Prettier (OpenMetadata rules) |
-| Backend | Node.js (Koa.js) — planned |
-| Database | MySQL 8.0 — planned |
-| AI | Claude API (Sonnet) — planned |
-| Deployment | AWS EC2 + RDS + Cloudflare + PM2 |
-
-## Architecture
-
-```
-askdorian.com ──\                     /──→ Next.js (:3000)
-                 → Cloudflare → EC2 Nginx
-aix-hub.com ────/                     \──→ Koa.js API (:4000)
-                                            │
-                                       RDS MySQL 8.0
-```
+| AI | Claude API |
+| Backend | Node.js (Koa.js) |
+| Database | MySQL 8.0 |
+| Deployment | AWS |
 
 ## Getting Started
 
 ```bash
-# Clone
 git clone https://github.com/your-username/ask-dorian.git
 cd ask-dorian
-
-# Install dependencies
 pnpm install
-
-# Run showcase (UI prototype)
 pnpm dev:showcase
-
 # Open http://localhost:3000
-```
-
-## Project Structure
-
-```
-ask-dorian/
-├── packages/
-│   └── showcase/              # UI prototype (27+ routes)
-│       ├── src/
-│       │   ├── app/[locale]/  # Pages with i18n routing
-│       │   ├── components/    # Layout + shadcn/ui (28 components)
-│       │   ├── lib/           # Mock data, types, utils
-│       │   ├── i18n/          # next-intl config
-│       │   └── messages/      # zh.json, en.json
-│       └── middleware.ts      # Locale detection & redirect
-├── docs/
-│   ├── screenshots/           # Product screenshots
-│   └── prd-supplement.md      # PRD supplement
-├── .prettierrc.yaml           # Prettier config (OpenMetadata rules)
-└── pnpm-workspace.yaml
 ```
 
 ## Roadmap
 
-- [x] UI Showcase — 27+ routes with mock data
-- [x] i18n — Chinese / English
-- [x] AI Skills management page
+- [x] UI Prototype — 27+ routes
+- [x] AI Skills management
 - [x] Smart Input Hub (multi-modal capture)
-- [x] Detail pages (tasks, inbox, knowledge, projects, calendar)
-- [x] Auth pages + Onboarding wizard
-- [x] Settings sub-pages (appearance, AI, integrations, subscription, data)
-- [x] Morning Plan + Evening Review dialogs
-- [x] Command Palette (`Cmd+K`)
-- [x] Prettier formatting (OpenMetadata rules)
-- [ ] Backend API (Koa.js)
-- [ ] Database schema (MySQL)
-- [ ] Auth (Email + OAuth)
-- [ ] AI classification (Claude API)
-- [ ] Google Calendar integration
-- [ ] PWA support
+- [x] Detail pages, auth, onboarding, settings
+- [x] Command Palette, morning plan, evening review
+- [ ] Backend API
+- [ ] AI classification engine
+- [ ] Payment integration
+- [ ] Google Calendar sync
+- [ ] PWA
 
 ## License
 
