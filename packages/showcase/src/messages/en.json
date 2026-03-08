@@ -52,7 +52,18 @@
     "quickCapture": "Quick Capture",
     "morningPlan": "Morning Plan",
     "eveningReview": "Evening Review",
-    "viewAll": "View All"
+    "viewAll": "View All",
+    "captureBarPlaceholder": "Type any thought, task, link...",
+    "captureBarSubmit": "AI Process",
+    "aiFeedTitle": "AI just processed",
+    "pipelineTitle": "Fragment Pipeline",
+    "pipelineInputs": "inputs",
+    "pipelineTasks": "tasks",
+    "pipelineEvents": "events",
+    "pipelineKnowledge": "knowledge",
+    "pipelineConflicts": "conflicts",
+    "pipelineNeedsConfirm": "Needs Confirmation",
+    "pipelineZeroManual": "Zero manual sorting"
   },
   "inbox": {
     "title": "Inbox",
@@ -71,7 +82,7 @@
     "classifying": "Classifying...",
     "aiSuggestion": "AI Suggestion",
     "reasoning": "Classification reasoning",
-    "smartInputTitle": "Drop anything, AI organizes for you",
+    "smartInputTitle": "Drop anything, Dorian organizes for you",
     "inputModeText": "Text",
     "inputModeVoice": "Voice",
     "inputModeDocument": "Document",

@@ -1,8 +1,8 @@
 // @MVP - Phase 1
-"use client"
+'use client';
 
-import { useTranslations } from "next-intl"
-import { Link } from "@/i18n/navigation"
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import {
   ArrowLeft,
   Calendar,
@@ -14,51 +14,60 @@ import {
   Tag,
   Timer,
   Trash2,
-} from "lucide-react"
+} from 'lucide-react';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { tasks, fragments, projects } from "@/lib/mock-data"
+} from '@/components/ui/select';
+import { tasks, fragments, projects } from '@/lib/mock-data';
 
 const statusColor: Record<string, string> = {
-  todo: "bg-slate-100 text-slate-700",
-  "in-progress": "bg-blue-100 text-blue-700",
-  done: "bg-emerald-100 text-emerald-700",
-  postponed: "bg-amber-100 text-amber-700",
-}
+  todo: 'bg-slate-100 text-slate-700',
+  'in-progress': 'bg-blue-100 text-blue-700',
+  done: 'bg-emerald-100 text-emerald-700',
+  postponed: 'bg-amber-100 text-amber-700',
+};
 
 const statusLabel: Record<string, string> = {
-  todo: "Todo",
-  "in-progress": "In Progress",
-  done: "Done",
-  postponed: "Postponed",
-}
+  todo: 'Todo',
+  'in-progress': 'In Progress',
+  done: 'Done',
+  postponed: 'Postponed',
+};
 
 const priorityConfig: Record<string, { color: string; dot: string }> = {
-  urgent: { color: "bg-red-50 text-red-700 border-red-200", dot: "bg-red-500" },
-  high: { color: "bg-orange-50 text-orange-700 border-orange-200", dot: "bg-orange-500" },
-  medium: { color: "bg-blue-50 text-blue-700 border-blue-200", dot: "bg-blue-500" },
-  low: { color: "bg-slate-50 text-slate-600 border-slate-200", dot: "bg-slate-400" },
-}
+  urgent: { color: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' },
+  high: {
+    color: 'bg-orange-50 text-orange-700 border-orange-200',
+    dot: 'bg-orange-500',
+  },
+  medium: {
+    color: 'bg-blue-50 text-blue-700 border-blue-200',
+    dot: 'bg-blue-500',
+  },
+  low: {
+    color: 'bg-slate-50 text-slate-600 border-slate-200',
+    dot: 'bg-slate-400',
+  },
+};
 
 export default function TaskDetailPage() {
-  const t = useTranslations("taskDetail")
+  const t = useTranslations('taskDetail');
 
   // Use tasks[0] as showcase data
-  const task = tasks[0]
-  const project = projects.find((p) => p.id === task.projectId)
+  const task = tasks[0];
+  const project = projects.find((p) => p.id === task.projectId);
   const sourceFragment = task.sourceFragmentId
     ? fragments.find((f) => f.id === task.sourceFragmentId)
-    : null
+    : null;
 
   return (
     <div className="space-y-6">
@@ -69,7 +78,7 @@ export default function TaskDetailPage() {
           className="flex items-center gap-1 hover:text-foreground transition-colors"
         >
           <ArrowLeft className="size-3.5" />
-          {t("back")}
+          {t('back')}
         </Link>
         <span>/</span>
         <span className="text-foreground font-medium truncate max-w-xs">
@@ -81,14 +90,14 @@ export default function TaskDetailPage() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-muted-foreground">
-            {t("status")}
+            {t('status')}
           </span>
           <Select defaultValue={task.status}>
             <SelectTrigger className="w-36 h-8">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {(["todo", "in-progress", "done", "postponed"] as const).map(
+              {(['todo', 'in-progress', 'done', 'postponed'] as const).map(
                 (s) => (
                   <SelectItem key={s} value={s}>
                     <Badge
@@ -98,7 +107,7 @@ export default function TaskDetailPage() {
                       {statusLabel[s]}
                     </Badge>
                   </SelectItem>
-                )
+                ),
               )}
             </SelectContent>
           </Select>
@@ -108,14 +117,14 @@ export default function TaskDetailPage() {
 
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-muted-foreground">
-            {t("priority")}
+            {t('priority')}
           </span>
           <Select defaultValue={task.priority}>
             <SelectTrigger className="w-32 h-8">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {(["urgent", "high", "medium", "low"] as const).map((p) => (
+              {(['urgent', 'high', 'medium', 'low'] as const).map((p) => (
                 <SelectItem key={p} value={p}>
                   <div className="flex items-center gap-2">
                     <span
@@ -145,12 +154,12 @@ export default function TaskDetailPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                {t("description")}
+                {t('description')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm leading-relaxed">
-                {task.description || t("noDescription")}
+                {task.description || t('noDescription')}
               </p>
             </CardContent>
           </Card>
@@ -163,34 +172,30 @@ export default function TaskDetailPage() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                     <Calendar className="size-3.5" />
-                    {t("dueDate")}
+                    {t('dueDate')}
                   </div>
-                  <p className="text-sm font-medium">
-                    {task.dueDate || "—"}
-                  </p>
+                  <p className="text-sm font-medium">{task.dueDate || '—'}</p>
                 </div>
 
                 {/* Due Time */}
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                     <Clock className="size-3.5" />
-                    {t("dueTime")}
+                    {t('dueTime')}
                   </div>
-                  <p className="text-sm font-medium">
-                    {task.dueTime || "—"}
-                  </p>
+                  <p className="text-sm font-medium">{task.dueTime || '—'}</p>
                 </div>
 
                 {/* Estimated Time */}
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                     <Timer className="size-3.5" />
-                    {t("estimatedTime")}
+                    {t('estimatedTime')}
                   </div>
                   <p className="text-sm font-medium">
                     {task.estimatedMinutes
-                      ? `${task.estimatedMinutes} ${t("minutes")}`
-                      : "—"}
+                      ? `${task.estimatedMinutes} ${t('minutes')}`
+                      : '—'}
                   </p>
                 </div>
 
@@ -198,7 +203,7 @@ export default function TaskDetailPage() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                     <Timer className="size-3.5" />
-                    {t("actualTime")}
+                    {t('actualTime')}
                   </div>
                   <p className="text-sm font-medium text-muted-foreground">—</p>
                 </div>
@@ -207,7 +212,7 @@ export default function TaskDetailPage() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                     <FolderKanban className="size-3.5" />
-                    {t("project")}
+                    {t('project')}
                   </div>
                   {project ? (
                     <div className="flex items-center gap-2">
@@ -221,7 +226,7 @@ export default function TaskDetailPage() {
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground">
-                      {t("noProject")}
+                      {t('noProject')}
                     </p>
                   )}
                 </div>
@@ -230,7 +235,7 @@ export default function TaskDetailPage() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                     <Tag className="size-3.5" />
-                    {t("tags")}
+                    {t('tags')}
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {task.tags.length > 0 ? (
@@ -249,7 +254,7 @@ export default function TaskDetailPage() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                     <Calendar className="size-3.5" />
-                    {t("scheduledDate")}
+                    {t('scheduledDate')}
                   </div>
                   <p className="text-sm font-medium text-muted-foreground">—</p>
                 </div>
@@ -258,7 +263,7 @@ export default function TaskDetailPage() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                     <Clock className="size-3.5" />
-                    {t("scheduledTime")}
+                    {t('scheduledTime')}
                   </div>
                   <p className="text-sm font-medium text-muted-foreground">—</p>
                 </div>
@@ -269,24 +274,24 @@ export default function TaskDetailPage() {
           {/* Timestamps */}
           <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-xs text-muted-foreground">
             <span>
-              {t("createdAt")}:{" "}
-              {new Date(task.createdAt).toLocaleString("zh-CN", {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
+              {t('createdAt')}:{' '}
+              {new Date(task.createdAt).toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
               })}
             </span>
             {task.completedAt && (
               <span>
-                {t("completedAt")}:{" "}
-                {new Date(task.completedAt).toLocaleString("zh-CN", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
+                {t('completedAt')}:{' '}
+                {new Date(task.completedAt).toLocaleString('zh-CN', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
                 })}
               </span>
             )}
@@ -301,7 +306,7 @@ export default function TaskDetailPage() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium flex items-center gap-1.5">
                   <Pencil className="size-3.5" />
-                  {t("sourceFragment")}
+                  {t('sourceFragment')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -315,13 +320,13 @@ export default function TaskDetailPage() {
                     </Badge>
                     <span className="text-[10px] text-muted-foreground">
                       {new Date(sourceFragment.createdAt).toLocaleString(
-                        "zh-CN",
+                        'zh-CN',
                         {
-                          month: "2-digit",
-                          day: "2-digit",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        }
+                          month: '2-digit',
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        },
                       )}
                     </span>
                   </div>
@@ -335,15 +340,15 @@ export default function TaskDetailPage() {
             <CardContent className="pt-6 space-y-2">
               <Button className="w-full gap-2" variant="default">
                 <CheckCircle2 className="size-4" />
-                {t("markDone")}
+                {t('markDone')}
               </Button>
               <Button className="w-full gap-2" variant="outline">
                 <Clock className="size-4" />
-                {t("postpone")}
+                {t('postpone')}
               </Button>
               <Button className="w-full gap-2" variant="outline">
                 <CalendarPlus className="size-4" />
-                {t("addToCalendar")}
+                {t('addToCalendar')}
               </Button>
               <Separator />
               <Button
@@ -351,12 +356,12 @@ export default function TaskDetailPage() {
                 variant="ghost"
               >
                 <Trash2 className="size-4" />
-                {t("delete")}
+                {t('delete')}
               </Button>
             </CardContent>
           </Card>
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -52,7 +52,18 @@
     "quickCapture": "快速记录",
     "morningPlan": "晨间规划",
     "eveningReview": "日终回顾",
-    "viewAll": "查看全部"
+    "viewAll": "查看全部",
+    "captureBarPlaceholder": "输入任何想法、任务、链接...",
+    "captureBarSubmit": "AI 处理",
+    "aiFeedTitle": "AI 刚处理的",
+    "pipelineTitle": "碎片管道",
+    "pipelineInputs": "碎片输入",
+    "pipelineTasks": "任务",
+    "pipelineEvents": "日程",
+    "pipelineKnowledge": "知识",
+    "pipelineConflicts": "冲突",
+    "pipelineNeedsConfirm": "待确认",
+    "pipelineZeroManual": "零手动整理"
   },
   "inbox": {
     "title": "收集箱",
@@ -71,7 +82,7 @@
     "classifying": "分类中...",
     "aiSuggestion": "AI 建议",
     "reasoning": "分类理由",
-    "smartInputTitle": "丢入任何东西，AI 帮你整理",
+    "smartInputTitle": "丢入任何东西，Dorian 帮你整理",
     "inputModeText": "文字",
     "inputModeVoice": "语音",
     "inputModeDocument": "文档",

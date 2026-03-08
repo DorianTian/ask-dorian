@@ -11,54 +11,120 @@
 
 ## The Problem
 
-You receive a message — "Sync OKR next Wednesday". You think you'll add it to your calendar later. You forget.
+You receive a message — "Sync OKR next Wednesday". You tell yourself you'll add it to the calendar later. You forget.
 
-You bookmark an article. Never read it again.
+You bookmark a great article. Never open it again.
 
-A great idea pops up during a meeting. By the time it's over, it's gone.
+A brilliant idea hits you during a meeting. By the time the meeting ends, it's gone.
 
 **Your fragments are scattered across 5+ apps, and most of them die in silence.**
 
-Notion requires you to organize. Todoist requires you to type. Calendar requires you to schedule. Every tool expects *you* to do the work.
+Every tool expects *you* to do the work — Notion requires you to organize, Todoist requires you to type, your calendar requires you to schedule. But what you actually need is to just *capture* the thought and move on.
 
-## The Solution
+## Not Another AI Chatbot
 
-Ask Dorian is the missing automation layer between your fragmented inputs and your organized life.
+The market is flooded with AI assistants. ChatGPT, Claw, Copilot — they're great at answering questions, but they don't *do* anything for you afterward. You still have to manually copy the answer into your task list, your calendar, or your notes.
 
-**Throw anything in. AI handles the rest.**
+**Ask Dorian is fundamentally different.**
+
+It's not a chatbot. It's not a note-taking app. It's the **automated processing pipeline** between your fragmented inputs and your organized life.
 
 ```
-Fragment Input → AI Classification → Tasks / Schedules / Knowledge → Execute → Review
+You throw in anything → Dorian understands, links, plans, and acts → You just execute
 ```
 
-| | Notion | Todoist | Ask Dorian |
-|---|---|---|---|
-| Input | Manual pages | Manual tasks | Anything — text, voice, screenshots, links |
-| Classify | You tag it | You file it | AI does it |
-| Create tasks | You write it | You write it | AI extracts it |
-| Schedule | You set it | Partial | AI detects time and creates events |
-| Learn | Zero | Zero | AI archives knowledge automatically |
-| Learning curve | High | Medium | **Zero** |
+## How It Works
 
-**Others say "you organize". We say "you throw it in, AI organizes".**
+### Context-Aware AI, Not Simple Classification
+
+Most tools just categorize: "This looks like a task → create a task." That's surface-level.
+
+Dorian reads your **full context** — your projects, tasks, calendar, recent fragments, and behavioral patterns — to deeply understand what you actually mean, even from the messiest inputs.
+
+**Example 1: You type "OKR"**
+
+> Dorian sees you have an OKR alignment meeting on Wednesday, and an unfinished "Prepare OKR Report" task. Instead of creating something new, it says:
+> *"Found 2 related items → [Start preparing report] [Remind me about the meeting] [Something else...]"*
+
+**Example 2: You type "3pm boss growth"**
+
+> Dorian interprets: 3pm today, meeting with boss about user growth. But it detects a conflict — you already have focus time blocked at 3-4pm.
+> *"Created meeting + conflict alert → [Move focus time to 4pm] [Keep both]"*
+
+**Example 3: Meeting notes — "Standup: CDC goes live this week; I'll draft the data quality proposal; tech sharing is my turn next week"**
+
+> Dorian splits this into 3 separate items:
+> - Links "CDC launch" to your existing code review task, updates the deadline
+> - Creates "Data quality proposal" as a high-priority task, suggests scheduling it in tomorrow's free slot
+> - Creates "Tech sharing prep" and suggests a topic based on your recent knowledge entries
+
+**Example 4: "Mom's birthday next Tuesday"**
+
+> Dorian understands what "birthday" really means:
+> - Creates an all-day event
+> - Creates prep tasks: buy gift, order cake (due the day before)
+> - Sets up a yearly recurring event
+> - Adds a morning reminder to send wishes
+
+**Example 5: "That proposal won't work"**
+
+> Dorian finds multiple "proposals" in your recent context but can't determine which one.
+> *"Which proposal? [CDC migration plan] [Homepage optimization plan] [Other]"*
+
+## Why Ask Dorian
+
+|  | Note Apps (Notion) | Task Apps (Todoist) | AI Chatbots (ChatGPT, Claw) | **Ask Dorian** |
+|---|---|---|---|---|
+| Input | Build pages manually | Add tasks manually | Type full prompts | **Anything** — text, voice, screenshots, links, even 2-word fragments |
+| Understanding | None | None | Answers questions | **Context-aware** — knows your projects, tasks, calendar |
+| Output | You organize | You organize | Chat responses | **Executable items** — tasks, events, knowledge, auto-linked |
+| Conflict Detection | None | None | None | **Built-in** — calendar conflicts, priority clashes, forgotten items |
+| Follow-through | You track | Basic reminders | None | **Closed-loop** — daily plan → execute → review → learn |
+| Learning Curve | High | Medium | Low | **Zero** |
+
+**Others say "you organize it". We say "throw it in, Dorian handles it".**
+
+## Core Features
+
+### Capture Anywhere
+Text, voice, documents, screenshots, links — one unified entry point. Capture on desktop with `Cmd+K`, on mobile via PWA, through email, iOS Shortcuts, or WeChat.
+
+### 5-Layer AI Processing Pipeline
+1. **Understand** — Semantic analysis + intent recognition, not just keyword matching
+2. **Link** — Auto-connect fragments to existing projects, tasks, and events
+3. **Detect Conflicts** — Calendar clashes, priority conflicts, forgotten follow-ups
+4. **Proactive Planning** — Suggest time slots, break down complex tasks, create dependencies
+5. **Close the Loop** — Reminders, deadline alerts, behavioral pattern learning
+
+### Today's Dashboard
+Your daily command center. Tasks, schedule, and Dorian's processed results — all in one view. Capture a thought without leaving the page.
+
+### Morning Plan & Evening Review
+Start each day with a clear plan. End each day reflecting on what got done, what got delayed, and what decisions were made.
+
+### Weekly Review
+Auto-generated summary: completed items, delayed items, key decisions, knowledge accumulated. No manual writing.
+
+### Smart Projects
+Fragments auto-link to projects. Track progress with Kanban view. Every piece of information finds its home.
 
 ## Product Showcase
 
 ### Today's Dashboard
 
-Your daily command center — tasks, schedule, pending fragments, focus time. Zero context switching.
+Your daily command center — capture, view, and act, all in one place.
 
 ![Today's Dashboard](docs/screenshots/01-today.png)
 
 ### Fragment Hub
 
-The core entry point. Text, voice, documents, screenshots, links — pick an AI skill, hit process. The 6-step AI pipeline handles classification, entity extraction, and action generation automatically.
+Multi-modal input. Every fragment gets processed through the AI pipeline automatically.
 
 ![Fragment Hub](docs/screenshots/02-inbox.png)
 
 ### AI Skills
 
-Define how AI processes your fragments. 5 built-in skills + custom skills with editable processing pipelines.
+Define how Dorian processes your fragments. Built-in skills + fully customizable processing pipelines.
 
 ![AI Skills](docs/screenshots/03-skills.png)
 
@@ -68,62 +134,30 @@ Tasks, knowledge, and events organized by project. Progress tracking and Kanban 
 
 ![Projects](docs/screenshots/04-projects.png)
 
-## Who is this for?
+## Who Is This For
 
-**Solo founders, indie developers, and content creators** who juggle multiple roles and get overwhelmed by fragmented information every day — but don't have an assistant to organize it all.
+**Solo founders, indie developers, content creators, and knowledge workers** — anyone who juggles multiple roles, gets overwhelmed by fragmented information every day, and doesn't have a personal assistant to organize it all.
 
 If you're already paying for 2-3 productivity tools and still losing track of things, Ask Dorian replaces the manual glue work between them.
 
-## Features
+## Cross-Platform
 
-| Feature | Description |
-|---------|-------------|
-| **Multi-modal Capture** | Text / voice / documents / screenshots / links — one entry |
-| **AI Processing Pipeline** | 6-step: analyze → classify → extract → generate → link → validate |
-| **Configurable AI Skills** | Default + custom skills with editable pipelines |
-| **Today's Dashboard** | Tasks, schedule, fragments, focus time in one view |
-| **Project Context** | Fragments auto-linked to projects |
-| **Weekly Review** | Auto-summarize completed, delayed, decisions, knowledge |
-| **Morning Plan + Evening Review** | Daily planning and reflection rituals |
-| **i18n** | Chinese / English |
-| **Command Palette** | `Cmd+K` quick capture, search, navigation |
+- **Web + PWA** — Desktop and mobile, one codebase
+- **Native App** — iOS & Android (coming soon)
+- **WeChat Mini Program** — Capture fragments right inside WeChat
+- **Desktop App** — Global hotkey to capture anytime
 
-## Tech Stack
+## Pricing
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 16 (App Router) |
-| UI | React 19 + TypeScript |
-| Styling | Tailwind CSS 4 + shadcn/ui |
-| i18n | next-intl |
-| AI | Claude API |
-| Backend | Node.js (Koa.js) |
-| Database | MySQL 8.0 |
-| Deployment | AWS |
+| Plan | Included |
+|------|----------|
+| **Free** | 50 fragments/month, basic AI processing |
+| **Pro** | Unlimited fragments, full AI pipeline, all integrations |
+| **Team** | Collaboration, shared projects, team insights |
 
-## Getting Started
+---
 
-```bash
-git clone https://github.com/your-username/ask-dorian.git
-cd ask-dorian
-pnpm install
-pnpm dev:showcase
-# Open http://localhost:3000
-```
-
-## Roadmap
-
-- [x] UI Prototype — 27+ routes
-- [x] AI Skills management
-- [x] Smart Input Hub (multi-modal capture)
-- [x] Detail pages, auth, onboarding, settings
-- [x] Command Palette, morning plan, evening review
-- [ ] Backend API
-- [ ] AI classification engine
-- [ ] Payment integration
-- [ ] Google Calendar sync
-- [ ] PWA
-
-## License
-
-Private — All rights reserved.
+<p align="center">
+  <strong>Stop organizing. Start doing.</strong><br/>
+  <a href="https://askdorian.com">askdorian.com</a>
+</p>

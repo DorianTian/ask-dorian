@@ -92,3 +92,52 @@ export interface AppNotification {
   createdAt: string
   actionUrl?: string
 }
+
+// -- AI Processing (Showcase Demo) --
+
+export interface AIMatchedEntity {
+  type: "task" | "event" | "knowledge" | "project"
+  title: string
+}
+
+export interface AIGeneratedEntity {
+  type: "task" | "event" | "knowledge"
+  title: string
+  priority?: "urgent" | "high" | "medium" | "low"
+  dueDate?: string
+  time?: string
+  project?: string
+  tags?: string[]
+  detail?: string
+  isRecurring?: boolean
+}
+
+export interface AIConflict {
+  description: string
+  suggestion: string
+}
+
+export interface AIProcessResult {
+  interpretation: string
+  confidence: number
+  isSplit: boolean
+  splitCount?: number
+  matchedEntities: AIMatchedEntity[]
+  generatedEntities: AIGeneratedEntity[]
+  conflicts: AIConflict[]
+  userPrompt?: {
+    message: string
+    options: string[]
+  }
+}
+
+export interface ProcessedFragment {
+  id: string
+  rawContent: string
+  inputSource: "cmd-k" | "mobile" | "email" | "ios-shortcut" | "wechat"
+  inputDevice: "desktop" | "mobile"
+  capturedAt: string
+  processStatus: "completed" | "needs_confirmation"
+  processingTimeMs: number
+  aiResult: AIProcessResult
+}
