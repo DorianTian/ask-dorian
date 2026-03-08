@@ -1,0 +1,138 @@
+{
+  "common": {
+    "appName": "Ask Dorian",
+    "tagline": "掌控碎片化",
+    "search": "搜索...",
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "create": "新建",
+    "confirm": "确认",
+    "loading": "加载中...",
+    "noData": "暂无数据",
+    "viewAll": "查看全部",
+    "mvpBadge": "MVP"
+  },
+  "nav": {
+    "today": "今日",
+    "inbox": "收集箱",
+    "weekly": "本周",
+    "projects": "项目",
+    "review": "回顾",
+    "calendar": "日历",
+    "knowledge": "知识库",
+    "settings": "设置",
+    "notifications": "通知"
+  },
+  "sidebar": {
+    "navigation": "导航",
+    "workspace": "工作区",
+    "system": "系统",
+    "profile": "个人资料",
+    "signOut": "退出登录"
+  },
+  "today": {
+    "title": "今日驾驶舱",
+    "greeting": "早上好",
+    "todayTasks": "今日任务",
+    "schedule": "日程安排",
+    "followUps": "跟进事项",
+    "pendingFragments": "待处理碎片",
+    "meetingPrep": "会议准备",
+    "overdue": "已逾期",
+    "upcoming": "即将到来",
+    "completed": "已完成",
+    "markDone": "标记完成",
+    "postpone": "延后",
+    "addToCalendar": "加入日历",
+    "focusTime": "专注时间",
+    "quickCapture": "快速记录"
+  },
+  "inbox": {
+    "title": "收集箱",
+    "inputPlaceholder": "输入想法、任务、链接或任何碎片信息...",
+    "allItems": "全部",
+    "unprocessed": "待处理",
+    "tasks": "任务",
+    "schedules": "日程",
+    "knowledge": "知识",
+    "inspiration": "灵感",
+    "classify": "分类",
+    "archive": "归档",
+    "uploadImage": "上传图片",
+    "pasteLink": "粘贴链接",
+    "voiceInput": "语音输入"
+  },
+  "weekly": {
+    "title": "本周面板",
+    "weekPlan": "本周计划",
+    "priorities": "优先事项",
+    "freeSlots": "空档时间",
+    "importantItems": "重要事项",
+    "schedulePlan": "排期计划",
+    "migrate": "迁移",
+    "aggregate": "聚合查看"
+  },
+  "projects": {
+    "title": "项目视图",
+    "allProjects": "所有项目",
+    "activeProjects": "进行中",
+    "archivedProjects": "已归档",
+    "tasks": "任务",
+    "knowledge": "知识",
+    "events": "事件",
+    "context": "上下文",
+    "history": "历史记录",
+    "newProject": "新建项目"
+  },
+  "review": {
+    "title": "回顾",
+    "weeklyReport": "周报",
+    "completedItems": "已完成",
+    "delayedItems": "延期项",
+    "keyDecisions": "关键决策",
+    "knowledgeSediment": "知识沉淀",
+    "export": "导出",
+    "generateReport": "生成报告"
+  },
+  "calendar": {
+    "title": "日历",
+    "month": "月",
+    "week": "周",
+    "day": "日",
+    "newEvent": "新建事件"
+  },
+  "knowledge": {
+    "title": "知识库",
+    "search": "搜索知识...",
+    "categories": "分类",
+    "recent": "最近",
+    "starred": "收藏",
+    "newNote": "新建笔记"
+  },
+  "settings": {
+    "title": "设置",
+    "general": "通用",
+    "account": "账号",
+    "appearance": "外观",
+    "language": "语言",
+    "notifications": "通知",
+    "aiPreferences": "AI 偏好",
+    "integrations": "集成",
+    "subscription": "订阅",
+    "dataExport": "数据导出",
+    "theme": "主题",
+    "lightMode": "浅色模式",
+    "darkMode": "深色模式",
+    "systemMode": "跟随系统"
+  },
+  "notifications": {
+    "title": "通知中心",
+    "all": "全部",
+    "unread": "未读",
+    "taskReminders": "任务提醒",
+    "systemNotices": "系统通知",
+    "markAllRead": "全部已读"
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "common": {
+    "appName": "Ask Dorian",
+    "tagline": "Master Your Fragments",
+    "search": "Search...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "noData": "No data",
+    "viewAll": "View All",
+    "mvpBadge": "MVP"
+  },
+  "nav": {
+    "today": "Today",
+    "inbox": "Inbox",
+    "weekly": "This Week",
+    "projects": "Projects",
+    "review": "Review",
+    "calendar": "Calendar",
+    "knowledge": "Knowledge",
+    "settings": "Settings",
+    "notifications": "Notifications"
+  },
+  "sidebar": {
+    "navigation": "Navigation",
+    "workspace": "Workspace",
+    "system": "System",
+    "profile": "Profile",
+    "signOut": "Sign Out"
+  },
+  "today": {
+    "title": "Today's Dashboard",
+    "greeting": "Good morning",
+    "todayTasks": "Today's Tasks",
+    "schedule": "Schedule",
+    "followUps": "Follow-ups",
+    "pendingFragments": "Pending Fragments",
+    "meetingPrep": "Meeting Prep",
+    "overdue": "Overdue",
+    "upcoming": "Upcoming",
+    "completed": "Completed",
+    "markDone": "Mark Done",
+    "postpone": "Postpone",
+    "addToCalendar": "Add to Calendar",
+    "focusTime": "Focus Time",
+    "quickCapture": "Quick Capture"
+  },
+  "inbox": {
+    "title": "Inbox",
+    "inputPlaceholder": "Type a thought, task, link, or any fragment...",
+    "allItems": "All",
+    "unprocessed": "Unprocessed",
+    "tasks": "Tasks",
+    "schedules": "Schedules",
+    "knowledge": "Knowledge",
+    "inspiration": "Inspiration",
+    "classify": "Classify",
+    "archive": "Archive",
+    "uploadImage": "Upload Image",
+    "pasteLink": "Paste Link",
+    "voiceInput": "Voice Input"
+  },
+  "weekly": {
+    "title": "Weekly Board",
+    "weekPlan": "Week Plan",
+    "priorities": "Priorities",
+    "freeSlots": "Free Slots",
+    "importantItems": "Important",
+    "schedulePlan": "Schedule Plan",
+    "migrate": "Migrate",
+    "aggregate": "Aggregate View"
+  },
+  "projects": {
+    "title": "Projects",
+    "allProjects": "All Projects",
+    "activeProjects": "Active",
+    "archivedProjects": "Archived",
+    "tasks": "Tasks",
+    "knowledge": "Knowledge",
+    "events": "Events",
+    "context": "Context",
+    "history": "History",
+    "newProject": "New Project"
+  },
+  "review": {
+    "title": "Review",
+    "weeklyReport": "Weekly Report",
+    "completedItems": "Completed",
+    "delayedItems": "Delayed",
+    "keyDecisions": "Key Decisions",
+    "knowledgeSediment": "Knowledge Archive",
+    "export": "Export",
+    "generateReport": "Generate Report"
+  },
+  "calendar": {
+    "title": "Calendar",
+    "month": "Month",
+    "week": "Week",
+    "day": "Day",
+    "newEvent": "New Event"
+  },
+  "knowledge": {
+    "title": "Knowledge Base",
+    "search": "Search knowledge...",
+    "categories": "Categories",
+    "recent": "Recent",
+    "starred": "Starred",
+    "newNote": "New Note"
+  },
+  "settings": {
+    "title": "Settings",
+    "general": "General",
+    "account": "Account",
+    "appearance": "Appearance",
+    "language": "Language",
+    "notifications": "Notifications",
+    "aiPreferences": "AI Preferences",
+    "integrations": "Integrations",
+    "subscription": "Subscription",
+    "dataExport": "Data Export",
+    "theme": "Theme",
+    "lightMode": "Light",
+    "darkMode": "Dark",
+    "systemMode": "System"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "all": "All",
+    "unread": "Unread",
+    "taskReminders": "Task Reminders",
+    "systemNotices": "System Notices",
+    "markAllRead": "Mark All Read"
+  }
+}

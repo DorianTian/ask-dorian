@@ -1,0 +1,11 @@
+{
+  "name": "ask-dorian",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev:showcase": "pnpm --filter @ask-dorian/showcase dev",
+    "build:showcase": "pnpm --filter @ask-dorian/showcase build",
+    "lint:showcase": "pnpm --filter @ask-dorian/showcase lint"
+  }
+}
+
