@@ -3,9 +3,10 @@ export interface Fragment {
   id: string
   content: string
   type: "text" | "link" | "image" | "voice" | "document"
-  status: "unprocessed" | "classified" | "archived"
+  status: "classifying" | "unprocessed" | "classified" | "archived"
   classification?: "task" | "schedule" | "knowledge" | "inspiration" | "follow-up"
   confidence?: number
+  reasoning?: string
   projectId?: string
   createdAt: string
   processedAt?: string

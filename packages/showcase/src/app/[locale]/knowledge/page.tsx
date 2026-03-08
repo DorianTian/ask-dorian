@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Link } from "@/i18n/navigation"
 import { knowledgeItems } from "@/lib/mock-data"
 
 export default function KnowledgePage() {
@@ -43,7 +44,8 @@ export default function KnowledgePage() {
         <TabsContent value="recent" className="mt-4">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {knowledgeItems.map((item) => (
-              <Card key={item.id} className="hover:shadow-md transition-shadow cursor-pointer">
+              <Link key={item.id} href={`/knowledge/${item.id}`}>
+              <Card className="hover:shadow-md transition-shadow cursor-pointer">
                 <CardHeader>
                   <CardTitle className="text-sm">{item.title}</CardTitle>
                   <CardDescription className="line-clamp-3 text-xs">
@@ -65,6 +67,7 @@ export default function KnowledgePage() {
                   </div>
                 </CardContent>
               </Card>
+              </Link>
             ))}
           </div>
         </TabsContent>

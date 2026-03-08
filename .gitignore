@@ -31,3 +31,7 @@ pnpm-debug.log*
 .idea/
 *.swp
 *.swo
+
+# Claude
+CLAUDE.md
+.claude/

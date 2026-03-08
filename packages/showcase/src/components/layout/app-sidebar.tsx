@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useLocale, useTranslations } from "next-intl"
-import { usePathname } from "next/navigation"
+import { useLocale, useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
 import {
   Sparkles,
   Sun,
@@ -14,9 +14,10 @@ import {
   Settings,
   Bell,
   ChevronUp,
-} from "lucide-react"
+  Zap,
+} from "lucide-react";
 
-import { Link } from "@/i18n/navigation"
+import { Link } from "@/i18n/navigation";
 import {
   Sidebar,
   SidebarContent,
@@ -30,50 +31,53 @@ import {
   SidebarMenuItem,
   SidebarRail,
   SidebarSeparator,
-} from "@/components/ui/sidebar"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+} from "@/components/ui/sidebar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
+} from "@/components/ui/dropdown-menu";
 
 interface NavItem {
-  titleKey: string
-  href: string
-  icon: React.ElementType
-  mvp?: boolean
+  titleKey: string;
+  href: string;
+  icon: React.ElementType;
 }
 
-const workspaceItems: NavItem[] = [
-  { titleKey: "nav.today", href: "/today", icon: Sun, mvp: true },
-  { titleKey: "nav.inbox", href: "/inbox", icon: Inbox, mvp: true },
-  { titleKey: "nav.weekly", href: "/weekly", icon: CalendarRange, mvp: true },
-  { titleKey: "nav.projects", href: "/projects", icon: FolderKanban, mvp: true },
-  { titleKey: "nav.review", href: "/review", icon: RotateCcw, mvp: true },
-]
+// Fragment flow: Capture → Process → Execute → Reflect
+const captureItems: NavItem[] = [
+  { titleKey: "nav.inbox", href: "/inbox", icon: Inbox },
+  { titleKey: "nav.skills", href: "/skills", icon: Zap },
+];
 
-const extendedItems: NavItem[] = [
+const executeItems: NavItem[] = [
+  { titleKey: "nav.today", href: "/today", icon: Sun },
+  { titleKey: "nav.weekly", href: "/weekly", icon: CalendarRange },
+  { titleKey: "nav.projects", href: "/projects", icon: FolderKanban },
   { titleKey: "nav.calendar", href: "/calendar", icon: Calendar },
+];
+
+const intelligenceItems: NavItem[] = [
   { titleKey: "nav.knowledge", href: "/knowledge", icon: BookOpen },
-]
+  { titleKey: "nav.review", href: "/review", icon: RotateCcw },
+];
 
 const systemItems: NavItem[] = [
   { titleKey: "nav.notifications", href: "/notifications", icon: Bell },
   { titleKey: "nav.settings", href: "/settings", icon: Settings },
-]
+];
 
 export function AppSidebar() {
-  const pathname = usePathname()
-  const locale = useLocale()
-  const t = useTranslations()
+  const pathname = usePathname();
+  const locale = useLocale();
+  const t = useTranslations();
 
-  const strippedPath = pathname.replace(`/${locale}`, "") || "/"
+  const strippedPath = pathname.replace(`/${locale}`, "") || "/";
 
   function isActive(href: string) {
-    return strippedPath === href || strippedPath.startsWith(`${href}/`)
+    return strippedPath === href || strippedPath.startsWith(`${href}/`);
   }
 
   function renderNavGroup(items: NavItem[], label: string) {
@@ -91,18 +95,13 @@ export function AppSidebar() {
                 >
                   <item.icon className="size-4" />
                   <span>{t(item.titleKey)}</span>
-                  {item.mvp && (
-                    <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0">
-                      MVP
-                    </Badge>
-                  )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
-    )
+    );
   }
 
   return (
@@ -110,7 +109,11 @@ export function AppSidebar() {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<Link href="/today" />} tooltip="Ask Dorian">
+            <SidebarMenuButton
+              size="lg"
+              render={<Link href="/today" />}
+              tooltip="Ask Dorian"
+            >
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Sparkles className="size-4" />
               </div>
@@ -128,8 +131,9 @@ export function AppSidebar() {
       <SidebarSeparator />
 
       <SidebarContent>
-        {renderNavGroup(workspaceItems, t("sidebar.workspace"))}
-        {renderNavGroup(extendedItems, t("sidebar.navigation"))}
+        {renderNavGroup(captureItems, t("sidebar.capture"))}
+        {renderNavGroup(executeItems, t("sidebar.execute"))}
+        {renderNavGroup(intelligenceItems, t("sidebar.intelligence"))}
         {renderNavGroup(systemItems, t("sidebar.system"))}
       </SidebarContent>
 
@@ -150,7 +154,9 @@ export function AppSidebar() {
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Dorian User</span>
-                  <span className="truncate text-xs text-muted-foreground">Pro Plan</span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    Pro Plan
+                  </span>
                 </div>
                 <ChevronUp className="ml-auto size-4" />
               </DropdownMenuTrigger>
@@ -171,5 +177,5 @@ export function AppSidebar() {
 
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

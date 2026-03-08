@@ -11,6 +11,13 @@ import type {
 // -- Fragments --
 export const fragments: Fragment[] = [
   {
+    id: "f0",
+    content: "下午和设计师过一下新版收集箱的交互稿，重点看移动端适配",
+    type: "text",
+    status: "classifying",
+    createdAt: "2026-03-08T10:02:00",
+  },
+  {
     id: "f1",
     content: "下周三和产品团队对齐 Q2 OKR，需要提前准备数据报告",
     type: "text",
@@ -34,6 +41,7 @@ export const fragments: Fragment[] = [
     status: "classified",
     classification: "inspiration",
     confidence: 0.88,
+    reasoning: "内容提到了具体算法和优化思路，属于技术灵感而非具体任务。关联到 Ask Dorian 项目因涉及图表渲染。",
     projectId: "p2",
     createdAt: "2026-03-07T22:10:00",
     processedAt: "2026-03-07T22:11:00",

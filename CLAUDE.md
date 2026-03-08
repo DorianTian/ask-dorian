@@ -1,5 +1,8 @@
 # Ask Dorian - Project Context
 
+## Response Language
+- 本项目所有回答使用**中文**
+
 ## Product Overview
 
 **Ask Dorian** — 掌控碎片化，让碎片输入自动变成可执行结果。

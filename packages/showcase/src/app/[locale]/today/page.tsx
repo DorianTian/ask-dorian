@@ -1,6 +1,7 @@
 // @MVP - Phase 1
 "use client"
 
+import { useState } from "react"
 import { useTranslations } from "next-intl"
 import {
   CheckCircle2,
@@ -12,14 +13,19 @@ import {
   Zap,
   ArrowRight,
   Timer,
+  Sun,
+  Moon,
+  ArrowUpRight,
 } from "lucide-react"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
+import { Link } from "@/i18n/navigation"
 import { tasks, scheduleEvents, fragments, todayStats } from "@/lib/mock-data"
+import { MorningPlanning } from "@/components/morning-planning"
+import { EveningReview } from "@/components/evening-review"
 
 const priorityColor = {
   urgent: "text-red-600 bg-red-50",
@@ -30,6 +36,8 @@ const priorityColor = {
 
 export default function TodayPage() {
   const t = useTranslations("today")
+  const [morningOpen, setMorningOpen] = useState(false)
+  const [eveningOpen, setEveningOpen] = useState(false)
 
   const todayTasks = tasks.filter(
     (task) => task.dueDate === "2026-03-08" || task.status === "in-progress"
@@ -45,7 +53,7 @@ export default function TodayPage() {
 
   return (
     <div className="space-y-6">
-      {/* Greeting & Stats Bar */}
+      {/* Greeting & Actions */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
@@ -55,10 +63,20 @@ export default function TodayPage() {
             2026-03-08 Sunday
           </p>
         </div>
-        <Button variant="outline" size="sm" className="gap-1.5">
-          <Zap className="size-3.5" />
-          {t("quickCapture")}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setMorningOpen(true)}>
+            <Sun className="size-3.5" />
+            {t("morningPlan")}
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setEveningOpen(true)}>
+            <Moon className="size-3.5" />
+            {t("eveningReview")}
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5">
+            <Zap className="size-3.5" />
+            {t("quickCapture")}
+          </Button>
+        </div>
       </div>
 
       {/* KPI Row */}
@@ -140,10 +158,18 @@ export default function TodayPage() {
         {/* Today's Tasks */}
         <Card className="lg:col-span-3">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <CheckCircle2 className="size-4" />
-              {t("todayTasks")}
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <CheckCircle2 className="size-4" />
+                {t("todayTasks")}
+              </CardTitle>
+              <Link href="/weekly">
+                <Button variant="ghost" size="sm" className="gap-1 text-xs">
+                  {t("viewAll")}
+                  <ArrowUpRight className="size-3" />
+                </Button>
+              </Link>
+            </div>
           </CardHeader>
           <CardContent className="space-y-3">
             {todayTasks.map((task) => (
@@ -157,13 +183,14 @@ export default function TodayPage() {
                   <Circle className="size-4 text-muted-foreground shrink-0" />
                 )}
                 <div className="flex-1 min-w-0">
-                  <p
-                    className={`text-sm font-medium ${
+                  <Link
+                    href={`/tasks/${task.id}`}
+                    className={`text-sm font-medium hover:underline ${
                       task.status === "done" ? "line-through text-muted-foreground" : ""
                     }`}
                   >
                     {task.title}
-                  </p>
+                  </Link>
                   <div className="flex items-center gap-2 mt-1">
                     {task.projectName && (
                       <span className="text-xs text-muted-foreground">
@@ -202,10 +229,18 @@ export default function TodayPage() {
           {/* Schedule */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <CalendarClock className="size-4" />
-                {t("schedule")}
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <CalendarClock className="size-4" />
+                  {t("schedule")}
+                </CardTitle>
+                <Link href="/calendar">
+                  <Button variant="ghost" size="sm" className="gap-1 text-xs">
+                    {t("viewAll")}
+                    <ArrowUpRight className="size-3" />
+                  </Button>
+                </Link>
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
               {todayEvents.map((event) => (
@@ -218,7 +253,9 @@ export default function TodayPage() {
                     })}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{event.title}</p>
+                    <Link href={`/calendar/${event.id}`} className="text-sm font-medium hover:underline">
+                      {event.title}
+                    </Link>
                     {event.location && (
                       <p className="text-xs text-muted-foreground">
                         {event.location}
@@ -236,17 +273,26 @@ export default function TodayPage() {
           {/* Pending Fragments */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <AlertTriangle className="size-4 text-amber-500" />
-                {t("pendingFragments")}
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <AlertTriangle className="size-4 text-amber-500" />
+                  {t("pendingFragments")}
+                </CardTitle>
+                <Link href="/inbox">
+                  <Button variant="ghost" size="sm" className="gap-1 text-xs">
+                    {t("viewAll")}
+                    <ArrowUpRight className="size-3" />
+                  </Button>
+                </Link>
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
               {pendingFragments.length > 0 ? (
                 pendingFragments.map((fragment) => (
-                  <div
+                  <Link
                     key={fragment.id}
-                    className="rounded-lg border border-amber-200 bg-amber-50/50 p-3"
+                    href={`/inbox/${fragment.id}`}
+                    className="block rounded-lg border border-amber-200 bg-amber-50/50 p-3 hover:bg-amber-50"
                   >
                     <p className="text-sm">{fragment.content}</p>
                     <div className="flex items-center justify-between mt-2">
@@ -262,7 +308,7 @@ export default function TodayPage() {
                         <ArrowRight className="size-3" />
                       </Button>
                     </div>
-                  </div>
+                  </Link>
                 ))
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">
@@ -273,6 +319,9 @@ export default function TodayPage() {
           </Card>
         </div>
       </div>
+
+      <MorningPlanning open={morningOpen} onOpenChange={setMorningOpen} />
+      <EveningReview open={eveningOpen} onOpenChange={setEveningOpen} />
     </div>
   )
 }

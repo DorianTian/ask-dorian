@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Link } from "@/i18n/navigation"
 import { projects, tasks, knowledgeItems, scheduleEvents } from "@/lib/mock-data"
 
 export default function ProjectsPage() {
@@ -45,7 +46,8 @@ export default function ProjectsPage() {
             : 0
 
           return (
-            <Card key={project.id} className="hover:shadow-md transition-shadow">
+            <Link key={project.id} href={`/projects/${project.id}`}>
+            <Card className="hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -96,6 +98,7 @@ export default function ProjectsPage() {
                 </Badge>
               </CardContent>
             </Card>
+            </Link>
           )
         })}
       </div>
@@ -130,9 +133,9 @@ export default function ProjectsPage() {
                     ) : (
                       <Circle className="size-4 text-muted-foreground" />
                     )}
-                    <span className={`text-sm flex-1 ${task.status === "done" ? "line-through text-muted-foreground" : ""}`}>
+                    <Link href={`/tasks/${task.id}`} className={`text-sm flex-1 hover:underline ${task.status === "done" ? "line-through text-muted-foreground" : ""}`}>
                       {task.title}
-                    </span>
+                    </Link>
                     {task.dueDate && (
                       <span className="text-xs text-muted-foreground flex items-center gap-0.5">
                         <Clock className="size-3" />

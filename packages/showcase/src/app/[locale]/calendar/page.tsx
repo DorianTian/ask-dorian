@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Link } from "@/i18n/navigation"
 import { scheduleEvents } from "@/lib/mock-data"
 
 const hours = Array.from({ length: 12 }, (_, i) => i + 8) // 8:00 - 19:00
@@ -60,20 +61,22 @@ export default function CalendarPage() {
                   </div>
                   <div className="flex-1 py-1 pl-3">
                     {event && (
-                      <div
-                        className={`rounded-md px-2 py-1.5 text-xs ${
-                          event.type === "focus"
-                            ? "bg-blue-50 border border-blue-200 text-blue-700"
-                            : event.type === "meeting"
-                              ? "bg-purple-50 border border-purple-200 text-purple-700"
-                              : "bg-emerald-50 border border-emerald-200 text-emerald-700"
-                        }`}
-                      >
-                        <p className="font-medium">{event.title}</p>
-                        {event.location && (
-                          <p className="text-[10px] opacity-70">{event.location}</p>
-                        )}
-                      </div>
+                      <Link href={`/calendar/${event.id}`}>
+                        <div
+                          className={`rounded-md px-2 py-1.5 text-xs hover:opacity-80 transition-opacity ${
+                            event.type === "focus"
+                              ? "bg-blue-50 border border-blue-200 text-blue-700"
+                              : event.type === "meeting"
+                                ? "bg-purple-50 border border-purple-200 text-purple-700"
+                                : "bg-emerald-50 border border-emerald-200 text-emerald-700"
+                          }`}
+                        >
+                          <p className="font-medium">{event.title}</p>
+                          {event.location && (
+                            <p className="text-[10px] opacity-70">{event.location}</p>
+                          )}
+                        </div>
+                      </Link>
                     )}
                   </div>
                 </div>
