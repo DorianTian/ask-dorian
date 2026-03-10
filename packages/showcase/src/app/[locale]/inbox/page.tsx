@@ -1,4 +1,4 @@
-// @MVP - Phase 1
+// @MVP - Phase 1 — Inbox
 "use client";
 
 import { useState } from "react";
@@ -15,11 +15,6 @@ import {
   ListTodo,
   Calendar,
   BookOpen,
-  Lightbulb,
-  ArrowRight,
-  Loader2,
-  Circle,
-  MoreHorizontal,
   AlertTriangle,
   MessageCircle,
   Smartphone,
@@ -30,36 +25,21 @@ import {
   GitBranch,
   Repeat,
   Clock,
-  Settings,
+  Check,
+  Pencil,
+  X,
+  HelpCircle,
 } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { Link } from "@/i18n/navigation";
-import { fragments, processedFragments, pipelineStats } from "@/lib/mock-data";
-import type { ProcessedFragment, AIGeneratedEntity } from "@/lib/types";
+import { processedFragments } from "@/lib/mock-data";
+import type { ProcessedFragment } from "@/lib/types";
 
-// -- constants --
-
-const classificationIcon = {
-  task: ListTodo,
-  schedule: Calendar,
-  knowledge: BookOpen,
-  inspiration: Lightbulb,
-  "follow-up": ArrowRight,
-};
-const classificationColor = {
-  task: "text-blue-600 bg-blue-50 border-blue-200",
-  schedule: "text-purple-600 bg-purple-50 border-purple-200",
-  knowledge: "text-emerald-600 bg-emerald-50 border-emerald-200",
-  inspiration: "text-amber-600 bg-amber-50 border-amber-200",
-  "follow-up": "text-orange-600 bg-orange-50 border-orange-200",
-};
-
+// -- Input modes --
 type InputMode = "text" | "voice" | "document" | "screenshot" | "link";
 
 const INPUT_MODES = [
@@ -70,7 +50,16 @@ const INPUT_MODES = [
   { key: "link" as const, icon: Link2, labelKey: "inputModeLink" },
 ] as const;
 
-const SOURCE_ICON = {
+// -- constants --
+
+const TYPE_BADGE: Record<string, { label: string; className: string }> = {
+  task: { label: "Task", className: "bg-blue-50 text-blue-600 border-blue-200" },
+  event: { label: "Event", className: "bg-emerald-50 text-emerald-600 border-emerald-200" },
+  knowledge: { label: "Note", className: "bg-gray-50 text-gray-600 border-gray-200" },
+  inspiration: { label: "Note", className: "bg-gray-50 text-gray-600 border-gray-200" },
+};
+
+const SOURCE_ICON: Record<string, typeof Monitor> = {
   "cmd-k": Monitor,
   mobile: Smartphone,
   email: Mail,
@@ -79,10 +68,10 @@ const SOURCE_ICON = {
 };
 const SOURCE_LABEL: Record<string, string> = {
   "cmd-k": "⌘K",
-  mobile: "手机",
-  email: "邮件",
-  "ios-shortcut": "快捷指令",
-  wechat: "微信",
+  mobile: "Mobile",
+  email: "Email",
+  "ios-shortcut": "Shortcut",
+  wechat: "WeChat",
 };
 
 const ENTITY_ICON: Record<string, typeof ListTodo> = {
@@ -90,197 +79,145 @@ const ENTITY_ICON: Record<string, typeof ListTodo> = {
   event: Calendar,
   knowledge: BookOpen,
 };
-const ENTITY_COLOR: Record<string, string> = {
-  task: "text-blue-500 bg-blue-500/10",
-  event: "text-violet-500 bg-violet-500/10",
-  knowledge: "text-emerald-500 bg-emerald-500/10",
-};
 
-const PRIORITY_DOT: Record<string, string> = {
-  urgent: "bg-red-500",
-  high: "bg-orange-500",
-  medium: "bg-blue-500",
-  low: "bg-slate-400",
-};
+// -- Fragment Card --
 
-// -- sub-components --
-
-function EntityCard({ entity }: { entity: AIGeneratedEntity }) {
-  const Icon = ENTITY_ICON[entity.type] ?? ListTodo;
-  const color = ENTITY_COLOR[entity.type] ?? "text-muted-foreground bg-muted";
-  return (
-    <div className="flex items-center gap-2.5">
-      <div
-        className={`flex items-center justify-center size-6 rounded-md ${color}`}
-      >
-        <Icon className="size-3" />
-      </div>
-      <span className="text-sm">{entity.title}</span>
-      {entity.priority && (
-        <span
-          className={`size-1.5 rounded-full ${PRIORITY_DOT[entity.priority]}`}
-        />
-      )}
-      {entity.dueDate && (
-        <span className="text-[11px] text-muted-foreground">
-          {entity.dueDate}
-        </span>
-      )}
-      {entity.time && (
-        <span className="text-[11px] text-muted-foreground flex items-center gap-0.5">
-          <Clock className="size-2.5" />
-          {entity.time}
-        </span>
-      )}
-      {entity.project && (
-        <span className="text-[11px] text-muted-foreground">
-          {entity.project}
-        </span>
-      )}
-      {entity.isRecurring && <Repeat className="size-3 text-muted-foreground" />}
-    </div>
-  );
-}
-
-function ProcessedFragmentCard({ pf }: { pf: ProcessedFragment }) {
+function FragmentCard({ pf }: { pf: ProcessedFragment }) {
+  const t = useTranslations("inbox");
   const SourceIcon = SOURCE_ICON[pf.inputSource];
-  const isConfirm = pf.processStatus === "needs_confirmation";
   const ai = pf.aiResult;
+  const primaryType = ai.generatedEntities[0]?.type ?? "task";
+  const badge = TYPE_BADGE[primaryType] ?? TYPE_BADGE.task;
 
   return (
-    <Card
-      className={isConfirm ? "border-amber-200 dark:border-amber-800/50" : ""}
-    >
+    <Card className="border-border hover:border-foreground/10 transition-colors">
       <CardContent className="pt-4 space-y-3">
-        {/* Raw input + source */}
-        <div className="flex items-start gap-3">
-          <div
-            className={`flex items-center justify-center size-8 rounded-lg shrink-0 ${
-              isConfirm ? "bg-amber-500/10" : "bg-violet-500/10"
-            }`}
-          >
-            <Brain
-              className={`size-4 ${isConfirm ? "text-amber-500" : "text-violet-500"}`}
-            />
+        {/* Header */}
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className={`text-[10px] font-medium ${badge.className}`}>
+            {badge.label}
+          </Badge>
+          <span className="text-[11px] text-muted-foreground">·</span>
+          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <SourceIcon className="size-3" />
+            {SOURCE_LABEL[pf.inputSource]}
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium">
-              &ldquo;{pf.rawContent}&rdquo;
-            </p>
-            <div className="flex items-center gap-2 mt-1.5">
-              <Badge
-                variant="outline"
-                className="text-[10px] h-5 gap-1 font-normal"
-              >
-                <SourceIcon className="size-3" />
-                {SOURCE_LABEL[pf.inputSource]}
-              </Badge>
-              <span className="text-[11px] text-muted-foreground font-mono">
-                {new Date(pf.capturedAt).toLocaleTimeString("en", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                })}
-              </span>
-              <span
-                className={`text-[11px] font-medium ${
-                  ai.confidence >= 0.9
-                    ? "text-emerald-600"
-                    : ai.confidence >= 0.7
-                      ? "text-blue-600"
-                      : "text-amber-600"
-                }`}
-              >
-                {Math.round(ai.confidence * 100)}%
-              </span>
-              <span className="text-[10px] text-muted-foreground font-mono">
-                {pf.processingTimeMs}ms
-              </span>
-              {ai.isSplit && (
-                <Badge
-                  variant="outline"
-                  className="text-[10px] text-violet-600 border-violet-300"
-                >
-                  拆分为 {ai.splitCount} 项
-                </Badge>
-              )}
+          <span className="ml-auto text-[11px] text-muted-foreground font-mono">
+            {new Date(pf.capturedAt).toLocaleTimeString("en", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            })}
+          </span>
+        </div>
+
+        {/* Raw input */}
+        <p className="text-sm text-muted-foreground">
+          &ldquo;{pf.rawContent}&rdquo;
+        </p>
+
+        <Separator />
+
+        {/* AI suggestion area */}
+        <div className="rounded-md bg-muted/50 px-3 py-2.5 space-y-2">
+          <p className="text-xs leading-relaxed">{ai.interpretation}</p>
+
+          {ai.matchedEntities.length > 0 && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <GitBranch className="size-3 text-muted-foreground shrink-0" />
+              {ai.matchedEntities.map((e, i) => {
+                const Icon = ENTITY_ICON[e.type] ?? ListTodo;
+                return (
+                  <Badge key={i} variant="secondary" className="text-[10px] gap-1 font-normal h-5">
+                    <Icon className="size-2.5" />
+                    {e.title}
+                  </Badge>
+                );
+              })}
             </div>
+          )}
+
+          {ai.generatedEntities.length > 0 && (
+            <div className="space-y-1">
+              {ai.generatedEntities.map((entity, i) => {
+                const Icon = ENTITY_ICON[entity.type] ?? ListTodo;
+                return (
+                  <div key={i} className="flex items-center gap-2 text-sm">
+                    <Icon className="size-3.5 text-muted-foreground shrink-0" />
+                    <span className="font-medium">{entity.title}</span>
+                    {entity.dueDate && (
+                      <span className="text-[11px] text-muted-foreground">{entity.dueDate}</span>
+                    )}
+                    {entity.time && (
+                      <span className="text-[11px] text-muted-foreground flex items-center gap-0.5">
+                        <Clock className="size-2.5" />
+                        {entity.time}
+                      </span>
+                    )}
+                    {entity.isRecurring && <Repeat className="size-3 text-muted-foreground" />}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {ai.conflicts.length > 0 && (
+            <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 rounded px-2 py-1.5">
+              <AlertTriangle className="size-3.5 shrink-0 mt-0.5" />
+              <span>
+                {ai.conflicts[0].description} —{" "}
+                <span className="font-medium">{ai.conflicts[0].suggestion}</span>
+              </span>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2">
+            <span
+              className={`text-[10px] font-medium ${
+                ai.confidence >= 0.9
+                  ? "text-emerald-600"
+                  : ai.confidence >= 0.7
+                    ? "text-blue-600"
+                    : "text-amber-600"
+              }`}
+            >
+              {Math.round(ai.confidence * 100)}% {t("confidence")}
+            </span>
+            <span className="text-[10px] text-muted-foreground font-mono">
+              {pf.processingTimeMs}ms
+            </span>
+            {ai.isSplit && (
+              <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-violet-300 text-violet-600">
+                Split ×{ai.splitCount}
+              </Badge>
+            )}
           </div>
         </div>
 
-        {/* AI interpretation */}
-        <p className="text-xs text-muted-foreground leading-relaxed pl-11">
-          {ai.interpretation}
-        </p>
-
-        {/* Matched entities */}
-        {ai.matchedEntities.length > 0 && (
-          <div className="flex items-center gap-2 pl-11 flex-wrap">
-            <GitBranch className="size-3.5 text-blue-500 shrink-0" />
-            {ai.matchedEntities.map((e, i) => {
-              const Icon = ENTITY_ICON[e.type] ?? ListTodo;
-              return (
-                <Badge
-                  key={i}
-                  variant="secondary"
-                  className="text-[11px] gap-1 font-normal"
-                >
-                  <Icon className="size-3" />
-                  {e.title}
-                </Badge>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Generated entities */}
-        {ai.generatedEntities.length > 0 && (
-          <div className="pl-11 space-y-2">
-            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-              生成 {ai.generatedEntities.length} 个事项
-            </p>
-            <div className="space-y-1.5">
-              {ai.generatedEntities.map((entity, i) => (
-                <EntityCard key={i} entity={entity} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Conflicts */}
-        {ai.conflicts.length > 0 && (
-          <div className="pl-11 rounded-lg bg-amber-50 dark:bg-amber-950/20 px-3 py-2">
-            {ai.conflicts.map((c, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-2 text-xs text-amber-700 dark:text-amber-300"
-              >
-                <AlertTriangle className="size-3.5 shrink-0 mt-0.5" />
-                <span>
-                  {c.description} —{" "}
-                  <span className="font-medium">{c.suggestion}</span>
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Confirm prompt */}
-        {ai.userPrompt && (
-          <div className="pl-11 flex items-center gap-2 flex-wrap pt-1">
-            <span className="text-xs text-muted-foreground">
-              {ai.userPrompt.message}
-            </span>
+        {/* Actions */}
+        {ai.userPrompt ? (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-muted-foreground">{ai.userPrompt.message}</span>
             {ai.userPrompt.options.map((option, i) => (
-              <Button
-                key={i}
-                variant={i === 0 ? "default" : "outline"}
-                size="sm"
-                className="text-xs h-7"
-              >
+              <Button key={i} variant={i === 0 ? "default" : "outline"} size="sm" className="text-xs h-7">
                 {option}
               </Button>
             ))}
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5">
+            <Button variant="ghost" size="sm" className="text-xs h-7 gap-1">
+              <Check className="size-3" />
+              {t("accept")}
+            </Button>
+            <Button variant="ghost" size="sm" className="text-xs h-7 gap-1">
+              <Pencil className="size-3" />
+              {t("editAction")}
+            </Button>
+            <Button variant="ghost" size="sm" className="text-xs h-7 gap-1 text-muted-foreground">
+              <X className="size-3" />
+              {t("ignore")}
+            </Button>
           </div>
         )}
       </CardContent>
@@ -288,47 +225,90 @@ function ProcessedFragmentCard({ pf }: { pf: ProcessedFragment }) {
   );
 }
 
-// -- main page --
+// -- Shimmer Card --
+
+function ShimmerCard() {
+  return (
+    <Card className="border-border">
+      <CardContent className="pt-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="ai-shimmer h-5 w-12 rounded" />
+          <div className="ai-shimmer h-4 w-16 rounded" />
+        </div>
+        <p className="text-sm text-muted-foreground italic">
+          &ldquo;下午和设计师过一下新版收集箱的交互稿&rdquo;
+        </p>
+        <div className="ai-shimmer h-16 w-full rounded-md" />
+      </CardContent>
+    </Card>
+  );
+}
+
+// -- Tab button --
+
+function TabButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-1 pb-2 text-sm transition-colors border-b-2 ${
+        active
+          ? "border-foreground text-foreground font-medium"
+          : "border-transparent text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+// -- main --
+
+type FilterTab = "all" | "tasks" | "events" | "notes" | "uncertain";
 
 export default function InboxPage() {
   const t = useTranslations("inbox");
-
   const [inputMode, setInputMode] = useState<InputMode>("text");
   const [inputValue, setInputValue] = useState("");
+  const [activeTab, setActiveTab] = useState<FilterTab>("all");
 
-  const classifying = fragments.filter((f) => f.status === "classifying");
-  const unprocessed = fragments.filter((f) => f.status === "unprocessed");
+  const taskCount = processedFragments.filter(
+    (pf) => pf.aiResult.generatedEntities.some((e) => e.type === "task"),
+  ).length;
+  const eventCount = processedFragments.filter(
+    (pf) => pf.aiResult.generatedEntities.some((e) => e.type === "event"),
+  ).length;
+  const uncertainCount = processedFragments.filter(
+    (pf) => pf.processStatus === "needs_confirmation",
+  ).length;
+
+  const filteredFragments = processedFragments.filter((pf) => {
+    if (activeTab === "all") return true;
+    if (activeTab === "uncertain") return pf.processStatus === "needs_confirmation";
+    if (activeTab === "tasks") return pf.aiResult.generatedEntities.some((e) => e.type === "task");
+    if (activeTab === "events") return pf.aiResult.generatedEntities.some((e) => e.type === "event");
+    if (activeTab === "notes") return pf.aiResult.generatedEntities.some((e) => e.type === "knowledge");
+    return true;
+  });
 
   return (
-    <div className="space-y-8">
-      {/* ── Page Header ── */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center size-9 rounded-lg bg-violet-500/10">
-            <Sparkles className="size-4 text-violet-500" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight">
-              {t("title")}
-            </h2>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {t("smartInputTitle")}
-            </p>
-          </div>
-        </div>
-      </div>
-
+    <div className="mx-auto max-w-4xl space-y-6">
       {/* ── Smart Input Hub ── */}
       <Card>
         <CardContent className="pt-5 space-y-4">
-          {/* Input Area */}
+          {/* Input Area — varies by mode */}
           {inputMode === "text" || inputMode === "link" ? (
             <Textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder={
-                inputMode === "link" ? "https://..." : t("inputPlaceholder")
-              }
+              placeholder={inputMode === "link" ? "https://..." : t("inputPlaceholder")}
               className="min-h-[100px] resize-none text-sm"
             />
           ) : inputMode === "voice" ? (
@@ -338,7 +318,7 @@ export default function InboxPage() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
                   <span className="relative inline-flex rounded-full size-4 bg-red-500" />
                 </span>
-                <span className="text-sm font-medium text-red-600 dark:text-red-400">
+                <span className="text-sm font-medium text-red-600">
                   {t("voiceRecording")}
                 </span>
               </div>
@@ -353,9 +333,7 @@ export default function InboxPage() {
                   />
                 ))}
               </div>
-              <span className="text-xs text-muted-foreground font-mono">
-                00:12
-              </span>
+              <span className="text-xs text-muted-foreground font-mono">00:12</span>
             </div>
           ) : (
             <div className="min-h-[100px] rounded-lg border-2 border-dashed bg-muted/30 flex flex-col items-center justify-center gap-3 p-6 hover:bg-muted/50 transition-colors cursor-pointer">
@@ -397,155 +375,44 @@ export default function InboxPage() {
         </CardContent>
       </Card>
 
-      <Separator />
+      {/* ── Filter Tabs ── */}
+      <div className="flex items-center gap-4 border-b border-border">
+        <TabButton active={activeTab === "all"} onClick={() => setActiveTab("all")}>
+          {t("filterAll")} ({processedFragments.length})
+        </TabButton>
+        <TabButton active={activeTab === "tasks"} onClick={() => setActiveTab("tasks")}>
+          {t("filterTasks")} ({taskCount})
+        </TabButton>
+        <TabButton active={activeTab === "events"} onClick={() => setActiveTab("events")}>
+          {t("filterEvents")} ({eventCount})
+        </TabButton>
+        <TabButton active={activeTab === "notes"} onClick={() => setActiveTab("notes")}>
+          {t("filterNotes")}
+        </TabButton>
+        {uncertainCount > 0 && (
+          <TabButton active={activeTab === "uncertain"} onClick={() => setActiveTab("uncertain")}>
+            <span className="flex items-center gap-1">
+              <HelpCircle className="size-3" />
+              {uncertainCount}
+            </span>
+          </TabButton>
+        )}
+      </div>
 
-      {/* ── AI Processing Showcase ── */}
-      <section className="space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center size-9 rounded-lg bg-violet-500/10">
-            <Brain className="size-4 text-violet-500" />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold">Dorian 处理实况</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {pipelineStats.todayInputs} 碎片输入 →{" "}
-              {pipelineStats.generatedTasks} 任务 ·{" "}
-              {pipelineStats.generatedEvents} 日程 ·{" "}
-              {pipelineStats.generatedKnowledge} 知识
-            </p>
-          </div>
+      {/* ── Fragment List ── */}
+      <div className="space-y-3">
+        <ShimmerCard />
+        {filteredFragments.map((pf) => (
+          <FragmentCard key={pf.id} pf={pf} />
+        ))}
+      </div>
+
+      {filteredFragments.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <Sparkles className="size-8 text-muted-foreground/30 mb-3" />
+          <p className="text-sm text-muted-foreground">{t("emptyInbox")}</p>
         </div>
-
-        <div className="space-y-3">
-          {processedFragments.map((pf) => (
-            <ProcessedFragmentCard key={pf.id} pf={pf} />
-          ))}
-        </div>
-      </section>
-
-      <Separator />
-
-      {/* ── Fragment History ── */}
-      <section className="space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center size-9 rounded-lg bg-muted">
-            <Settings className="size-4 text-muted-foreground" />
-          </div>
-          <h3 className="text-lg font-semibold">历史记录</h3>
-        </div>
-
-        <Tabs defaultValue="all">
-          <TabsList>
-            <TabsTrigger value="all">
-              {t("allItems")} ({fragments.length})
-            </TabsTrigger>
-            <TabsTrigger value="unprocessed">
-              {t("unprocessed")} ({unprocessed.length + classifying.length})
-            </TabsTrigger>
-            <TabsTrigger value="tasks">{t("tasks")}</TabsTrigger>
-            <TabsTrigger value="schedules">{t("schedules")}</TabsTrigger>
-            <TabsTrigger value="knowledge">{t("knowledge")}</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="all" className="mt-4 space-y-2">
-            {fragments.map((fragment) => {
-              const isClassifying = fragment.status === "classifying";
-              const Icon = isClassifying
-                ? Loader2
-                : fragment.classification
-                  ? classificationIcon[fragment.classification]
-                  : Circle;
-              const colorClass = fragment.classification
-                ? classificationColor[fragment.classification]
-                : "";
-
-              return (
-                <Link
-                  key={fragment.id}
-                  href={`/inbox/${fragment.id}`}
-                  className="block"
-                >
-                  <Card className="hover:bg-muted/30 transition-colors">
-                    <CardContent className="flex items-start gap-3 py-3">
-                      <div
-                        className={`mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg border ${
-                          isClassifying
-                            ? "bg-muted border-dashed"
-                            : fragment.status === "classified"
-                              ? colorClass
-                              : "bg-muted"
-                        }`}
-                      >
-                        <Icon
-                          className={`size-4 ${isClassifying ? "animate-spin text-muted-foreground" : ""}`}
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm">{fragment.content}</p>
-                        <div className="flex items-center gap-2 mt-1.5">
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(fragment.createdAt).toLocaleString("en", {
-                              month: "short",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              hour12: false,
-                            })}
-                          </span>
-                          {isClassifying && (
-                            <Badge
-                              variant="outline"
-                              className="text-[10px] text-violet-600 border-violet-300 animate-pulse"
-                            >
-                              {t("classifying")}
-                            </Badge>
-                          )}
-                          {fragment.classification && (
-                            <Badge
-                              variant="secondary"
-                              className={`text-[10px] ${colorClass}`}
-                            >
-                              {fragment.classification}
-                            </Badge>
-                          )}
-                          {fragment.confidence && (
-                            <span
-                              className={`text-[11px] font-medium ${
-                                fragment.confidence >= 0.9
-                                  ? "text-emerald-600"
-                                  : fragment.confidence >= 0.7
-                                    ? "text-blue-600"
-                                    : "text-amber-600"
-                              }`}
-                            >
-                              {Math.round(fragment.confidence * 100)}%
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0 shrink-0"
-                      >
-                        <MoreHorizontal className="size-4" />
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </Link>
-              );
-            })}
-          </TabsContent>
-
-          {["unprocessed", "tasks", "schedules", "knowledge"].map((tab) => (
-            <TabsContent key={tab} value={tab} className="mt-4">
-              <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-                {t("allItems")} — filtered view
-              </div>
-            </TabsContent>
-          ))}
-        </Tabs>
-      </section>
+      )}
     </div>
   );
 }

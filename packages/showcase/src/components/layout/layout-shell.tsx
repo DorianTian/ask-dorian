@@ -41,10 +41,12 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
 
   if (isStandalone) {
     return (
-      <div className="min-h-svh flex flex-col">
-        <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+      <div className="min-h-svh flex flex-col bg-background">
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-6">
           <div className="flex items-center gap-2">
-            <Sparkles className="size-4 text-primary" />
+            <div className="flex size-7 items-center justify-center rounded-lg bg-brand-gradient">
+              <Sparkles className="size-3.5 text-white" />
+            </div>
             <span className="font-semibold text-sm">Ask Dorian</span>
           </div>
           <div className="ml-auto flex items-center gap-2">
@@ -67,15 +69,15 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-4 md:px-6">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4!" />
-          <h1 className="text-sm font-medium">{pageTitle}</h1>
+          <h1 className="text-sm font-semibold tracking-tight">{pageTitle}</h1>
           <div className="ml-auto flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
-              className="h-7 gap-1.5 text-xs text-muted-foreground"
+              className="h-7 gap-1.5 rounded-md border-border/60 px-2.5 text-xs text-muted-foreground hover:text-foreground"
             >
               <span>⌘K</span>
             </Button>

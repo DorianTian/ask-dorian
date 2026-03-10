@@ -63,7 +63,12 @@
     "pipelineKnowledge": "knowledge",
     "pipelineConflicts": "conflicts",
     "pipelineNeedsConfirm": "Needs Confirmation",
-    "pipelineZeroManual": "Zero manual sorting"
+    "pipelineZeroManual": "Zero manual sorting",
+    "startFocus": "Start Focus",
+    "events": "events",
+    "autoClassify": "auto-classify",
+    "dateDisplay": "Mar 10 · Tue",
+    "focusPlanned": "Focus Time"
   },
   "inbox": {
     "title": "Inbox",
@@ -102,7 +107,17 @@
     "pipelineOutput": "Output",
     "recordingHint": "Click to start recording...",
     "dropzoneHint": "Drop files here, or click to upload",
-    "voiceRecording": "Recording..."
+    "voiceRecording": "Recording...",
+    "willAutoClassify": "auto-classify",
+    "emptyInbox": "Inbox is empty — capture your first thought",
+    "accept": "Accept",
+    "editAction": "Edit",
+    "ignore": "Ignore",
+    "filterAll": "All",
+    "filterTasks": "Tasks",
+    "filterEvents": "Events",
+    "filterNotes": "Notes",
+    "confidence": "confidence"
   },
   "weekly": {
     "title": "Weekly Board",
@@ -112,7 +127,18 @@
     "importantItems": "Important",
     "schedulePlan": "Schedule Plan",
     "migrate": "Migrate",
-    "aggregate": "Aggregate View"
+    "aggregate": "Aggregate View",
+    "completed": "Completed",
+    "estimatedRemaining": "Remaining",
+    "unscheduled": "Unscheduled",
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat",
+    "sun": "Sun",
+    "weekRange": "{start} - {end}"
   },
   "projects": {
     "title": "Projects",
@@ -134,7 +160,15 @@
     "keyDecisions": "Key Decisions",
     "knowledgeSediment": "Knowledge Archive",
     "export": "Export",
-    "generateReport": "Generate Report"
+    "generateReport": "Generate Report",
+    "completionRate": "Completion Rate",
+    "moveToNextWeek": "Next week",
+    "cancel": "Cancel",
+    "noDelayed": "No delayed items this week",
+    "focusLabel": "focus",
+    "aiInsights": "Weekly Insights",
+    "insightText": "Data Platform project is on track — Flink CDC connector is in code review. Ask Dorian has 2 tasks pending scheduling, recommend prioritizing the first-screen optimization next week. Focus time was 16h this week, up 25% from last week.",
+    "dailyBreakdown": "Daily Breakdown"
   },
   "calendar": {
     "title": "Calendar",

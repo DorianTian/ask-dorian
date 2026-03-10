@@ -1,212 +1,212 @@
-// @MVP - Phase 1
-"use client"
+// @MVP - Phase 1 — Review
+"use client";
 
-import { useTranslations } from "next-intl"
+import { useTranslations } from "next-intl";
 import {
-  RotateCcw,
   CheckCircle2,
   AlertTriangle,
-  Lightbulb,
-  BookOpen,
   Timer,
-  TrendingUp,
   Download,
-  FileText,
-} from "lucide-react"
+  Sparkles,
+  ArrowRight,
+  XCircle,
+} from "lucide-react";
+import {
+  Bar,
+  BarChart,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+} from "recharts";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
-import { weeklyReview, tasks, knowledgeItems } from "@/lib/mock-data"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import { weeklyReview, tasks } from "@/lib/mock-data";
+
+// -- Daily breakdown mock data --
+const dailyData = [
+  { day: "Mon", count: 2 },
+  { day: "Tue", count: 3 },
+  { day: "Wed", count: 1 },
+  { day: "Thu", count: 2 },
+  { day: "Fri", count: 0 },
+  { day: "Sat", count: 0 },
+  { day: "Sun", count: 0 },
+];
 
 export default function ReviewPage() {
-  const t = useTranslations("review")
+  const t = useTranslations("review");
 
   const completionRate = Math.round(
-    (weeklyReview.completedTasks / weeklyReview.totalTasks) * 100
-  )
-  const focusHours = Math.round(weeklyReview.focusMinutes / 60)
+    (weeklyReview.completedTasks / weeklyReview.totalTasks) * 100,
+  );
+  const focusHours = Math.round(weeklyReview.focusMinutes / 60);
 
-  const completedTasks = tasks.filter((t) => t.status === "done")
+  const completedTasks = tasks.filter((task) => task.status === "done");
   const delayedTasks = tasks.filter(
-    (t) => t.status !== "done" && t.dueDate && t.dueDate < "2026-03-08"
-  )
+    (task) => task.status !== "done" && task.dueDate && task.dueDate < "2026-03-08",
+  );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="mx-auto max-w-4xl space-y-6">
+      {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm text-muted-foreground">{weeklyReview.weekLabel}</p>
+          <h2 className="text-lg font-semibold tracking-tight">
+            {t("title")}
+          </h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {weeklyReview.weekLabel}
+          </p>
+        </div>
+        <Button variant="outline" size="sm" className="gap-1.5 h-8">
+          <Download className="size-3.5" />
+          {t("export")}
+        </Button>
+      </div>
+
+      {/* ── Stats Bar ── */}
+      <div className="flex items-center gap-6 flex-wrap">
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="size-4 text-emerald-500" />
+          <span className="text-sm">
+            <span className="font-semibold text-foreground">
+              {weeklyReview.completedTasks}
+            </span>{" "}
+            <span className="text-muted-foreground">{t("completedItems")}</span>
+          </span>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <Download className="size-3.5" />
-            {t("export")}
-          </Button>
-          <Button size="sm" className="gap-1.5">
-            <FileText className="size-3.5" />
-            {t("generateReport")}
-          </Button>
+          <AlertTriangle className="size-4 text-amber-500" />
+          <span className="text-sm">
+            <span className={`font-semibold ${weeklyReview.delayedTasks > 0 ? "text-amber-600" : "text-foreground"}`}>
+              {weeklyReview.delayedTasks}
+            </span>{" "}
+            <span className="text-muted-foreground">{t("delayedItems")}</span>
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Timer className="size-4 text-muted-foreground" />
+          <span className="text-sm">
+            <span className="font-semibold text-foreground">{focusHours}h</span>{" "}
+            <span className="text-muted-foreground">{t("focusLabel")}</span>
+          </span>
+        </div>
+      </div>
+      <div className="space-y-1">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>{t("completionRate")}</span>
+          <span className="font-medium text-foreground">{completionRate}%</span>
+        </div>
+        <Progress value={completionRate} className="h-1.5" />
+      </div>
+
+      {/* ── Completed vs Deferred ── */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Completed */}
+        <div className="space-y-2">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            {t("completedItems")} ({completedTasks.length})
+          </p>
+          {completedTasks.map((task) => (
+            <div
+              key={task.id}
+              className="flex items-center gap-3 rounded-lg px-3 py-2"
+            >
+              <CheckCircle2 className="size-4 text-muted-foreground/50 shrink-0" />
+              <span className="text-sm text-muted-foreground line-through">
+                {task.title}
+              </span>
+              {task.completedAt && (
+                <span className="text-[10px] text-muted-foreground/50 ml-auto font-mono">
+                  {new Date(task.completedAt).toLocaleDateString("en", {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Deferred */}
+        <div className="space-y-2">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            {t("delayedItems")} ({delayedTasks.length})
+          </p>
+          {delayedTasks.length > 0 ? (
+            delayedTasks.map((task) => (
+              <div
+                key={task.id}
+                className="flex items-center gap-3 rounded-lg px-3 py-2"
+              >
+                <AlertTriangle className="size-4 text-amber-500 shrink-0" />
+                <span className="text-sm">{task.title}</span>
+                <div className="flex items-center gap-1.5 ml-auto">
+                  <Button variant="ghost" size="sm" className="text-[10px] h-6 px-2 gap-1">
+                    <ArrowRight className="size-2.5" />
+                    {t("moveToNextWeek")}
+                  </Button>
+                  <Button variant="ghost" size="sm" className="text-[10px] h-6 px-2 gap-1 text-muted-foreground">
+                    <XCircle className="size-2.5" />
+                    {t("cancel")}
+                  </Button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              {t("noDelayed")}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* KPI Summary */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card size="sm">
-          <CardHeader>
-            <CardDescription className="flex items-center justify-between">
-              <span>{t("completedItems")}</span>
-              <CheckCircle2 className="size-4 text-emerald-500" />
-            </CardDescription>
-            <CardTitle className="text-2xl text-emerald-600">
-              {weeklyReview.completedTasks}/{weeklyReview.totalTasks}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Progress value={completionRate} className="h-1.5" />
-          </CardContent>
-        </Card>
+      <Separator />
 
-        <Card size="sm">
-          <CardHeader>
-            <CardDescription className="flex items-center justify-between">
-              <span>{t("delayedItems")}</span>
-              <AlertTriangle className="size-4 text-amber-500" />
-            </CardDescription>
-            <CardTitle className="text-2xl text-amber-600">
-              {weeklyReview.delayedTasks}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground">Need rescheduling</p>
-          </CardContent>
-        </Card>
+      {/* ── AI Insights ── */}
+      <Card className="border-l-[3px] border-l-transparent bg-card" style={{ borderImage: "linear-gradient(to bottom, var(--brand-from), var(--brand-to)) 1" }}>
+        <CardContent className="pt-4 space-y-2">
+          <div className="flex items-center gap-2">
+            <Sparkles className="size-3.5 text-brand-from" />
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              {t("aiInsights")}
+            </p>
+          </div>
+          <p className="text-sm leading-relaxed">
+            {t("insightText")}
+          </p>
+        </CardContent>
+      </Card>
 
-        <Card size="sm">
-          <CardHeader>
-            <CardDescription className="flex items-center justify-between">
-              <span>{t("knowledgeSediment")}</span>
-              <BookOpen className="size-4 text-blue-500" />
-            </CardDescription>
-            <CardTitle className="text-2xl">{weeklyReview.knowledgeItems}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground">New entries this week</p>
-          </CardContent>
-        </Card>
-
-        <Card size="sm">
-          <CardHeader>
-            <CardDescription className="flex items-center justify-between">
-              <span>Focus Time</span>
-              <Timer className="size-4 text-violet-500" />
-            </CardDescription>
-            <CardTitle className="text-2xl text-violet-600">{focusHours}h</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground">Deep work this week</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Key Decisions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Lightbulb className="size-4 text-amber-500" />
-              {t("keyDecisions")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {weeklyReview.keyDecisions.map((decision, i) => (
-              <div key={i} className="flex items-start gap-3 rounded-lg border p-3">
-                <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 text-xs font-medium">
-                  {i + 1}
-                </div>
-                <p className="text-sm">{decision}</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Knowledge Sediment */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <BookOpen className="size-4 text-emerald-500" />
-              {t("knowledgeSediment")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {knowledgeItems.map((item) => (
-              <div key={item.id} className="rounded-lg border p-3">
-                <p className="text-sm font-medium">{item.title}</p>
-                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                  {item.content}
-                </p>
-                <div className="flex items-center gap-2 mt-2">
-                  <Badge variant="secondary" className="text-[10px]">{item.category}</Badge>
-                  {item.projectName && (
-                    <span className="text-[10px] text-muted-foreground">{item.projectName}</span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Completed & Delayed Lists */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <CheckCircle2 className="size-4 text-emerald-500" />
-              {t("completedItems")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {completedTasks.map((task) => (
-              <div key={task.id} className="flex items-center gap-2 text-sm text-muted-foreground">
-                <CheckCircle2 className="size-3.5 text-emerald-500 shrink-0" />
-                <span className="line-through">{task.title}</span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <AlertTriangle className="size-4 text-amber-500" />
-              {t("delayedItems")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {delayedTasks.length > 0 ? (
-              <div className="space-y-2">
-                {delayedTasks.map((task) => (
-                  <div key={task.id} className="flex items-center gap-2 text-sm">
-                    <AlertTriangle className="size-3.5 text-amber-500 shrink-0" />
-                    <span>{task.title}</span>
-                    <Badge variant="outline" className="ml-auto text-[10px]">
-                      {task.dueDate}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No delayed items this week
-              </p>
-            )}
-          </CardContent>
-        </Card>
+      {/* ── Daily Breakdown Chart ── */}
+      <div className="space-y-3">
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          {t("dailyBreakdown")}
+        </p>
+        <div className="h-40">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={dailyData} barSize={28}>
+              <XAxis
+                dataKey="day"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+              />
+              <YAxis hide />
+              <Bar
+                dataKey="count"
+                fill="hsl(var(--foreground))"
+                radius={[4, 4, 0, 0]}
+                opacity={0.6}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
-  )
+  );
 }

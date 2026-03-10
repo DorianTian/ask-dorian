@@ -63,7 +63,12 @@
     "pipelineKnowledge": "知识",
     "pipelineConflicts": "冲突",
     "pipelineNeedsConfirm": "待确认",
-    "pipelineZeroManual": "零手动整理"
+    "pipelineZeroManual": "零手动整理",
+    "startFocus": "开始专注",
+    "events": "事件",
+    "autoClassify": "自动分类",
+    "dateDisplay": "3月10日 · 周二",
+    "focusPlanned": "专注时间"
   },
   "inbox": {
     "title": "收集箱",
@@ -102,7 +107,17 @@
     "pipelineOutput": "输出结果",
     "recordingHint": "点击开始录音...",
     "dropzoneHint": "拖放文件到这里，或点击上传",
-    "voiceRecording": "录音中..."
+    "voiceRecording": "录音中...",
+    "willAutoClassify": "自动分类",
+    "emptyInbox": "收集箱为空 — 记下你的第一个想法",
+    "accept": "确认",
+    "editAction": "编辑",
+    "ignore": "忽略",
+    "filterAll": "全部",
+    "filterTasks": "任务",
+    "filterEvents": "日程",
+    "filterNotes": "笔记",
+    "confidence": "置信度"
   },
   "weekly": {
     "title": "本周面板",
@@ -112,7 +127,18 @@
     "importantItems": "重要事项",
     "schedulePlan": "排期计划",
     "migrate": "迁移",
-    "aggregate": "聚合查看"
+    "aggregate": "聚合查看",
+    "completed": "已完成",
+    "estimatedRemaining": "预估剩余",
+    "unscheduled": "未安排",
+    "mon": "周一",
+    "tue": "周二",
+    "wed": "周三",
+    "thu": "周四",
+    "fri": "周五",
+    "sat": "周六",
+    "sun": "周日",
+    "weekRange": "{start} - {end}"
   },
   "projects": {
     "title": "项目视图",
@@ -134,7 +160,15 @@
     "keyDecisions": "关键决策",
     "knowledgeSediment": "知识沉淀",
     "export": "导出",
-    "generateReport": "生成报告"
+    "generateReport": "生成报告",
+    "completionRate": "完成率",
+    "moveToNextWeek": "移到下周",
+    "cancel": "取消",
+    "noDelayed": "本周无延期项",
+    "focusLabel": "专注",
+    "aiInsights": "本周观察",
+    "insightText": "数据平台项目进度良好，Flink CDC connector 已提交 Code Review。Ask Dorian 项目有 2 个任务待排期，建议下周优先处理首屏加载优化。本周深度工作 16 小时，比上周增长 25%。",
+    "dailyBreakdown": "每日完成分布"
   },
   "calendar": {
     "title": "日历",

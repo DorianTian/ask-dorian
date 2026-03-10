@@ -46,7 +46,6 @@ interface NavItem {
   icon: React.ElementType;
 }
 
-// Fragment flow: Capture → Process → Execute → Reflect
 const captureItems: NavItem[] = [
   { titleKey: "nav.inbox", href: "/inbox", icon: Inbox },
   { titleKey: "nav.skills", href: "/skills", icon: Zap },
@@ -114,11 +113,13 @@ export function AppSidebar() {
               render={<Link href="/today" />}
               tooltip="Ask Dorian"
             >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Sparkles className="size-4" />
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-brand-gradient">
+                <Sparkles className="size-4 text-white" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">Ask Dorian</span>
+                <span className="truncate font-semibold">
+                  Ask Dorian
+                </span>
                 <span className="truncate text-xs text-muted-foreground">
                   {t("common.tagline")}
                 </span>
@@ -150,10 +151,14 @@ export function AppSidebar() {
                 }
               >
                 <Avatar size="sm">
-                  <AvatarFallback>D</AvatarFallback>
+                  <AvatarFallback className="text-xs">
+                    D
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Dorian User</span>
+                  <span className="truncate font-semibold">
+                    Dorian User
+                  </span>
                   <span className="truncate text-xs text-muted-foreground">
                     Pro Plan
                   </span>
