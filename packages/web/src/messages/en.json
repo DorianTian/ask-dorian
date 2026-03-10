@@ -1,0 +1,80 @@
+{
+  "nav": {
+    "today": "Today",
+    "weekly": "Weekly",
+    "projects": "Projects",
+    "inbox": "Inbox",
+    "review": "Review",
+    "settings": "Settings",
+    "notifications": "Notifications"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "loginTitle": "Login to Ask Dorian",
+    "registerTitle": "Create Account",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "googleLogin": "Login with Google",
+    "forgotPassword": "Forgot password?",
+    "loginError": "Invalid email or password",
+    "registerError": "Registration failed, please try again"
+  },
+  "today": {
+    "title": "Today",
+    "fragmentFeed": "Fragment Feed",
+    "timeline": "Timeline",
+    "noFragments": "No fragments captured today",
+    "addFragment": "Capture a fragment"
+  },
+  "weekly": {
+    "title": "Weekly",
+    "focus": "Weekly Focus",
+    "timeAllocation": "Time Allocation",
+    "decisions": "Decisions Needed",
+    "progress": "Weekly Progress"
+  },
+  "inbox": {
+    "title": "Inbox",
+    "pending": "Pending",
+    "processed": "Processed",
+    "empty": "Inbox is empty"
+  },
+  "projects": {
+    "title": "Projects",
+    "active": "Active",
+    "all": "All",
+    "create": "New Project"
+  },
+  "review": {
+    "title": "Review",
+    "thisWeek": "This Week's Review",
+    "completed": "Completed",
+    "events": "Events Attended",
+    "knowledge": "Knowledge Captured"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "search": "Search...",
+    "noData": "No data"
+  },
+  "fragment": {
+    "raw": "Raw Input",
+    "aiUnderstanding": "AI Understanding",
+    "entities": "Entities",
+    "action": "Action Taken",
+    "pending": "Pending",
+    "processing": "Processing",
+    "confirm": "Confirm",
+    "reject": "Reject"
+  }
+}

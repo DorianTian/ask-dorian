@@ -1,0 +1,80 @@
+{
+  "nav": {
+    "today": "今日",
+    "weekly": "本周",
+    "projects": "项目",
+    "inbox": "收集箱",
+    "review": "回顾",
+    "settings": "设置",
+    "notifications": "通知"
+  },
+  "auth": {
+    "login": "登录",
+    "register": "注册",
+    "email": "邮箱",
+    "password": "密码",
+    "name": "姓名",
+    "loginTitle": "登录 Ask Dorian",
+    "registerTitle": "创建账号",
+    "noAccount": "没有账号？",
+    "hasAccount": "已有账号？",
+    "googleLogin": "使用 Google 登录",
+    "forgotPassword": "忘记密码？",
+    "loginError": "邮箱或密码错误",
+    "registerError": "注册失败，请稍后重试"
+  },
+  "today": {
+    "title": "今日",
+    "fragmentFeed": "碎片动态",
+    "timeline": "时间线",
+    "noFragments": "今天还没有碎片输入",
+    "addFragment": "记录一条碎片"
+  },
+  "weekly": {
+    "title": "本周",
+    "focus": "本周焦点",
+    "timeAllocation": "时间分配",
+    "decisions": "待决策",
+    "progress": "周进度"
+  },
+  "inbox": {
+    "title": "收集箱",
+    "pending": "待处理",
+    "processed": "已处理",
+    "empty": "收集箱空空如也"
+  },
+  "projects": {
+    "title": "项目",
+    "active": "进行中",
+    "all": "全部",
+    "create": "新建项目"
+  },
+  "review": {
+    "title": "回顾",
+    "thisWeek": "本周回顾",
+    "completed": "已完成",
+    "events": "参与事件",
+    "knowledge": "知识沉淀"
+  },
+  "common": {
+    "loading": "加载中...",
+    "error": "出错了",
+    "retry": "重试",
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "confirm": "确认",
+    "search": "搜索...",
+    "noData": "暂无数据"
+  },
+  "fragment": {
+    "raw": "原始输入",
+    "aiUnderstanding": "AI 理解",
+    "entities": "识别实体",
+    "action": "执行动作",
+    "pending": "等待处理",
+    "processing": "处理中",
+    "confirm": "确认",
+    "reject": "拒绝"
+  }
+}

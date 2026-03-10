@@ -6,10 +6,31 @@
     "dev:showcase": "pnpm --filter @ask-dorian/showcase dev",
     "build:showcase": "pnpm --filter @ask-dorian/showcase build",
     "lint:showcase": "pnpm --filter @ask-dorian/showcase lint",
+    "dev:web": "pnpm --filter @ask-dorian/web dev",
+    "build:web": "pnpm --filter @ask-dorian/web build",
+    "lint:web": "pnpm --filter @ask-dorian/web lint",
+    "dev:desktop": "pnpm --filter @ask-dorian/desktop dev",
+    "build:desktop": "pnpm --filter @ask-dorian/desktop build",
+    "dev:mobile": "pnpm --filter @ask-dorian/mobile start",
+    "dev:mobile-web": "pnpm --filter @ask-dorian/mobile dev:web",
+    "build:mobile-web": "pnpm --filter @ask-dorian/mobile build:web",
+    "dev:server": "pnpm --filter @ask-dorian/server dev",
+    "build:server": "pnpm --filter @ask-dorian/server build",
+    "lint:server": "pnpm --filter @ask-dorian/server lint",
+    "db:migrate": "pnpm --filter @ask-dorian/server db:migrate",
+    "db:migrate:force": "pnpm --filter @ask-dorian/server db:migrate:force",
+    "db:push": "pnpm --filter @ask-dorian/server db:push",
+    "db:studio": "pnpm --filter @ask-dorian/server db:studio",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
   "devDependencies": {
     "prettier": "^3.8.1"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "nodejieba"
+    ]
   }
 }

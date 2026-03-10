@@ -26,72 +26,93 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";      -- 三元组索引（模糊搜索
 -- ========================
 
 -- 用户角色：free/pro/admin 几乎不会改
-CREATE TYPE user_role AS ENUM ('free', 'pro', 'admin');
+DO $$ BEGIN
+  CREATE TYPE user_role AS ENUM ('free', 'pro', 'admin');
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
 
 -- 碎片内容类型：输入的媒体形式
-CREATE TYPE fragment_content_type AS ENUM (
-  'text',            -- 文本输入
-  'voice',           -- 语音转文字
-  'image',           -- 图片/截图 OCR
-  'url',             -- 链接抓取
-  'file',            -- 文件摘要
-  'email',           -- 邮件转发
-  'forward'          -- 第三方消息转发
-);
+DO $$ BEGIN
+  CREATE TYPE fragment_content_type AS ENUM (
+    'text',            -- 文本输入
+    'voice',           -- 语音转文字
+    'image',           -- 图片/截图 OCR
+    'url',             -- 链接抓取
+    'file',            -- 文件摘要
+    'email',           -- 邮件转发
+    'forward'          -- 第三方消息转发
+  );
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
 
 -- 任务状态：状态机稳定
-CREATE TYPE task_status AS ENUM (
-  'todo',            -- 待办
-  'in_progress',     -- 进行中
-  'done',            -- 已完成
-  'cancelled',       -- 已取消
-  'archived'         -- 已归档
-);
+DO $$ BEGIN
+  CREATE TYPE task_status AS ENUM (
+    'todo',            -- 待办
+    'in_progress',     -- 进行中
+    'done',            -- 已完成
+    'cancelled',       -- 已取消
+    'archived'         -- 已归档
+  );
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
 
 -- 任务优先级
-CREATE TYPE task_priority AS ENUM (
-  'urgent',          -- P0 紧急
-  'high',            -- P1 高
-  'medium',          -- P2 中
-  'low',             -- P3 低
-  'none'             -- 未设置
-);
+DO $$ BEGIN
+  CREATE TYPE task_priority AS ENUM (
+    'urgent',          -- P0 紧急
+    'high',            -- P1 高
+    'medium',          -- P2 中
+    'low',             -- P3 低
+    'none'             -- 未设置
+  );
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
 
 -- 专注力等级（Sunsama 模式）
-CREATE TYPE energy_level AS ENUM (
-  'high',            -- 深度工作
-  'medium',          -- 日常事务
-  'low'              -- 机械操作
-);
+DO $$ BEGIN
+  CREATE TYPE energy_level AS ENUM (
+    'high',            -- 深度工作
+    'medium',          -- 日常事务
+    'low'              -- 机械操作
+  );
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
 
 -- 实体类型：多态关联 + 向量表共用
-CREATE TYPE entity_type AS ENUM (
-  'fragment',
-  'task',
-  'event',
-  'knowledge',
-  'project'
-);
+DO $$ BEGIN
+  CREATE TYPE entity_type AS ENUM (
+    'fragment',
+    'task',
+    'event',
+    'knowledge',
+    'project'
+  );
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
 
 -- 关系类型：实体间关系
-CREATE TYPE relation_type AS ENUM (
-  'generated_from',  -- 碎片 → 实体
-  'belongs_to',      -- 实体 → 项目（补充 FK 覆盖不到的场景）
-  'depends_on',      -- 前置依赖
-  'blocks',          -- 阻塞关系
-  'related_to',      -- 语义关联
-  'split_from',      -- 碎片拆分
-  'merged_from',     -- 合并来源
-  'derived_from',    -- 衍生
-  'references',      -- 引用
-  'duplicate_of'     -- 重复标记
-);
+DO $$ BEGIN
+  CREATE TYPE relation_type AS ENUM (
+    'generated_from',  -- 碎片 → 实体
+    'belongs_to',      -- 实体 → 项目（补充 FK 覆盖不到的场景）
+    'depends_on',      -- 前置依赖
+    'blocks',          -- 阻塞关系
+    'related_to',      -- 语义关联
+    'split_from',      -- 碎片拆分
+    'merged_from',     -- 合并来源
+    'derived_from',    -- 衍生
+    'references',      -- 引用
+    'duplicate_of'     -- 重复标记
+  );
+EXCEPTION WHEN duplicate_object THEN null;
+END $$;
 
 
 -- ========================
 -- 2. users — 用户表
 -- ========================
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                       -- 用户唯一 ID
   email               VARCHAR(255) UNIQUE NOT NULL,
@@ -127,14 +148,14 @@ CREATE TABLE users (
   updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_user_email            ON users (email);
-CREATE INDEX idx_user_wechat           ON users (wechat_openid) WHERE wechat_openid IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_user_email            ON users (email);
+CREATE INDEX IF NOT EXISTS idx_user_wechat           ON users (wechat_openid) WHERE wechat_openid IS NOT NULL;
 
 
 -- ========================
 -- 3. user_settings — 用户设置表
 -- ========================
-CREATE TABLE user_settings (
+CREATE TABLE IF NOT EXISTS user_settings (
   id                    UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id               UUID UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                         -- 1:1 关联用户
@@ -174,7 +195,7 @@ CREATE TABLE user_settings (
 -- 4. devices — 设备表
 -- ========================
 -- 跨端核心：注册用户的每个设备，管理推送和同步
-CREATE TABLE devices (
+CREATE TABLE IF NOT EXISTS devices (
   id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id             UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
@@ -212,10 +233,10 @@ CREATE TABLE devices (
   updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE UNIQUE INDEX idx_device_unique      ON devices (user_id, platform, device_fingerprint)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_device_unique      ON devices (user_id, platform, device_fingerprint)
                                            WHERE device_fingerprint IS NOT NULL;
-CREATE INDEX idx_device_user               ON devices (user_id) WHERE is_active = TRUE;
-CREATE INDEX idx_device_push               ON devices (push_provider)
+CREATE INDEX IF NOT EXISTS idx_device_user               ON devices (user_id) WHERE is_active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_device_push               ON devices (push_provider)
                                            WHERE push_token IS NOT NULL AND push_enabled = TRUE;
 
 
@@ -223,7 +244,7 @@ CREATE INDEX idx_device_push               ON devices (push_provider)
 -- 5. sessions — 会话表
 -- ========================
 -- JWT refresh token 管理 + 设备绑定
-CREATE TABLE sessions (
+CREATE TABLE IF NOT EXISTS sessions (
   id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id             UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   device_id           UUID REFERENCES devices(id) ON DELETE SET NULL,
@@ -249,18 +270,18 @@ CREATE TABLE sessions (
   created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_session_user          ON sessions (user_id) WHERE revoked_at IS NULL;
-CREATE INDEX idx_session_token         ON sessions (refresh_token_hash) WHERE revoked_at IS NULL;
-CREATE INDEX idx_session_prev_token   ON sessions (previous_token_hash) WHERE previous_token_hash IS NOT NULL AND revoked_at IS NULL;
-CREATE INDEX idx_session_device        ON sessions (device_id) WHERE revoked_at IS NULL;
-CREATE INDEX idx_session_cleanup       ON sessions (expires_at) WHERE revoked_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_session_user          ON sessions (user_id) WHERE revoked_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_session_token         ON sessions (refresh_token_hash) WHERE revoked_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_session_prev_token   ON sessions (previous_token_hash) WHERE previous_token_hash IS NOT NULL AND revoked_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_session_device        ON sessions (device_id) WHERE revoked_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_session_cleanup       ON sessions (expires_at) WHERE revoked_at IS NULL;
 
 
 -- ========================
 -- 6. projects — 项目表
 -- ========================
 -- 组织维度：任务、事件、知识都可以归属到项目
-CREATE TABLE projects (
+CREATE TABLE IF NOT EXISTS projects (
   id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id             UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
@@ -324,10 +345,10 @@ CREATE TABLE projects (
                       ) STORED
 );
 
-CREATE INDEX idx_project_user_status   ON projects (user_id, status) WHERE deleted_at IS NULL;
-CREATE INDEX idx_project_external      ON projects (external_source, external_id) WHERE external_id IS NOT NULL;
-CREATE INDEX idx_project_tags          ON projects USING GIN (tags) WHERE deleted_at IS NULL;
-CREATE INDEX idx_project_fts           ON projects USING GIN (fts_vector);
+CREATE INDEX IF NOT EXISTS idx_project_user_status   ON projects (user_id, status) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_project_external      ON projects (external_source, external_id) WHERE external_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_project_tags          ON projects USING GIN (tags) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_project_fts           ON projects USING GIN (fts_vector);
 
 
 -- ========================
@@ -335,7 +356,7 @@ CREATE INDEX idx_project_fts           ON projects USING GIN (fts_vector);
 -- ========================
 -- 产品核心：用户所有输入的原始记录
 -- 设计原则：raw_content 写入后不可变，所有处理结果在关联表中
-CREATE TABLE fragments (
+CREATE TABLE IF NOT EXISTS fragments (
   id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id             UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   device_id           UUID REFERENCES devices(id) ON DELETE SET NULL,
@@ -413,19 +434,19 @@ CREATE TABLE fragments (
                       ) STORED
 );
 
-CREATE UNIQUE INDEX idx_frag_source_ref    ON fragments (source_ref) WHERE source_ref IS NOT NULL;
-CREATE INDEX idx_frag_user_status          ON fragments (user_id, status) WHERE deleted_at IS NULL;
-CREATE INDEX idx_frag_user_time            ON fragments (user_id, captured_at DESC) WHERE deleted_at IS NULL;
-CREATE INDEX idx_frag_content_hash         ON fragments (content_hash) WHERE content_hash IS NOT NULL;
-CREATE INDEX idx_frag_parent               ON fragments (parent_id) WHERE parent_id IS NOT NULL;
-CREATE INDEX idx_frag_device               ON fragments (device_id) WHERE device_id IS NOT NULL;
-CREATE INDEX idx_frag_fts                  ON fragments USING GIN (fts_vector);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_frag_source_ref    ON fragments (source_ref) WHERE source_ref IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_frag_user_status          ON fragments (user_id, status) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_frag_user_time            ON fragments (user_id, captured_at DESC) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_frag_content_hash         ON fragments (content_hash) WHERE content_hash IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_frag_parent               ON fragments (parent_id) WHERE parent_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_frag_device               ON fragments (device_id) WHERE device_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_frag_fts                  ON fragments USING GIN (fts_vector);
 
 
 -- ========================
 -- 8. tasks — 任务表
 -- ========================
-CREATE TABLE tasks (
+CREATE TABLE IF NOT EXISTS tasks (
   id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id             UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
@@ -515,22 +536,22 @@ CREATE TABLE tasks (
                       ) STORED
 );
 
-CREATE INDEX idx_task_user_status      ON tasks (user_id, status) WHERE deleted_at IS NULL;
-CREATE INDEX idx_task_user_scheduled   ON tasks (user_id, scheduled_date)
+CREATE INDEX IF NOT EXISTS idx_task_user_status      ON tasks (user_id, status) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_task_user_scheduled   ON tasks (user_id, scheduled_date)
                                        WHERE deleted_at IS NULL AND status NOT IN ('done', 'cancelled', 'archived');
-CREATE INDEX idx_task_user_due         ON tasks (user_id, due_date)
+CREATE INDEX IF NOT EXISTS idx_task_user_due         ON tasks (user_id, due_date)
                                        WHERE deleted_at IS NULL AND due_date IS NOT NULL;
-CREATE INDEX idx_task_project          ON tasks (project_id) WHERE project_id IS NOT NULL AND deleted_at IS NULL;
-CREATE INDEX idx_task_parent           ON tasks (parent_id) WHERE parent_id IS NOT NULL;
-CREATE INDEX idx_task_external         ON tasks (external_source, external_id) WHERE external_id IS NOT NULL;
-CREATE INDEX idx_task_tags             ON tasks USING GIN (tags) WHERE deleted_at IS NULL;
-CREATE INDEX idx_task_fts              ON tasks USING GIN (fts_vector);
+CREATE INDEX IF NOT EXISTS idx_task_project          ON tasks (project_id) WHERE project_id IS NOT NULL AND deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_task_parent           ON tasks (parent_id) WHERE parent_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_task_external         ON tasks (external_source, external_id) WHERE external_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_task_tags             ON tasks USING GIN (tags) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_task_fts              ON tasks USING GIN (fts_vector);
 
 
 -- ========================
 -- 9. events — 日程表
 -- ========================
-CREATE TABLE events (
+CREATE TABLE IF NOT EXISTS events (
   id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id             UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
@@ -624,24 +645,24 @@ CREATE TABLE events (
                       ) STORED
 );
 
-CREATE INDEX idx_event_user_range      ON events (user_id, start_time, end_time) WHERE deleted_at IS NULL;
-CREATE INDEX idx_event_user_busy       ON events (user_id, start_time, end_time)
+CREATE INDEX IF NOT EXISTS idx_event_user_range      ON events (user_id, start_time, end_time) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_event_user_busy       ON events (user_id, start_time, end_time)
                                        WHERE deleted_at IS NULL AND status = 'confirmed' AND busy_status = 'busy';
-CREATE INDEX idx_event_user_type       ON events (user_id, type) WHERE deleted_at IS NULL;
-CREATE INDEX idx_event_project         ON events (project_id) WHERE project_id IS NOT NULL AND deleted_at IS NULL;
-CREATE INDEX idx_event_task            ON events (task_id) WHERE task_id IS NOT NULL;
-CREATE INDEX idx_event_ical_uid        ON events (ical_uid) WHERE ical_uid IS NOT NULL;
-CREATE INDEX idx_event_external        ON events (external_source, external_id) WHERE external_id IS NOT NULL;
-CREATE INDEX idx_event_recurring       ON events (recurrence_parent_id) WHERE recurrence_parent_id IS NOT NULL;
-CREATE INDEX idx_event_tags            ON events USING GIN (tags) WHERE deleted_at IS NULL;
-CREATE INDEX idx_event_fts             ON events USING GIN (fts_vector);
+CREATE INDEX IF NOT EXISTS idx_event_user_type       ON events (user_id, type) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_event_project         ON events (project_id) WHERE project_id IS NOT NULL AND deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_event_task            ON events (task_id) WHERE task_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_event_ical_uid        ON events (ical_uid) WHERE ical_uid IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_event_external        ON events (external_source, external_id) WHERE external_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_event_recurring       ON events (recurrence_parent_id) WHERE recurrence_parent_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_event_tags            ON events USING GIN (tags) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_event_fts             ON events USING GIN (fts_vector);
 
 
 -- ========================
 -- 10. knowledge — 知识表
 -- ========================
 -- 沉淀层：碎片经 AI 处理 + 用户确认后沉淀为知识
-CREATE TABLE knowledge (
+CREATE TABLE IF NOT EXISTS knowledge (
   id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id             UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   project_id          UUID REFERENCES projects(id) ON DELETE SET NULL,
@@ -691,17 +712,17 @@ CREATE TABLE knowledge (
                       ) STORED
 );
 
-CREATE INDEX idx_knowledge_user        ON knowledge (user_id, type) WHERE deleted_at IS NULL;
-CREATE INDEX idx_knowledge_project     ON knowledge (project_id) WHERE project_id IS NOT NULL AND deleted_at IS NULL;
-CREATE INDEX idx_knowledge_tags        ON knowledge USING GIN (tags) WHERE deleted_at IS NULL;
-CREATE INDEX idx_knowledge_fts         ON knowledge USING GIN (fts_vector);
+CREATE INDEX IF NOT EXISTS idx_knowledge_user        ON knowledge (user_id, type) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_knowledge_project     ON knowledge (project_id) WHERE project_id IS NOT NULL AND deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_knowledge_tags        ON knowledge USING GIN (tags) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_knowledge_fts         ON knowledge USING GIN (fts_vector);
 
 
 -- ========================
 -- 11. entity_relationship — 实体关系表（多态关联）
 -- ========================
 -- 只存动态的、跨类型的关系；确定性 1:N 走直接 FK
-CREATE TABLE entity_relationship (
+CREATE TABLE IF NOT EXISTS entity_relationship (
   from_id             UUID NOT NULL,
   from_entity         entity_type NOT NULL,
   to_id               UUID NOT NULL,
@@ -719,15 +740,15 @@ CREATE TABLE entity_relationship (
   CHECK (from_id != to_id OR relation = 'duplicate_of')
 );
 
-CREATE INDEX idx_er_from               ON entity_relationship (from_id, from_entity, relation);
-CREATE INDEX idx_er_to                 ON entity_relationship (to_id, to_entity, relation);
-CREATE INDEX idx_er_type_relation      ON entity_relationship (from_entity, relation);
+CREATE INDEX IF NOT EXISTS idx_er_from               ON entity_relationship (from_id, from_entity, relation);
+CREATE INDEX IF NOT EXISTS idx_er_to                 ON entity_relationship (to_id, to_entity, relation);
+CREATE INDEX IF NOT EXISTS idx_er_type_relation      ON entity_relationship (from_entity, relation);
 
 
 -- ========================
 -- 12. embeddings — 向量嵌入表
 -- ========================
-CREATE TABLE embeddings (
+CREATE TABLE IF NOT EXISTS embeddings (
   id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id             UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   entity_type         entity_type NOT NULL,
@@ -743,20 +764,20 @@ CREATE TABLE embeddings (
   UNIQUE (entity_type, entity_id)
 );
 
-CREATE INDEX idx_emb_user_vector       ON embeddings
+CREATE INDEX IF NOT EXISTS idx_emb_user_vector       ON embeddings
                                        USING hnsw (embedding vector_cosine_ops)
                                        WITH (m = 16, ef_construction = 200);
                                        -- m=16: 个人工具数据量级（< 10M vectors）足够
                                        -- ef_construction=200: 比默认 64 高，索引质量更好
                                        -- 查询时需设置: SET hnsw.ef_search = 100;
-CREATE INDEX idx_emb_user_entity       ON embeddings (user_id, entity_type);
-CREATE INDEX idx_emb_content_hash      ON embeddings (content_hash);
+CREATE INDEX IF NOT EXISTS idx_emb_user_entity       ON embeddings (user_id, entity_type);
+CREATE INDEX IF NOT EXISTS idx_emb_content_hash      ON embeddings (content_hash);
 
 
 -- ========================
 -- 13. ai_process_logs — AI 处理日志表
 -- ========================
-CREATE TABLE ai_process_logs (
+CREATE TABLE IF NOT EXISTS ai_process_logs (
   id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id             UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   fragment_id         UUID REFERENCES fragments(id) ON DELETE SET NULL,
@@ -798,16 +819,16 @@ CREATE TABLE ai_process_logs (
   created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_ai_log_user           ON ai_process_logs (user_id, created_at DESC);
-CREATE INDEX idx_ai_log_fragment       ON ai_process_logs (fragment_id) WHERE fragment_id IS NOT NULL;
-CREATE INDEX idx_ai_log_type           ON ai_process_logs (process_type, created_at DESC);
-CREATE INDEX idx_ai_log_model          ON ai_process_logs (model_used, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ai_log_user           ON ai_process_logs (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ai_log_fragment       ON ai_process_logs (fragment_id) WHERE fragment_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_ai_log_type           ON ai_process_logs (process_type, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ai_log_model          ON ai_process_logs (model_used, created_at DESC);
 
 
 -- ========================
 -- 14. notifications — 通知表
 -- ========================
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
   id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id             UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   device_id           UUID REFERENCES devices(id) ON DELETE SET NULL,
@@ -844,15 +865,15 @@ CREATE TABLE notifications (
   created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_notif_user_unread     ON notifications (user_id, scheduled_at DESC) WHERE is_read = FALSE;
-CREATE INDEX idx_notif_pending_push    ON notifications (scheduled_at) WHERE is_pushed = FALSE;
-CREATE INDEX idx_notif_entity          ON notifications (entity_type, entity_id) WHERE entity_type IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_notif_user_unread     ON notifications (user_id, scheduled_at DESC) WHERE is_read = FALSE;
+CREATE INDEX IF NOT EXISTS idx_notif_pending_push    ON notifications (scheduled_at) WHERE is_pushed = FALSE;
+CREATE INDEX IF NOT EXISTS idx_notif_entity          ON notifications (entity_type, entity_id) WHERE entity_type IS NOT NULL;
 
 
 -- ========================
 -- 15. integrations — 第三方集成表
 -- ========================
-CREATE TABLE integrations (
+CREATE TABLE IF NOT EXISTS integrations (
   id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id             UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
@@ -892,14 +913,14 @@ CREATE TABLE integrations (
   UNIQUE (user_id, provider, provider_account_id)
 );
 
-CREATE INDEX idx_integration_user      ON integrations (user_id, status);
-CREATE INDEX idx_integration_sync      ON integrations (provider, status) WHERE sync_enabled = TRUE;
+CREATE INDEX IF NOT EXISTS idx_integration_user      ON integrations (user_id, status);
+CREATE INDEX IF NOT EXISTS idx_integration_sync      ON integrations (provider, status) WHERE sync_enabled = TRUE;
 
 
 -- ========================
 -- 16. attachments — 附件表
 -- ========================
-CREATE TABLE attachments (
+CREATE TABLE IF NOT EXISTS attachments (
   id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id             UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
@@ -925,5 +946,5 @@ CREATE TABLE attachments (
   deleted_at          TIMESTAMPTZ
 );
 
-CREATE INDEX idx_attach_entity         ON attachments (entity_type, entity_id) WHERE deleted_at IS NULL;
-CREATE INDEX idx_attach_user           ON attachments (user_id, created_at DESC) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_attach_entity         ON attachments (entity_type, entity_id) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_attach_user           ON attachments (user_id, created_at DESC) WHERE deleted_at IS NULL;

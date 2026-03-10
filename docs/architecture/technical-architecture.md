@@ -1,8 +1,8 @@
 # Ask Dorian — 技术架构方案
 
 > **定位**: 系统架构级设计文档，覆盖后端分层、数据库、AI 管道、API 设计、部署方案
-> **版本**: v1.2 — 2026-03-10
-> **状态**: 已确认（数据库、AI 管道、向量检索、认证、API 格式已定稿）
+> **版本**: v1.3 — 2026-03-10
+> **状态**: 已确认（数据库、AI 管道、向量检索、认证、API 格式、多端架构已定稿）
 
 ---
 
@@ -27,10 +27,10 @@
 
 ```mermaid
 graph TB
-    subgraph Client["客户端"]
-        WEB["Next.js Web + PWA"]
-        TAURI["Tauri Desktop (Phase 2)"]
-        RN["Expo Mobile (Phase 3)"]
+    subgraph Client["客户端 (MVP 三端)"]
+        TAURI["Tauri Desktop — 全局快捷键/截图/剪贴板/语音"]
+        WEB["Next.js Web — Dashboard 全功能页面"]
+        RN["React Native Mobile — Share Sheet/语音/推送"]
     end
 
     subgraph Gateway["接入层"]
@@ -52,7 +52,8 @@ graph TB
     end
 
     subgraph External["外部服务"]
-        CLAUDE["Claude API (Haiku / Sonnet)"]
+        CLAUDE["Claude API (Haiku / Sonnet / Vision)"]
+        WHISPER["OpenAI Whisper API (语音转文字)"]
         EMBED["OpenAI Embedding API"]
         GOOGLE["Google OAuth (MVP)"]
     end
@@ -68,6 +69,7 @@ graph TB
     PIPE --> CTX
     CTX --> PG
     PIPE --> CLAUDE
+    PIPE --> WHISPER
     PIPE --> EMBED
     SVC --> PG
     AUTH --> PG
@@ -118,7 +120,7 @@ ask-dorian/
 │   │   ├── package.json
 │   │   └── tsconfig.json
 │   │
-│   ├── web/                    # 正式前端（Next.js 16）
+│   ├── web/                    # Dashboard 全功能页面（Next.js 16）
 │   │   ├── src/
 │   │   │   ├── app/[locale]/   # 页面路由
 │   │   │   ├── components/     # UI 组件
@@ -126,6 +128,19 @@ ask-dorian/
 │   │   │   ├── stores/         # 状态管理（Zustand）
 │   │   │   ├── i18n/           # next-intl 配置
 │   │   │   └── messages/       # zh.json, en.json
+│   │   └── package.json
+│   │
+│   ├── desktop/                # 桌面端（Tauri menubar app）
+│   │   ├── src/                # Rust 后端
+│   │   ├── src-tauri/          # Tauri 配置
+│   │   └── package.json
+│   │
+│   ├── mobile/                 # 移动端（React Native, iOS 优先）
+│   │   ├── src/
+│   │   │   ├── screens/        # 页面
+│   │   │   ├── components/     # 组件
+│   │   │   ├── share-extension/ # iOS Share Extension
+│   │   │   └── services/       # API 调用
 │   │   └── package.json
 │   │
 │   ├── api/                    # 后端（Koa.js）
@@ -163,10 +178,14 @@ graph LR
     SHARED["@ask-dorian/shared"]
     WEB["@ask-dorian/web"]
     API["@ask-dorian/api"]
+    DESKTOP["@ask-dorian/desktop"]
+    MOBILE["@ask-dorian/mobile"]
     SHOWCASE["@ask-dorian/showcase"]
 
     WEB --> SHARED
     API --> SHARED
+    DESKTOP --> SHARED
+    MOBILE --> SHARED
     SHOWCASE -.->|"独立，不依赖"| SHARED
 ```
 
@@ -547,11 +566,20 @@ LIMIT 10;
 
 ```mermaid
 flowchart TB
-    INPUT["用户输入碎片"] --> PRE["Pre-process"]
+    INPUT["用户输入碎片"] --> MEDIA["Media Pre-process"]
+
+    subgraph MEDIA["⓪ Media Pre-process（多模态输入）"]
+        M1["text → 直接进入管道"]
+        M2["voice → Whisper API 转文字 → 原始音频存 attachments"]
+        M3["image → Claude Vision OCR → 原始图片存 attachments"]
+        M4["url → 链接抓取 → 提取正文"]
+    end
+
+    MEDIA --> PRE["Pre-process"]
 
     subgraph PRE["① Pre-process"]
         P1["补充元数据（时间、设备、来源）"]
-        P2["写入 fragments 表"]
+        P2["写入 fragments 表（raw_content = 提取后的文本）"]
         P3["异步触发 Embedding"]
     end
 
@@ -850,14 +878,28 @@ POST /api/v1/fragments
 
 这是产品的核心 API — 用户输入碎片，触发 AI 处理管道，返回处理结果。
 
-**Request:**
+支持两种 Content-Type：
+- `application/json` — 纯文本输入
+- `multipart/form-data` — 语音/截图/文件上传
+
+**Request (文本):**
 ```json
 {
   "rawContent": "3点 老板 增长",
-  "inputSource": "cmd-k",
+  "inputSource": "cmd_k",
   "inputDevice": "desktop"
 }
 ```
+
+**Request (语音/图片 — multipart/form-data):**
+```
+file: <audio/webm or image/png>
+contentType: "voice" | "image"
+inputSource: "voice" | "share_sheet" | "cmd_k"
+inputDevice: "desktop" | "mobile"
+```
+
+处理流程：voice → Whisper API 转文字 → rawContent; image → Claude Vision OCR → rawContent; 原始文件存 attachments 表。
 
 **Response:**
 ```json
@@ -1037,14 +1079,15 @@ graph TB
 | **后端** | Koa.js + TypeScript | 独立进程 |
 | **ORM** | Drizzle ORM + Drizzle Kit | Schema-first, 类型安全 |
 | **数据库** | PostgreSQL 16.13 + pgvector 0.8.1 | 关系型 + 向量一体, 16 表, FK+多态混合 |
-| **AI 推理** | Claude Haiku 4.5 (分类) / Sonnet 4.6 (推理) | |
+| **AI 推理** | Claude Haiku 4.5 (分类) / Sonnet 4.6 (推理) / Vision (OCR) | |
+| **语音转文字** | OpenAI Whisper API | voice → text pre-processing |
 | **Embedding** | OpenAI text-embedding-3-small (1536d) | |
 | **认证** | JWT HS256 + Refresh Token Rotation (Bearer, 无 Cookie) | 详见 `auth-design.md` |
 | **入参校验** | zod | |
 | **部署** | AWS EC2 + RDS + Cloudflare + Nginx + PM2 | |
 | **Monorepo** | pnpm workspace | |
-| **桌面端 (P2)** | Tauri | 包 Next.js |
-| **移动端 (P3)** | Expo (React Native) | 共享 @ask-dorian/shared |
+| **桌面端 (MVP)** | Tauri | Menubar app: 全局快捷键、截图监听、剪贴板、语音 |
+| **移动端 (MVP)** | React Native (iOS 优先) | Share Extension、语音输入、通知推送 |
 
 ---
 

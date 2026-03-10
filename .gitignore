@@ -35,6 +35,7 @@ pnpm-debug.log*
 # Claude
 CLAUDE.md
 .claude/
+.superpowers/
 
 # Internal confidential docs
 docs/gtm-strategy.md
