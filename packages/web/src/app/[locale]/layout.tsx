@@ -25,7 +25,7 @@ export default async function LocaleLayout({
     <NextIntlClientProvider locale={locale} messages={messages}>
       <ThemeProvider
         attribute="class"
-        defaultTheme="light"
+        defaultTheme="dark"
         enableSystem
         disableTransitionOnChange
       >
