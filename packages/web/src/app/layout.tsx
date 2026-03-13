@@ -1,21 +1,16 @@
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Inter } from "next/font/google"
 import "./globals.css"
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-})
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
 })
 
 export const metadata: Metadata = {
-  title: "Ask Dorian — 掌控碎片化",
+  title: "Dorian — Crystallize Your Thoughts",
   description:
-    "Master your fragments. Turn fragmented inputs into actionable tasks, schedules, and knowledge.",
+    "Your premium AI thought partner. Capture fragments of knowledge, voice memos, and screenshots. Watch them transform into actionable insights.",
 }
 
 export default function RootLayout({
@@ -24,10 +19,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="zh" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.variable} antialiased`}>
         {children}
       </body>
     </html>
