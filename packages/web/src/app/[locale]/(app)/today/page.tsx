@@ -1,177 +1,287 @@
 "use client"
 
+import { useState } from "react"
 import { useTranslations } from "next-intl"
-import { format } from "date-fns"
-import { zhCN } from "date-fns/locale"
-import { Sparkles, Inbox, AlertTriangle } from "lucide-react"
-import { useSWRConfig } from "swr"
+import {
+  Sparkles,
+  CheckCircle2,
+  Clock,
+  PlusCircle,
+  ChevronLeft,
+  ChevronRight,
+  Utensils,
+  Zap,
+  ArrowUpRight,
+  MoreHorizontal,
+} from "lucide-react"
 
-import { useTodayDashboard } from "@ask-dorian/core/hooks"
-import { fragmentApi } from "@ask-dorian/core/api"
-import { taskApi } from "@ask-dorian/core/api"
-
-import { Skeleton } from "@/components/ui/skeleton"
-import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { FragmentCard } from "@/components/shared/fragment-card"
-import { TaskItem, TaskItemSkeleton } from "@/components/shared/task-item"
-import { EventItem, EventItemSkeleton } from "@/components/shared/event-item"
-import { QuickCapture } from "@/components/shared/quick-capture"
-import { EmptyState } from "@/components/shared/empty-state"
+const defaultRituals = [
+  { id: 1, title: "10min Mindful Breathing", completed: true },
+  { id: 2, title: "Cold Shower (Level 3)", completed: true },
+  { id: 3, title: "Review Product Specs", completed: false, focus: true },
+  { id: 4, title: "Journaling (Daily Intentions)", completed: false },
+]
 
 export default function TodayPage() {
   const t = useTranslations("today")
-  const { data, error, isLoading, mutate: mutateDashboard } = useTodayDashboard()
-  const { mutate } = useSWRConfig()
+  const [rituals, setRituals] = useState(defaultRituals)
 
-  const today = format(new Date(), "M月d日 EEEE", { locale: zhCN })
-
-  async function handleConfirmFragment(id: string) {
-    await fragmentApi.confirm(id)
-    mutateDashboard()
-    mutate((key: string) => typeof key === "string" && key.includes("/fragments"))
-  }
-
-  async function handleRejectFragment(id: string) {
-    await fragmentApi.reject(id)
-    mutateDashboard()
-  }
-
-  async function handleCompleteTask(id: string) {
-    await taskApi.complete(id)
-    mutateDashboard()
-  }
-
-  // --- Error ---
-  if (error) {
-    return (
-      <div className="mx-auto max-w-5xl p-6">
-        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-6 text-center">
-          <AlertTriangle className="mx-auto mb-2 h-8 w-8 text-destructive" />
-          <p className="text-sm text-destructive">{error.message}</p>
-        </div>
-      </div>
+  const toggleRitual = (id: number) => {
+    setRituals((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, completed: !r.completed } : r))
     )
   }
 
+  const completedCount = rituals.filter((r) => r.completed).length
+
   return (
-    <div className="mx-auto max-w-5xl">
-      {/* Header */}
-      <div className="mb-6 flex items-baseline justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">{t("title")}</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">{today}</p>
-        </div>
-        {data && (
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span>{data.tasks.scheduled.length} tasks</span>
-            <span>{data.events.length} events</span>
-            {data.pendingFragments.length > 0 && (
-              <Badge variant="secondary" className="gap-1">
-                <Sparkles className="h-3 w-3" />
-                {data.pendingFragments.length} pending
-              </Badge>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Quick Capture */}
-      <QuickCapture className="mb-6" placeholder={t("addFragment")} />
-
-      {/* Main Content: Two-column layout */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        {/* Left: Fragment Feed (3/5) */}
-        <div className="lg:col-span-3">
-          <div className="mb-3 flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-brand-from" />
-            <h2 className="text-sm font-medium">{t("fragmentFeed")}</h2>
-          </div>
-
-          {isLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-28 w-full rounded-lg" />
-              ))}
+    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 space-y-8">
+      {/* AI Summary Banner */}
+      <section className="relative overflow-hidden rounded-2xl p-6 bg-surface-dark border border-primary/20 shadow-2xl shadow-primary/5 group cursor-pointer">
+        <div className="relative z-10 flex flex-col md:flex-row items-start justify-between gap-6">
+          <div className="space-y-3 max-w-2xl">
+            <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.2em] text-[10px]">
+              <Sparkles size={14} />
+              <span>{t("aiSummaryBadge")}</span>
             </div>
-          ) : data && data.pendingFragments.length > 0 ? (
-            <div className="space-y-3">
-              {data.pendingFragments.map((fragment) => (
-                <FragmentCard
-                  key={fragment.id}
-                  fragment={fragment}
-                  onConfirm={handleConfirmFragment}
-                  onReject={handleRejectFragment}
-                />
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              icon={<Inbox className="h-8 w-8" />}
-              title={t("noFragments")}
-              description="使用上方输入框或 ⌘K 快速记录碎片"
+            <p className="text-lg md:text-xl font-medium leading-relaxed text-text-main group-hover:text-white transition-colors">
+              {t("aiSummaryLine1")}{" "}
+              <span className="text-primary font-bold">
+                {t("aiSummaryHighlight1")}
+              </span>{" "}
+              {t("aiSummaryLine2")}{" "}
+              <span className="text-primary font-bold">
+                {t("aiSummaryHighlight2")}
+              </span>
+              .{" "}
+              {t("aiSummaryLine3")}{" "}
+              <span className="text-text-main underline decoration-primary/50 underline-offset-4 group-hover:text-white">
+                {t("aiSummaryHighlight3")}
+              </span>{" "}
+              {t("aiSummaryLine4")}
+            </p>
+          </div>
+          <button className="bg-white/5 hover:bg-primary hover:text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all border border-white/10 text-text-main whitespace-nowrap flex items-center gap-2 group/btn active:scale-95">
+            {t("fullBriefing")}
+            <ArrowUpRight
+              size={14}
+              className="group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform"
             />
-          )}
+          </button>
         </div>
+        <div className="absolute -right-12 -top-12 size-48 bg-primary/10 rounded-full blur-[80px] group-hover:bg-primary/20 transition-all duration-500" />
+      </section>
 
-        {/* Right: Timeline (2/5) */}
-        <div className="lg:col-span-2">
-          <h2 className="mb-3 text-sm font-medium">{t("timeline")}</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pb-12">
+        {/* Morning Ritual Column */}
+        <div className="lg:col-span-5 space-y-6">
+          <div className="flex items-center justify-between px-2">
+            <h3 className="font-black uppercase tracking-widest text-xs text-slate-400 flex items-center gap-2">
+              <Zap size={16} className="text-primary" />
+              {t("morningRitual")}
+            </h3>
+            <span className="text-[10px] text-primary font-bold bg-primary/10 px-2 py-1 rounded-lg">
+              {completedCount} / {rituals.length} {t("done")}
+            </span>
+          </div>
 
-          {isLoading ? (
-            <div className="space-y-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i}>
-                  {i % 2 === 0 ? <TaskItemSkeleton /> : <EventItemSkeleton />}
+          <div className="space-y-3">
+            {rituals.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => toggleRitual(item.id)}
+                className={`flex items-center gap-4 p-4 rounded-2xl border transition-all cursor-pointer group active:scale-[0.98] ${
+                  item.focus
+                    ? "bg-surface-dark border-primary/50 ring-1 ring-primary/20 shadow-lg shadow-primary/5"
+                    : "bg-surface-dark/40 border-border-dark/50 hover:border-primary/30"
+                }`}
+              >
+                <div
+                  className={`size-5 rounded-lg border-2 flex items-center justify-center transition-all ${
+                    item.completed
+                      ? "bg-primary border-primary text-white"
+                      : "border-slate-700 group-hover:border-primary/50"
+                  }`}
+                >
+                  {item.completed && <CheckCircle2 size={12} />}
                 </div>
-              ))}
-            </div>
-          ) : data ? (
-            <ScrollArea className="h-[calc(100vh-280px)]">
-              <div className="space-y-2 pr-3">
-                {/* Overdue tasks (if any) */}
-                {data.tasks.overdue.length > 0 && (
-                  <>
-                    <p className="text-xs font-medium text-destructive">
-                      Overdue ({data.tasks.overdue.length})
-                    </p>
-                    {data.tasks.overdue.map((task) => (
-                      <TaskItem
-                        key={task.id}
-                        task={task}
-                        onComplete={handleCompleteTask}
-                      />
-                    ))}
-                    <Separator className="my-2" />
-                  </>
-                )}
-
-                {/* Events */}
-                {data.events.map((event) => (
-                  <EventItem key={event.id} event={event} />
-                ))}
-
-                {/* Scheduled tasks */}
-                {data.tasks.scheduled.map((task) => (
-                  <TaskItem
-                    key={task.id}
-                    task={task}
-                    onComplete={handleCompleteTask}
-                  />
-                ))}
-
-                {data.events.length === 0 &&
-                  data.tasks.scheduled.length === 0 && (
-                    <p className="py-8 text-center text-xs text-muted-foreground">
-                      今天没有日程安排
+                <div className="flex-1">
+                  <p
+                    className={`text-sm font-bold transition-all ${
+                      item.completed
+                        ? "text-slate-600 line-through"
+                        : "text-text-main"
+                    }`}
+                  >
+                    {item.title}
+                  </p>
+                  {item.focus && (
+                    <p className="text-[10px] text-slate-500 mt-1 font-mono uppercase tracking-wider">
+                      {t("focusPhase")}
                     </p>
                   )}
+                </div>
+                {item.focus && (
+                  <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">
+                    {t("timeboxing")}
+                  </span>
+                )}
               </div>
-            </ScrollArea>
-          ) : null}
+            ))}
+          </div>
+
+          <button className="w-full py-4 border-2 border-dashed border-border-dark rounded-2xl text-slate-600 text-xs font-black uppercase tracking-widest hover:text-primary hover:border-primary/50 transition-all flex items-center justify-center gap-2 group active:scale-[0.99]">
+            <PlusCircle
+              size={18}
+              className="group-hover:scale-110 transition-transform"
+            />{" "}
+            {t("addElement")}
+          </button>
+        </div>
+
+        {/* Daily Timeline Column */}
+        <div className="lg:col-span-7 space-y-6">
+          <div className="flex items-center justify-between px-2">
+            <h3 className="font-black uppercase tracking-widest text-xs text-slate-400 flex items-center gap-2">
+              <Clock size={16} className="text-primary" />
+              {t("dailyTimeline")}
+            </h3>
+            <div className="flex gap-2">
+              <button className="size-8 rounded-xl bg-surface-dark border border-border-dark flex items-center justify-center text-slate-500 hover:text-text-main hover:border-primary/50 transition-all active:scale-90">
+                <ChevronLeft size={16} />
+              </button>
+              <button className="size-8 rounded-xl bg-surface-dark border border-border-dark flex items-center justify-center text-slate-500 hover:text-text-main hover:border-primary/50 transition-all active:scale-90">
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+
+          <div className="relative bg-surface-dark/20 rounded-3xl border border-border-dark p-6 h-[480px] overflow-hidden group">
+            <div
+              className="absolute inset-0 opacity-[0.03]"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle at 2px 2px, white 1px, transparent 0)",
+                backgroundSize: "24px 24px",
+              }}
+            />
+
+            {/* Current Time Indicator */}
+            <div className="absolute top-[160px] left-0 right-0 z-20 flex items-center gap-2 pointer-events-none">
+              <div className="h-px flex-1 bg-primary/30" />
+              <span className="text-[10px] bg-primary text-white px-2 py-0.5 rounded-full font-black uppercase tracking-widest shadow-lg shadow-primary/20">
+                {t("currentTime")}
+              </span>
+              <div className="h-px flex-1 bg-primary/30" />
+            </div>
+
+            <div className="space-y-8 relative z-10">
+              <div className="grid grid-cols-[60px_1fr] gap-4 group/item cursor-pointer active:scale-[0.99] transition-transform">
+                <span className="text-[10px] text-slate-600 font-black font-mono text-right mt-1 group-hover/item:text-primary transition-colors">
+                  08:00
+                </span>
+                <div className="bg-primary/5 border-l-2 border-primary p-3 rounded-xl flex items-center justify-between hover:bg-primary/10 transition-all">
+                  <div>
+                    <p className="text-xs font-bold text-text-main">
+                      {t("morningRitual")}
+                    </p>
+                    <p className="text-[10px] text-slate-500 font-mono">
+                      {t("completedTime")}
+                    </p>
+                  </div>
+                  <CheckCircle2 size={14} className="text-primary" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-[60px_1fr] gap-4">
+                <span className="text-[10px] text-slate-600 font-black font-mono text-right mt-1">
+                  09:00
+                </span>
+                <div className="bg-primary/5 border-2 border-dashed border-primary/20 p-4 rounded-2xl flex items-center justify-center gap-3 hover:border-primary/50 transition-all cursor-pointer group/box active:scale-[0.99]">
+                  <Sparkles
+                    size={16}
+                    className="text-primary/50 group-hover/box:scale-110 transition-transform"
+                  />
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary/50 italic">
+                    {t("dropToTimebox")}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-[60px_1fr] gap-4 group/item cursor-pointer active:scale-[0.99] transition-transform">
+                <span className="text-[10px] text-slate-600 font-black font-mono text-right mt-1 group-hover/item:text-primary transition-colors">
+                  10:00
+                </span>
+                <div className="bg-white/5 border-l-2 border-white/20 p-3 rounded-xl hover:bg-white/10 transition-all">
+                  <p className="text-xs font-bold text-text-main">
+                    {t("weeklySync")}
+                  </p>
+                  <p className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">
+                    {t("videoCall")}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-[60px_1fr] gap-4 group/item cursor-pointer active:scale-[0.99] transition-transform">
+                <span className="text-[10px] text-slate-600 font-black font-mono text-right mt-1 group-hover/item:text-primary transition-colors">
+                  12:00
+                </span>
+                <div className="bg-primary/5 border-l-2 border-primary/50 p-3 rounded-xl flex items-center gap-3 hover:bg-primary/10 transition-all">
+                  <Utensils size={14} className="text-primary" />
+                  <div>
+                    <p className="text-xs font-bold text-text-main">
+                      {t("mindfulLunch")}
+                    </p>
+                    <p className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">
+                      {t("awayFromScreen")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Stats Section */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 pb-20 lg:pb-0">
+        {[
+          { label: t("focusScore"), value: "92", trend: "+4%" },
+          { label: t("deepWork"), value: "3.2", unit: t("hrs") },
+          { label: t("tasksDone"), value: "14/22" },
+          { label: t("energyPeak"), value: "10:00 - 12:30" },
+        ].map((stat, i) => (
+          <div
+            key={i}
+            className="bg-surface-dark/30 border border-border-dark p-6 rounded-2xl hover:border-primary/50 transition-all cursor-pointer group active:scale-[0.98]"
+          >
+            <div className="flex justify-between items-start mb-2">
+              <p className="text-slate-600 text-[10px] uppercase font-black tracking-[0.2em] group-hover:text-primary transition-colors">
+                {stat.label}
+              </p>
+              <MoreHorizontal
+                size={14}
+                className="text-slate-700 group-hover:text-slate-400 transition-colors"
+              />
+            </div>
+            <div className="flex items-end gap-2">
+              <span className="text-2xl font-black text-text-main group-hover:text-white transition-colors">
+                {stat.value}
+                {stat.unit && (
+                  <span className="text-xs font-bold text-slate-600 ml-1 uppercase">
+                    {stat.unit}
+                  </span>
+                )}
+              </span>
+              {stat.trend && (
+                <span className="text-[10px] text-primary font-black mb-1">
+                  {stat.trend}
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
+      </section>
     </div>
   )
 }
