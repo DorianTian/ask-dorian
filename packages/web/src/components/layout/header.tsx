@@ -1,0 +1,91 @@
+"use client"
+
+import { useState } from "react"
+import { useTranslations } from "next-intl"
+import { useTheme } from "next-themes"
+import { Search, Bell, Zap, Moon, Sun, Command } from "lucide-react"
+
+interface HeaderProps {
+  title: string
+  subtitle?: string
+  onSearchOpen: () => void
+}
+
+export function Header({ title, subtitle, onSearchOpen }: HeaderProps) {
+  const [isFocusMode, setIsFocusMode] = useState(false)
+  const { resolvedTheme, setTheme } = useTheme()
+  const t = useTranslations("header")
+
+  const toggleTheme = () => {
+    setTheme(resolvedTheme === "dark" ? "light" : "dark")
+  }
+
+  return (
+    <header className="h-16 border-b border-border-dark flex items-center justify-between px-4 md:px-8 bg-surface-dark/30 backdrop-blur-md sticky top-0 z-50">
+      <div className="flex flex-col md:flex-row md:items-center gap-0 md:gap-4 overflow-hidden">
+        <h2 className="text-base md:text-lg font-black tracking-tight text-text-main truncate">
+          {title}
+        </h2>
+        {subtitle && (
+          <span className="text-slate-500 text-[10px] md:text-xs font-bold uppercase tracking-widest truncate hidden sm:inline">
+            {subtitle}
+          </span>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2 md:gap-4">
+        <button
+          onClick={() => setIsFocusMode(!isFocusMode)}
+          className={`flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all border ${
+            isFocusMode
+              ? "bg-primary/20 border-primary text-primary shadow-lg shadow-primary/10"
+              : "bg-white/5 border-white/10 text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          <Zap size={14} className={isFocusMode ? "animate-pulse" : ""} />
+          <span className="hidden sm:inline">
+            {isFocusMode ? t("focusActive") : t("focusMode")}
+          </span>
+        </button>
+
+        <button
+          onClick={onSearchOpen}
+          className="hidden lg:flex items-center gap-3 bg-surface-dark border border-border-dark rounded-xl px-4 py-1.5 text-xs w-48 xl:w-64 text-slate-500 hover:border-primary/50 transition-all group"
+        >
+          <Search
+            size={16}
+            className="group-hover:text-primary transition-colors"
+          />
+          <span className="flex-1 text-left">{t("searchPlaceholder")}</span>
+          <div className="flex items-center gap-1 px-1 py-0.5 bg-white/5 rounded border border-white/10 text-[8px] font-bold">
+            <Command size={8} />
+            <span>K</span>
+          </div>
+        </button>
+
+        <button
+          onClick={toggleTheme}
+          className="size-9 flex items-center justify-center rounded-xl hover:bg-white/5 transition-colors text-slate-400"
+          title={
+            resolvedTheme === "light"
+              ? "Switch to Dark Mode"
+              : "Switch to Light Mode"
+          }
+        >
+          {resolvedTheme === "light" ? <Moon size={18} /> : <Sun size={18} />}
+        </button>
+
+        <button className="size-9 flex items-center justify-center rounded-xl hover:bg-white/5 transition-colors relative text-slate-400">
+          <Bell size={18} />
+          <span className="absolute top-2.5 right-2.5 size-1.5 bg-primary rounded-full" />
+        </button>
+
+        <div className="size-8 rounded-lg bg-slate-800 border border-border-dark overflow-hidden lg:hidden">
+          <div className="w-full h-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-primary text-[10px] font-bold">
+            D
+          </div>
+        </div>
+      </div>
+    </header>
+  )
+}
