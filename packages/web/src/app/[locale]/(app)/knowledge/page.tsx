@@ -16,72 +16,34 @@ import {
   Loader2,
   X,
 } from "lucide-react"
+import { FragmentDetail } from "@/components/shared/fragment-detail"
+import { useFragments } from "@ask-dorian/core/hooks"
+import type { Fragment } from "@ask-dorian/core/types"
 
-type FragmentType = "all" | "thought" | "screenshot" | "voice" | "link"
-
-const cards = [
-  {
-    title: "Neural Synapse Mapping",
-    project: "Phoenix",
-    tags: ["Neuroscience", "AI"],
-    summary:
-      "Extracted findings regarding the latency of signal propagation between synthetic nodes.",
-    type: "thought",
-  },
-  {
-    title: "Visual Cortex Simulation",
-    project: "Research",
-    tags: ["Simulation", "VRAM"],
-    summary:
-      "Latest simulation results from the G-900 cluster. High fidelity textures rendered.",
-    type: "screenshot",
-  },
-  {
-    title: "CRISPR Editing Log",
-    project: "Bio-Gen",
-    tags: ["Genomics", "CRISPR"],
-    summary:
-      "Automated sequence verification for the last batch. All markers within 0.01% deviation.",
-    type: "thought",
-  },
-  {
-    title: "Quantum Entanglement Protocol",
-    project: "Q-Link",
-    tags: ["Quantum", "Networking"],
-    summary:
-      "Initial tests on long-range entanglement stability. Coherence maintained for 4.2ms.",
-    type: "link",
-  },
-  {
-    title: "Sustainable Energy Grid",
-    project: "Eco-Net",
-    tags: ["Energy", "SmartGrid"],
-    summary:
-      "Optimization algorithms for distributed solar arrays. Efficiency increased by 12%.",
-    type: "voice",
-  },
-  {
-    title: "Linguistic Pattern Analysis",
-    project: "NLP-X",
-    tags: ["Linguistics", "LLM"],
-    summary:
-      "Cross-lingual semantic drift observed in multi-modal training sets.",
-    type: "thought",
-  },
-]
+type FragmentType = "all" | "text" | "image" | "voice" | "url"
 
 function getTypeIcon(type: string) {
   switch (type) {
-    case "thought":
+    case "text":
       return <MessageSquare size={14} />
-    case "screenshot":
+    case "image":
       return <ImageIcon size={14} />
     case "voice":
       return <Mic size={14} />
-    case "link":
+    case "url":
       return <LinkIcon size={14} />
     default:
       return null
+  }
+}
+
+function fragmentToDetail(f: Fragment) {
+  return {
+    id: f.id,
+    type: f.contentType,
+    content: f.normalizedContent || f.rawContent,
+    status: f.status,
+    timestamp: new Date(f.capturedAt).toLocaleDateString(),
   }
 }
 
@@ -93,6 +55,8 @@ export default function KnowledgePage() {
   const [isSearching, setIsSearching] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [selectedFragment, setSelectedFragment] = useState<Fragment | null>(null)
+  const { data: fragments, isLoading } = useFragments({ status: "confirmed" })
 
   useEffect(() => {
     if (searchQuery) {
@@ -102,14 +66,12 @@ export default function KnowledgePage() {
     }
   }, [searchQuery])
 
-  const filteredCards = cards.filter((card) => {
+  const items = fragments ?? []
+  const filteredItems = items.filter((f) => {
+    const content = f.normalizedContent || f.rawContent
     const matchesSearch =
-      card.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      card.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      card.tags.some((tag) =>
-        tag.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    const matchesType = selectedType === "all" || card.type === selectedType
+      !searchQuery || content.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesType = selectedType === "all" || f.contentType === selectedType
     return matchesSearch && matchesType
   })
 
@@ -173,10 +135,10 @@ export default function KnowledgePage() {
                   {(
                     [
                       "all",
-                      "thought",
-                      "screenshot",
+                      "text",
+                      "image",
                       "voice",
-                      "link",
+                      "url",
                     ] as FragmentType[]
                   ).map((type) => (
                     <button
@@ -250,63 +212,68 @@ export default function KnowledgePage() {
               : "space-y-4"
           }
         >
-          {filteredCards.map((card, i) => (
-            <div
-              key={i}
-              className={`bg-surface-dark/40 border border-border-dark/50 rounded-2xl p-6 flex flex-col gap-4 group hover:border-primary/30 transition-all hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1 hover:scale-[1.02] cursor-pointer active:scale-[0.99] ${
-                viewMode === "list" ? "flex-row items-center" : ""
-              }`}
-            >
-              <div
-                className={`flex justify-between items-start ${
-                  viewMode === "list"
-                    ? "flex-col gap-2 min-w-[120px]"
-                    : ""
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider border border-primary/20">
-                    {card.project}
-                  </span>
-                  <div className="text-slate-500 opacity-50">
-                    {getTypeIcon(card.type)}
-                  </div>
-                </div>
-                <button className="text-slate-500 hover:text-white transition-colors">
-                  <MoreHorizontal size={18} />
-                </button>
-              </div>
-              <div
-                className={`flex-1 ${viewMode === "list" ? "px-4" : ""}`}
-              >
-                <h3 className="text-lg font-bold text-text-main group-hover:text-primary transition-colors">
-                  {card.title}
-                </h3>
-                <p className="text-sm text-slate-400 line-clamp-1 leading-relaxed mt-1">
-                  {card.summary}
-                </p>
-              </div>
-              <div
-                className={`flex flex-wrap gap-2 ${
-                  viewMode === "list"
-                    ? "mt-0 pt-0 border-t-0"
-                    : "mt-auto pt-4 border-t border-white/5"
-                }`}
-              >
-                {card.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-[10px] text-slate-500 font-mono hover:text-primary cursor-pointer transition-colors"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
+          {isLoading ? (
+            <div className="col-span-full flex items-center justify-center py-20">
+              <Loader2 size={24} className="text-primary animate-spin" />
             </div>
-          ))}
+          ) : (
+            filteredItems.map((f) => (
+              <div
+                key={f.id}
+                onClick={() => setSelectedFragment(f)}
+                className={`bg-surface-dark/40 border border-border-dark/50 rounded-2xl p-6 flex flex-col gap-4 group hover:border-primary/30 transition-all hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1 hover:scale-[1.02] cursor-pointer active:scale-[0.99] ${
+                  viewMode === "list" ? "flex-row items-center" : ""
+                }`}
+              >
+                <div
+                  className={`flex justify-between items-start ${
+                    viewMode === "list"
+                      ? "flex-col gap-2 min-w-[120px]"
+                      : ""
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider border border-primary/20">
+                      {f.contentType}
+                    </span>
+                    <div className="text-slate-500 opacity-50">
+                      {getTypeIcon(f.contentType)}
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-slate-500 hover:text-white transition-colors"
+                  >
+                    <MoreHorizontal size={18} />
+                  </button>
+                </div>
+                <div
+                  className={`flex-1 ${viewMode === "list" ? "px-4" : ""}`}
+                >
+                  <h3 className="text-lg font-bold text-text-main group-hover:text-primary transition-colors">
+                    {f.normalizedContent?.slice(0, 80) || f.rawContent.slice(0, 80)}
+                  </h3>
+                  <p className="text-sm text-slate-400 line-clamp-1 leading-relaxed mt-1">
+                    {f.rawContent}
+                  </p>
+                </div>
+                <div
+                  className={`flex items-center ${
+                    viewMode === "list"
+                      ? "mt-0 pt-0 border-t-0"
+                      : "mt-auto pt-4 border-t border-white/5"
+                  }`}
+                >
+                  <span className="text-[10px] text-slate-500 font-mono">
+                    {new Date(f.capturedAt).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
-        {filteredCards.length === 0 && (
+        {!isLoading && filteredItems.length === 0 && (
           <div className="text-center py-20">
             <p className="text-slate-500">
               {t("noResults")} &quot;{searchQuery}&quot;
@@ -314,6 +281,11 @@ export default function KnowledgePage() {
           </div>
         )}
       </div>
+
+      <FragmentDetail
+        fragment={selectedFragment ? fragmentToDetail(selectedFragment) : null}
+        onClose={() => setSelectedFragment(null)}
+      />
     </div>
   )
 }
