@@ -129,17 +129,17 @@ ask-dorian/                   # pnpm monorepo
 
 ## 产品展示
 
-### Today
-![Today](docs/screenshots/01-today.png)
+### Web — Today Dashboard
+![Web Preview](docs/screenshots/app-preview.png)
 
-### Stream
-![Stream](docs/screenshots/02-inbox.png)
+### Web — Stream
+![Stream](docs/screenshots/stream.png)
 
-### AI 技能
-![AI 技能](docs/screenshots/03-skills.png)
+### Mobile — Today
+![Mobile Today](docs/screenshots/m-today.png)
 
-### 项目
-![项目](docs/screenshots/04-projects.png)
+### Mobile — Review
+![Mobile Review](docs/screenshots/m-review.png)
 
 ## 开发
 
@@ -302,17 +302,17 @@ ask-dorian/                   # pnpm monorepo
 
 ## Showcase
 
-### Today
-![Today](docs/screenshots/01-today.png)
+### Web — Today Dashboard
+![Web Preview](docs/screenshots/app-preview.png)
 
-### Stream
-![Stream](docs/screenshots/02-inbox.png)
+### Web — Stream
+![Stream](docs/screenshots/stream.png)
 
-### AI Skills
-![AI Skills](docs/screenshots/03-skills.png)
+### Mobile — Today
+![Mobile Today](docs/screenshots/m-today.png)
 
-### Projects
-![Projects](docs/screenshots/04-projects.png)
+### Mobile — Review
+![Mobile Review](docs/screenshots/m-review.png)
 
 ## Development
 
