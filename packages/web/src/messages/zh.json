@@ -145,6 +145,7 @@
   "settings": {
     "title": "设置",
     "premiumMember": "高级会员",
+    "freeMember": "免费用户",
     "accountSecurity": "账户与安全",
     "profileInfo": "个人信息",
     "securityPrivacy": "安全与隐私",

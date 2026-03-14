@@ -52,6 +52,7 @@ function SettingItem({
 export default function SettingsPage() {
   const t = useTranslations("settings")
   const logout = useAuth((s) => s.logout)
+  const user = useAuth((s) => s.user)
   const [threshold, setThreshold] = useState(85)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [autoCrystallize, setAutoCrystallize] = useState(true)
@@ -63,7 +64,15 @@ export default function SettingsPage() {
         <div className="flex flex-col items-center gap-4 py-8">
           <div className="relative group cursor-pointer">
             <div className="size-32 rounded-3xl border-4 border-primary/20 overflow-hidden shadow-2xl shadow-primary/10 group-hover:border-primary/40 transition-all bg-surface-dark flex items-center justify-center">
-              <User size={48} className="text-slate-600" />
+              {user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={user.name}
+                  className="size-full object-cover"
+                />
+              ) : (
+                <User size={48} className="text-slate-600" />
+              )}
             </div>
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl">
               <Camera size={24} className="text-white" />
@@ -73,9 +82,9 @@ export default function SettingsPage() {
             </button>
           </div>
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-text-main">Alex Johnson</h2>
+            <h2 className="text-2xl font-bold text-text-main">{user?.name ?? "User"}</h2>
             <p className="text-primary font-bold text-sm uppercase tracking-widest mt-1">
-              {t("premiumMember")}
+              {user?.role === "pro" ? t("premiumMember") : t("freeMember")}
             </p>
           </div>
         </div>
@@ -90,7 +99,7 @@ export default function SettingsPage() {
               <SettingItem
                 icon={User}
                 title={t("profileInfo")}
-                subtitle="alex.j@example.com"
+                subtitle={user?.email ?? ""}
               />
               <SettingItem
                 icon={Shield}

@@ -145,6 +145,7 @@
   "settings": {
     "title": "Settings",
     "premiumMember": "Premium Member",
+    "freeMember": "Free Member",
     "accountSecurity": "Account & Security",
     "profileInfo": "Profile Information",
     "securityPrivacy": "Security & Privacy",
