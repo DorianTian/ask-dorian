@@ -1,4 +1,4 @@
-import React, { useCallback } from "react"
+import React, { useMemo, useCallback } from "react"
 import {
   View,
   Text,
@@ -6,32 +6,230 @@ import {
   StyleSheet,
   RefreshControl,
   ActivityIndicator,
-  TextInput,
   TouchableOpacity,
   Platform,
 } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { format, startOfWeek, endOfWeek } from "date-fns"
-import { useSWRConfig } from "swr"
+import { format, startOfWeek, endOfWeek, addDays, isToday, getWeek } from "date-fns"
 import {
   BrainCircuit,
   Terminal,
   AlertTriangle,
+  Calendar,
+  ListTodo,
+  CheckCircle2,
+  Activity,
   Zap,
-  Hash,
+  Database,
 } from "lucide-react-native"
 import { useWeeklyDashboard } from "@ask-dorian/core/hooks"
 import { taskApi } from "@ask-dorian/core/api"
-import { useColors, spacing, typography, radii } from "../theme"
+import type { CalendarEvent, Task } from "@ask-dorian/core/types"
+import { useColors, spacing, radii } from "../theme"
 
+const mono = Platform.select({
+  ios: { fontFamily: "Menlo" as const },
+  android: { fontFamily: "monospace" as const },
+})
+
+function priorityColor(p: string, colors: ReturnType<typeof useColors>): string {
+  switch (p) {
+    case "urgent": return colors.priorityP0
+    case "high": return colors.priorityP1
+    case "medium": return colors.priorityP2
+    default: return colors.textMuted
+  }
+}
+
+function eventTypeColor(t: string, colors: ReturnType<typeof useColors>): string {
+  switch (t) {
+    case "meeting": return "#8B5CF6"
+    case "focus": return colors.brandFrom
+    case "deadline": return colors.destructive
+    case "personal": return "#F59E0B"
+    default: return "#6366F1"
+  }
+}
+
+function formatTime(iso: string): string {
+  const d = new Date(iso)
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`
+}
+
+// ---------------------------------------------------------------------------
+// StatCard
+// ---------------------------------------------------------------------------
+function StatCard({
+  icon: Icon,
+  value,
+  trend,
+  title,
+  colors,
+}: {
+  icon: React.ComponentType<{ size: number; color: string }>
+  value: string
+  trend: string
+  title: string
+  colors: ReturnType<typeof useColors>
+}) {
+  return (
+    <View style={[s.statCard, { backgroundColor: colors.card + "4D", borderColor: colors.border + "80" }]}>
+      <View style={s.statCardTop}>
+        <Icon size={14} color={colors.mutedForeground} />
+        <Text style={[s.statTrend, { color: colors.mutedForeground }, mono]}>{trend}</Text>
+      </View>
+      <Text style={[s.statValue, { color: colors.foreground }, mono]}>{value}</Text>
+      <Text style={[s.statTitle, { color: colors.mutedForeground }, mono]}>{title}</Text>
+    </View>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// RawFragment (anomalous fragment card)
+// ---------------------------------------------------------------------------
+function RawFragmentCard({
+  time,
+  content,
+  tags,
+  colors,
+  onPress,
+}: {
+  time: string
+  content: string
+  tags: string[]
+  colors: ReturnType<typeof useColors>
+  onPress?: () => void
+}) {
+  return (
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={onPress}
+      style={[s.rawFragment, { backgroundColor: "#000000" + "33", borderColor: colors.border + "4D" }]}
+    >
+      <View style={s.rawFragmentHeader}>
+        <Text style={[s.rawFragmentTime, { color: colors.mutedForeground }, mono]}>{time}</Text>
+        <View style={s.rawFragmentTags}>
+          {tags.map((tag) => (
+            <View key={tag} style={[s.rawFragmentTag, { backgroundColor: colors.brandFrom + "0D", borderColor: colors.brandFrom + "1A" }]}>
+              <Text style={[s.rawFragmentTagText, { color: colors.brandFrom + "B3" }, mono]}>{tag}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+      <Text style={[s.rawFragmentContent, { color: colors.textSecondary }]}>{content}</Text>
+    </TouchableOpacity>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Main Screen
+// ---------------------------------------------------------------------------
 export function WeeklyScreen() {
   const colors = useColors()
   const { data, error, isLoading, mutate: mutateDashboard } = useWeeklyDashboard()
-  const { mutate } = useSWRConfig()
 
   const now = new Date()
+  const weekNumber = getWeek(now, { weekStartsOn: 1 })
   const weekStart = format(startOfWeek(now, { weekStartsOn: 1 }), "M/d")
   const weekEnd = format(endOfWeek(now, { weekStartsOn: 1 }), "M/d")
+
+  // Compute stats from real data
+  const totalTasks = data
+    ? data.tasks.scheduled.length + data.tasks.due.length + data.tasks.overdue.length
+    : 0
+  const totalEvents = data?.events.length ?? 0
+  const overdueCount = data?.tasks.overdue.length ?? 0
+  const scheduledCount = data?.tasks.scheduled.length ?? 0
+
+  // Signal/noise: ratio of scheduled vs total (or "N/A" if no data)
+  const signalNoise = totalTasks > 0
+    ? `${Math.round((scheduledCount / totalTasks) * 100)}%`
+    : "N/A"
+
+  // Cognitive load based on overdue count
+  const cognitiveLoad = overdueCount === 0
+    ? "LOW"
+    : overdueCount <= 2
+      ? "MED"
+      : "HIGH"
+
+  const cognitiveStatus = overdueCount === 0
+    ? "ALIGNED"
+    : overdueCount <= 2
+      ? "CAUTION"
+      : "OVERLOAD"
+
+  // Group tasks and events by date
+  const weekDays = useMemo(() => {
+    const days: { date: Date; label: string; dateKey: string }[] = []
+    const start = startOfWeek(now, { weekStartsOn: 1 })
+    for (let i = 0; i < 7; i++) {
+      const d = addDays(start, i)
+      days.push({
+        date: d,
+        label: format(d, "EEE M/d"),
+        dateKey: format(d, "yyyy-MM-dd"),
+      })
+    }
+    // Today first, then the rest in original order
+    const todayIdx = days.findIndex((d) => isToday(d.date))
+    if (todayIdx > 0) {
+      const [today] = days.splice(todayIdx, 1)
+      days.unshift(today)
+    }
+    return days
+  }, [])
+
+  const tasksByDate = useMemo(() => {
+    const map = new Map<string, Task[]>()
+    if (!data) return map
+    const allTasks = [...data.tasks.scheduled, ...data.tasks.due]
+    for (const t of allTasks) {
+      const key = t.scheduledDate ?? t.dueDate ?? t.startDate
+      if (key) {
+        const dateKey = key.slice(0, 10)
+        const arr = map.get(dateKey) ?? []
+        arr.push(t)
+        map.set(dateKey, arr)
+      }
+    }
+    return map
+  }, [data])
+
+  const eventsByDate = useMemo(() => {
+    const map = new Map<string, CalendarEvent[]>()
+    if (!data) return map
+    for (const ev of data.events) {
+      const dateKey = ev.startTime.slice(0, 10)
+      const arr = map.get(dateKey) ?? []
+      arr.push(ev)
+      map.set(dateKey, arr)
+    }
+    return map
+  }, [data])
+
+  const completeTask = useCallback(async (id: string) => {
+    await taskApi.complete(id)
+    mutateDashboard()
+  }, [mutateDashboard])
+
+  // Build synthesized directive based on real data
+  const directive = useMemo(() => {
+    if (!data) return null
+    if (overdueCount > 2) {
+      return `You have ${overdueCount} overdue tasks creating cognitive drag. Recommend clearing the backlog before taking on new commitments this week.`
+    }
+    if (overdueCount > 0) {
+      return `${overdueCount} overdue task${overdueCount > 1 ? "s" : ""} detected. Consider prioritizing these early in the week to maintain flow state.`
+    }
+    if (totalTasks > 10) {
+      return `High task density (${totalTasks}) this week. Consider batching similar tasks and protecting deep-work blocks to maintain signal quality.`
+    }
+    if (totalTasks === 0 && totalEvents === 0) {
+      return "No inputs detected for this cycle. Open your inbox or capture new fragments to initialize the weekly pipeline."
+    }
+    return `${totalTasks} tasks and ${totalEvents} events mapped for this cycle. Current trajectory is stable — maintain execution rhythm.`
+  }, [data, overdueCount, totalTasks, totalEvents])
 
   if (error) {
     return (
@@ -46,26 +244,30 @@ export function WeeklyScreen() {
     )
   }
 
-  // Compute stats from real data when available
-  const totalTasks = data
-    ? data.tasks.scheduled.length + data.tasks.due.length + data.tasks.overdue.length
-    : 0
-  const totalEvents = data?.events.length ?? 0
-
   return (
     <SafeAreaView style={[s.container, { backgroundColor: colors.background }]} edges={["top"]}>
-      {/* HUD Header */}
-      <View style={s.header}>
-        <View style={s.headerLeft}>
-          <View style={[s.headerIconBox, { backgroundColor: colors.brandFrom + "1A" }]}>
-            <BrainCircuit size={20} color={colors.brandFrom} />
-          </View>
-          <View>
+      {/* ================================================================ */}
+      {/* HUD Header                                                       */}
+      {/* ================================================================ */}
+      <View style={[s.header, { borderBottomColor: colors.border + "80" }]}>
+        <View style={s.headerTop}>
+          <View style={s.headerLeft}>
+            <View style={s.headerBrand}>
+              <BrainCircuit size={18} color={colors.brandFrom} />
+              <Text style={[s.headerBrandLabel, { color: colors.brandFrom }, mono]}>System Synthesis</Text>
+            </View>
             <Text style={[s.headerTitle, { color: colors.foreground }]}>Cognitive Report</Text>
-            <Text style={[s.headerSub, { color: colors.mutedForeground }]}>
-              SYSTEM SYNTHESIS — {weekStart}–{weekEnd}
+            <Text style={[s.headerSub, { color: colors.mutedForeground }, mono]}>
+              CYCLE: WK-{String(weekNumber).padStart(2, "0")} // STATUS: {cognitiveStatus}
             </Text>
           </View>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            style={[s.exportBtn, { backgroundColor: colors.brandFrom + "1A", borderColor: colors.brandFrom + "4D" }]}
+          >
+            <Database size={12} color={colors.brandFrom} />
+            <Text style={[s.exportBtnText, { color: colors.brandFrom }, mono]}>EXPORT</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -84,110 +286,233 @@ export function WeeklyScreen() {
             />
           }
         >
-          {/* Telemetry Grid */}
+          {/* ============================================================ */}
+          {/* Telemetry Grid (2x2)                                         */}
+          {/* ============================================================ */}
           <View style={s.telemetryGrid}>
-            {[
-              { label: "RAW FRAGMENTS", value: "142" },
-              { label: "NODES CONNECTED", value: "38" },
-              { label: "SIGNAL/NOISE", value: "84%" },
-              { label: "COGNITIVE LOAD", value: "LOW" },
-            ].map((item, i) => (
-              <View
-                key={i}
-                style={[s.telemetryCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-              >
-                <Text style={[s.telemetryLabel, { color: colors.mutedForeground }]}>{item.label}</Text>
-                <Text style={[s.telemetryValue, { color: colors.foreground }]}>{item.value}</Text>
-              </View>
-            ))}
+            <StatCard
+              icon={ListTodo}
+              value={String(totalTasks)}
+              trend={totalTasks > 0 ? `${scheduledCount} sched` : "--"}
+              title="TASKS"
+              colors={colors}
+            />
+            <StatCard
+              icon={Calendar}
+              value={String(totalEvents)}
+              trend={totalEvents > 0 ? `${weekStart}–${weekEnd}` : "--"}
+              title="EVENTS"
+              colors={colors}
+            />
+            <StatCard
+              icon={Activity}
+              value={signalNoise}
+              trend={scheduledCount > 0 ? "OPTIMAL" : "LOW"}
+              title="SIGNAL/NOISE"
+              colors={colors}
+            />
+            <StatCard
+              icon={AlertTriangle}
+              value={cognitiveLoad}
+              trend={overdueCount > 0 ? `${overdueCount} overdue` : "STABLE"}
+              title="COGNITIVE LOAD"
+              colors={colors}
+            />
           </View>
 
-          {/* AI Analysis */}
-          <View style={[s.analysisCard, { backgroundColor: colors.card, borderColor: colors.brandFrom + "33" }]}>
+          {/* ============================================================ */}
+          {/* AI Analysis Terminal Card                                     */}
+          {/* ============================================================ */}
+          <View style={[s.analysisCard, { backgroundColor: colors.card + "4D", borderColor: colors.border + "80" }]}>
+            {/* Green gradient bar */}
             <View style={[s.analysisBar, { backgroundColor: colors.brandFrom }]} />
+
             <View style={s.analysisContent}>
               <View style={s.analysisHeader}>
                 <Terminal size={14} color={colors.brandFrom} />
-                <Text style={[s.analysisHeaderText, { color: colors.brandFrom }]}>weekly_synthesis.sh</Text>
-              </View>
-              <Text style={[s.analysisBody, { color: colors.mutedForeground }]}>
-                {"Analysis complete. Cognitive throughput increased 12% over previous period. " +
-                  "Deep work blocks were most productive between 09:00-12:00. " +
-                  "Recommendation: consolidate shallow tasks into single afternoon block."}
-              </Text>
-              <View style={[s.directiveBox, { backgroundColor: colors.brandFrom + "0D", borderColor: colors.brandFrom + "33" }]}>
-                <Text style={[s.directiveText, { color: colors.brandFrom }]}>
-                  DIRECTIVE: Schedule deep work before noon, batch comms 14:00-15:00
+                <Text style={[s.analysisHeaderText, { color: colors.textTertiary }, mono]}>
+                  semantic_analysis.exe
                 </Text>
               </View>
-            </View>
-          </View>
 
-          {/* Anomalous Fragments */}
-          <View style={s.anomalySection}>
-            <Text style={[s.sectionLabel, { color: colors.mutedForeground }]}>ANOMALOUS FRAGMENTS</Text>
-            {[
-              { time: "TUE 14:22", text: "Voice memo about refactoring auth module — no follow-up task created", tags: ["Auth", "Tech-Debt"] },
-              { time: "THU 09:15", text: "Screenshot of competitor's pricing page — unlinked to any project", tags: ["Market", "APAC"] },
-              { time: "FRI 17:30", text: "Quick note: 'talk to Sarah about Q2 timeline' — not scheduled", tags: ["Planning", "Q2"] },
-            ].map((item, i) => (
-              <View key={i} style={[s.anomalyCard, { backgroundColor: colors.card + "66", borderColor: colors.border + "80" }]}>
-                <Text style={[s.anomalyTime, { color: colors.mutedForeground }]}>{item.time}</Text>
-                <Text style={[s.anomalyText, { color: colors.foreground }]}>{item.text}</Text>
-                <View style={s.tagRow}>
-                  {item.tags.map((tag) => (
-                    <View key={tag} style={[s.tag, { backgroundColor: colors.brandFrom + "0D", borderColor: colors.brandFrom + "1A" }]}>
-                      <Text style={[s.tagText, { color: colors.brandFrom + "B3" }]}>#{tag}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-            ))}
-          </View>
-
-          {/* Topic Clusters (simplified for mobile) */}
-          <View style={s.clusterSection}>
-            <Text style={[s.sectionLabel, { color: colors.mutedForeground }]}>TOPIC CLUSTERS</Text>
-            <View style={[s.clusterCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              {[
-                { name: "Product Design", size: 48, connections: 12 },
-                { name: "Engineering", size: 36, connections: 8 },
-                { name: "Market Research", size: 28, connections: 5 },
-                { name: "Operations", size: 20, connections: 3 },
-              ].map((cluster, i) => (
-                <View key={i} style={s.clusterItem}>
-                  <View style={[s.clusterDot, { width: cluster.size / 2, height: cluster.size / 2, backgroundColor: colors.brandFrom + "33", borderColor: colors.brandFrom + "4D" }]} />
-                  <View style={s.clusterInfo}>
-                    <Text style={[s.clusterName, { color: colors.foreground }]}>{cluster.name}</Text>
-                    <Text style={[s.clusterMeta, { color: colors.mutedForeground }]}>
-                      {cluster.connections} connections
+              <View style={s.summaryItems}>
+                {totalTasks > 0 && (
+                  <View style={s.terminalLine}>
+                    <Text style={[s.terminalPrompt, { color: colors.brandFrom + "B3" }, mono]}>{">"}</Text>
+                    <Text style={[s.terminalText, { color: colors.textSecondary }, mono]}>
+                      Analyzing {totalTasks} tasks across {weekDays.length} days...
                     </Text>
                   </View>
-                  <Text style={[s.clusterCount, { color: colors.brandFrom }]}>{cluster.size}</Text>
+                )}
+                {totalEvents > 0 && (
+                  <View style={s.terminalLine}>
+                    <Text style={[s.terminalPrompt, { color: colors.brandFrom + "B3" }, mono]}>{">"}</Text>
+                    <Text style={[s.terminalText, { color: colors.textSecondary }, mono]}>
+                      {totalEvents} calendar events mapped to timeline.
+                    </Text>
+                  </View>
+                )}
+                {overdueCount > 0 && (
+                  <View style={s.terminalLine}>
+                    <Text style={[s.terminalPrompt, { color: colors.brandFrom + "B3" }, mono]}>{">"}</Text>
+                    <Text style={[s.terminalText, { color: colors.destructive }, mono]}>
+                      Warning: {overdueCount} overdue node{overdueCount > 1 ? "s" : ""} — action required.
+                    </Text>
+                  </View>
+                )}
+                {scheduledCount > 0 && (
+                  <View style={s.terminalLine}>
+                    <Text style={[s.terminalPrompt, { color: colors.brandFrom + "B3" }, mono]}>{">"}</Text>
+                    <Text style={[s.terminalText, { color: colors.textSecondary }, mono]}>
+                      {scheduledCount} tasks scheduled — signal clarity at {signalNoise}.
+                    </Text>
+                  </View>
+                )}
+                {totalTasks === 0 && totalEvents === 0 && (
+                  <View style={s.terminalLine}>
+                    <Text style={[s.terminalPrompt, { color: colors.brandFrom + "B3" }, mono]}>{">"}</Text>
+                    <Text style={[s.terminalText, { color: colors.mutedForeground }, mono]}>
+                      No inputs detected for this cycle.
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Synthesized Directive */}
+              {directive && (
+                <View style={[s.directiveBox, { backgroundColor: "#000000" + "66", borderColor: colors.brandFrom + "33" }]}>
+                  <View style={[s.directiveAccent, { backgroundColor: colors.brandFrom }]} />
+                  <View style={s.directiveContent}>
+                    <Text style={[s.directiveLabel, { color: colors.brandFrom + "B3" }, mono]}>
+                      // SYNTHESIZED DIRECTIVE
+                    </Text>
+                    <Text style={[s.directiveText, { color: colors.textSecondary }]}>
+                      {directive}
+                    </Text>
+                  </View>
                 </View>
-              ))}
+              )}
             </View>
           </View>
 
-          {/* Set Vector */}
-          <View style={s.vectorSection}>
-            <Text style={[s.sectionLabel, { color: colors.mutedForeground }]}>SET VECTOR</Text>
-            <View style={[s.vectorCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <TextInput
-                style={[s.vectorInput, { color: colors.foreground, borderColor: colors.border }]}
-                placeholder="What should next week focus on?"
-                placeholderTextColor={colors.mutedForeground}
-                multiline
-                numberOfLines={3}
-              />
-              <TouchableOpacity
-                style={[s.vectorBtn, { backgroundColor: colors.brandFrom }]}
-                activeOpacity={0.8}
-              >
-                <Zap size={12} color="#fff" />
-                <Text style={s.vectorBtnText}>COMMIT_VECTOR</Text>
-              </TouchableOpacity>
+          {/* ============================================================ */}
+          {/* Anomalous Fragments (Overdue Tasks)                          */}
+          {/* ============================================================ */}
+          {overdueCount > 0 && data && (
+            <View style={[s.sectionCard, { backgroundColor: colors.card + "4D", borderColor: colors.border + "80" }]}>
+              <View style={s.sectionHeader}>
+                <Zap size={14} color="#FB923C" />
+                <Text style={[s.sectionHeaderText, { color: colors.textTertiary }, mono]}>
+                  anomalous_fragments ({overdueCount})
+                </Text>
+              </View>
+              <View style={s.fragmentList}>
+                {data.tasks.overdue.map((task) => (
+                  <RawFragmentCard
+                    key={task.id}
+                    time={task.dueDate ? format(new Date(task.dueDate), "MM/dd HH:mm") : "??:??"}
+                    content={task.title}
+                    tags={[
+                      task.priority,
+                      ...(task.dueDate ? [`due:${task.dueDate.slice(0, 10)}`] : []),
+                    ]}
+                    colors={colors}
+                    onPress={() => completeTask(task.id)}
+                  />
+                ))}
+              </View>
             </View>
+          )}
+
+          {/* ============================================================ */}
+          {/* Day-by-Day Breakdown                                         */}
+          {/* ============================================================ */}
+          <View style={s.dayBreakdownSection}>
+            <View style={s.sectionHeader}>
+              <Calendar size={14} color={colors.brandFrom} />
+              <Text style={[s.sectionHeaderText, { color: colors.textTertiary }, mono]}>
+                daily_timeline
+              </Text>
+            </View>
+
+            {weekDays.map((day) => {
+              const dayTasks = tasksByDate.get(day.dateKey) ?? []
+              const dayEvents = eventsByDate.get(day.dateKey) ?? []
+              const hasItems = dayTasks.length > 0 || dayEvents.length > 0
+              const today = isToday(day.date)
+
+              return (
+                <View key={day.dateKey} style={s.daySection}>
+                  <View style={s.dayHeader}>
+                    <Text style={[
+                      s.dayLabel,
+                      { color: today ? colors.brandFrom : colors.mutedForeground },
+                      mono,
+                    ]}>
+                      {day.label.toUpperCase()}{today ? " — TODAY" : ""}
+                    </Text>
+                    {hasItems && (
+                      <Text style={[s.dayCount, { color: colors.mutedForeground }, mono]}>
+                        {dayTasks.length + dayEvents.length}
+                      </Text>
+                    )}
+                  </View>
+
+                  {!hasItems ? (
+                    <Text style={[s.emptyDay, { color: colors.textSubtle }, mono]}>
+                      No items
+                    </Text>
+                  ) : (
+                    <View style={s.dayItems}>
+                      {/* Events */}
+                      {dayEvents.map((ev) => (
+                        <View
+                          key={ev.id}
+                          style={[s.taskItem, { backgroundColor: colors.card + "4D", borderColor: colors.border }]}
+                        >
+                          <View style={[s.priorityBar, { backgroundColor: eventTypeColor(ev.type, colors) }]} />
+                          <View style={s.taskContent}>
+                            <Text style={[s.taskTitle, { color: colors.foreground }]}>{ev.title}</Text>
+                            <Text style={[s.taskMeta, { color: colors.mutedForeground }, mono]}>
+                              {formatTime(ev.startTime)}
+                              {ev.endTime ? `–${formatTime(ev.endTime)}` : ""}
+                              {ev.location ? ` · ${ev.location}` : ""}
+                            </Text>
+                          </View>
+                        </View>
+                      ))}
+
+                      {/* Tasks */}
+                      {dayTasks.map((task) => (
+                        <TouchableOpacity
+                          key={task.id}
+                          onPress={task.status !== "done" ? () => completeTask(task.id) : undefined}
+                          style={[s.taskItem, { backgroundColor: colors.card + "4D", borderColor: colors.border }]}
+                          activeOpacity={0.7}
+                        >
+                          <View style={[s.priorityBar, { backgroundColor: priorityColor(task.priority, colors) }]} />
+                          <View style={s.taskContent}>
+                            <Text style={[
+                              s.taskTitle,
+                              { color: task.status === "done" ? colors.mutedForeground : colors.foreground },
+                              task.status === "done" && s.strikethrough,
+                            ]}>
+                              {task.title}
+                            </Text>
+                            <Text style={[s.taskMeta, { color: colors.mutedForeground }, mono]}>
+                              {task.estimatedMinutes ? `${task.estimatedMinutes}min` : task.priority}
+                            </Text>
+                          </View>
+                          {task.status === "done" && (
+                            <CheckCircle2 size={14} color={colors.brandFrom + "80"} />
+                          )}
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              )
+            })}
           </View>
         </ScrollView>
       )}
@@ -195,47 +520,82 @@ export function WeeklyScreen() {
   )
 }
 
-const mono = Platform.select({ ios: { fontFamily: "Menlo" }, android: { fontFamily: "monospace" } })
-
+// ---------------------------------------------------------------------------
+// Styles
+// ---------------------------------------------------------------------------
 const s = StyleSheet.create({
   container: { flex: 1 },
+
+  // Header
   header: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing.lg,
+    borderBottomWidth: 1,
   },
-  headerLeft: { flexDirection: "row", alignItems: "center", gap: spacing.md },
-  headerIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: radii.lg,
+  headerTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  headerLeft: { flex: 1, gap: 4 },
+  headerBrand: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    gap: spacing.sm,
+    marginBottom: 4,
   },
-  headerTitle: { fontSize: 18, fontWeight: "800", letterSpacing: -0.3 },
+  headerBrandLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 2,
+    textTransform: "uppercase",
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    letterSpacing: -0.5,
+  },
   headerSub: {
     fontSize: 9,
     fontWeight: "600",
     letterSpacing: 1.5,
     textTransform: "uppercase",
-    marginTop: 1,
-    ...mono,
+    marginTop: 4,
   },
-  loadingContainer: { flex: 1, alignItems: "center", justifyContent: "center" },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing["5xl"],
-    gap: spacing.lg,
+  exportBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    marginTop: 4,
   },
-
-  // Section label
-  sectionLabel: {
+  exportBtnText: {
     fontSize: 9,
     fontWeight: "900",
-    letterSpacing: 2,
-    textTransform: "uppercase",
-    marginBottom: spacing.sm,
-    ...mono,
+    letterSpacing: 1,
+  },
+
+  // Loading / Error
+  loadingContainer: { flex: 1, alignItems: "center", justifyContent: "center" },
+  errorBox: {
+    margin: spacing.lg,
+    padding: spacing.xl,
+    borderRadius: radii.lg,
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  errorText: { fontSize: 14, textAlign: "center" },
+
+  // Scroll
+  scrollContent: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing["5xl"],
+    gap: spacing.lg,
   },
 
   // Telemetry Grid
@@ -244,146 +604,194 @@ const s = StyleSheet.create({
     flexWrap: "wrap",
     gap: spacing.sm,
   },
-  telemetryCard: {
+  statCard: {
     flex: 1,
     minWidth: "45%",
-    borderRadius: radii.lg,
+    borderRadius: radii.xl,
     borderWidth: 1,
-    padding: spacing.md,
+    padding: spacing.lg,
+    gap: spacing.sm,
   },
-  telemetryLabel: {
+  statCardTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  statTrend: {
     fontSize: 8,
-    fontWeight: "900",
+    fontWeight: "700",
     letterSpacing: 1.5,
     textTransform: "uppercase",
-    ...mono,
   },
-  telemetryValue: {
-    fontSize: 20,
+  statValue: {
+    fontSize: 22,
     fontWeight: "900",
-    marginTop: 4,
-    ...mono,
+  },
+  statTitle: {
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 2,
+    textTransform: "uppercase",
+    marginTop: 2,
   },
 
-  // AI Analysis
+  // Analysis Card (Terminal)
   analysisCard: {
     borderRadius: radii.xl,
     borderWidth: 1,
     overflow: "hidden",
   },
-  analysisBar: { height: 3 },
-  analysisContent: { padding: spacing.lg, gap: spacing.md },
-  analysisHeader: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  analysisBar: { height: 2, opacity: 0.5 },
+  analysisContent: {
+    padding: spacing.lg,
+    gap: spacing.lg,
+  },
+  analysisHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
   analysisHeaderText: {
     fontSize: 10,
     fontWeight: "700",
-    letterSpacing: 1,
+    letterSpacing: 2,
     textTransform: "uppercase",
-    ...mono,
   },
-  analysisBody: {
-    fontSize: 13,
-    lineHeight: 20,
-    ...mono,
+  summaryItems: { gap: spacing.md },
+  terminalLine: {
+    flexDirection: "row",
+    gap: spacing.sm,
   },
+  terminalPrompt: {
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  terminalText: {
+    fontSize: 12,
+    lineHeight: 18,
+    flex: 1,
+  },
+
+  // Synthesized Directive
   directiveBox: {
-    borderRadius: radii.lg,
+    borderRadius: radii.xl,
     borderWidth: 1,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    overflow: "hidden",
+    flexDirection: "row",
+    marginTop: spacing.sm,
+  },
+  directiveAccent: {
+    width: 2,
+  },
+  directiveContent: {
+    flex: 1,
+    padding: spacing.lg,
+    gap: spacing.sm,
+  },
+  directiveLabel: {
+    fontSize: 8,
+    fontWeight: "700",
+    letterSpacing: 2,
+    textTransform: "uppercase",
   },
   directiveText: {
-    fontSize: 11,
-    fontWeight: "700",
-    ...mono,
+    fontSize: 13,
+    lineHeight: 20,
   },
 
-  // Anomalous Fragments
-  anomalySection: { gap: spacing.sm },
-  anomalyCard: {
-    borderRadius: radii.lg,
+  // Section Card (shared)
+  sectionCard: {
+    borderRadius: radii.xl,
     borderWidth: 1,
     padding: spacing.lg,
-    gap: spacing.sm,
+    gap: spacing.md,
   },
-  anomalyTime: {
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  sectionHeaderText: {
     fontSize: 10,
     fontWeight: "700",
-    letterSpacing: 1,
-    ...mono,
+    letterSpacing: 2,
+    textTransform: "uppercase",
   },
-  anomalyText: { fontSize: 13, lineHeight: 18 },
-  tagRow: { flexDirection: "row", gap: spacing.sm, marginTop: 2 },
-  tag: {
+
+  // Raw Fragments (anomalous)
+  fragmentList: { gap: spacing.sm },
+  rawFragment: {
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    padding: spacing.lg,
+  },
+  rawFragmentHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  rawFragmentTime: {
+    fontSize: 9,
+    fontWeight: "600",
+  },
+  rawFragmentTags: {
+    flexDirection: "row",
+    gap: spacing.xs,
+  },
+  rawFragmentTag: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: radii.sm,
     borderWidth: 1,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
   },
-  tagText: { fontSize: 10, fontWeight: "600", ...mono },
-
-  // Topic Clusters
-  clusterSection: {},
-  clusterCard: {
-    borderRadius: radii.xl,
-    borderWidth: 1,
-    padding: spacing.lg,
-    gap: spacing.md,
+  rawFragmentTagText: {
+    fontSize: 8,
+    fontWeight: "700",
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
   },
-  clusterItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-  },
-  clusterDot: {
-    borderRadius: 999,
-    borderWidth: 1,
-  },
-  clusterInfo: { flex: 1 },
-  clusterName: { fontSize: 14, fontWeight: "600" },
-  clusterMeta: { fontSize: 11, ...mono },
-  clusterCount: { fontSize: 16, fontWeight: "900", ...mono },
-
-  // Set Vector
-  vectorSection: {},
-  vectorCard: {
-    borderRadius: radii.xl,
-    borderWidth: 1,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  vectorInput: {
-    borderWidth: 1,
-    borderRadius: radii.lg,
-    padding: spacing.md,
+  rawFragmentContent: {
     fontSize: 13,
-    minHeight: 72,
-    textAlignVertical: "top",
-    ...mono,
-  },
-  vectorBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    paddingVertical: spacing.md,
-    borderRadius: radii.lg,
-  },
-  vectorBtnText: {
-    color: "#fff",
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 1,
-    ...mono,
+    lineHeight: 19,
   },
 
-  // Error
-  errorBox: {
-    margin: spacing.lg,
-    padding: spacing.xl,
-    borderRadius: radii.lg,
+  // Day-by-day breakdown
+  dayBreakdownSection: { gap: spacing.md },
+  daySection: { gap: spacing.sm },
+  dayHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    gap: spacing.sm,
   },
-  errorText: { ...typography.body, textAlign: "center" },
+  dayLabel: {
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 2,
+    textTransform: "uppercase",
+  },
+  dayCount: { fontSize: 10, fontWeight: "700" },
+  emptyDay: { fontSize: 11, paddingVertical: spacing.xs },
+  dayItems: { gap: spacing.xs },
+
+  // Task / Event items
+  taskItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    padding: spacing.md,
+    gap: spacing.md,
+    overflow: "hidden",
+  },
+  priorityBar: {
+    width: 3,
+    alignSelf: "stretch",
+    borderRadius: 2,
+  },
+  taskContent: { flex: 1 },
+  taskTitle: { fontSize: 13, fontWeight: "600" },
+  taskMeta: { fontSize: 10, marginTop: 2 },
+  strikethrough: { textDecorationLine: "line-through" },
 })
