@@ -159,7 +159,7 @@ export const ritualRepo = {
     to: string,
   ): Promise<{ date: string; total: number }[]> {
     const rows = await db.execute<{ date: string; total: number }>(sql`
-      SELECT d.date::text AS date, count(r.id)::int AS total
+      SELECT d.date::date::text AS date, count(r.id)::int AS total
       FROM generate_series(${from}::date, ${to}::date, '1 day'::interval) AS d(date)
       LEFT JOIN rituals r ON r.user_id = ${userId}
         AND r.is_active = true
