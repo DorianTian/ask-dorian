@@ -116,7 +116,7 @@ export default function LoginPage() {
   const isRegister = mode === "register"
 
   return (
-    <div className="min-h-screen bg-[#09090B] flex items-center justify-center p-8 relative overflow-hidden">
+    <div className="min-h-screen bg-background flex items-center justify-center p-8 relative overflow-hidden">
       {GOOGLE_CLIENT_ID && (
         <Script
           src="https://accounts.google.com/gsi/client"
@@ -137,29 +137,29 @@ export default function LoginPage() {
         <div className="text-center space-y-4">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-sm font-medium mb-4"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm font-medium mb-4"
           >
             <ArrowRight size={16} className="rotate-180" /> {t("back")}
           </Link>
-          <div className="size-16 bg-primary rounded-2xl flex items-center justify-center text-white shadow-2xl shadow-primary/40 mx-auto">
+          <div className="size-16 bg-primary rounded-2xl flex items-center justify-center text-foreground shadow-2xl shadow-primary/40 mx-auto">
             <Diamond size={32} />
           </div>
-          <h2 className="text-3xl font-black tracking-tight text-white">
+          <h2 className="text-3xl font-black tracking-tight text-foreground">
             {isRegister ? t("welcomeRegister") : t("welcome")}
           </h2>
-          <p className="text-slate-500">
+          <p className="text-muted-foreground">
             {isRegister ? t("subtitleRegister") : t("subtitle")}
           </p>
         </div>
 
         {/* Tabs */}
-        <div className="flex bg-surface-dark rounded-xl p-1 border border-white/5">
+        <div className="flex bg-card rounded-xl p-1 border border-white/5">
           <button
             onClick={() => switchMode("login")}
             className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${
               !isRegister
                 ? "bg-primary text-white shadow-lg shadow-primary/20"
-                : "text-slate-500 hover:text-white"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {t("tabLogin")}
@@ -169,7 +169,7 @@ export default function LoginPage() {
             className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${
               isRegister
                 ? "bg-primary text-white shadow-lg shadow-primary/20"
-                : "text-slate-500 hover:text-white"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {t("tabRegister")}
@@ -205,7 +205,7 @@ export default function LoginPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder={t("name")}
-                    className="w-full bg-surface-dark border border-white/10 text-white px-4 py-3.5 rounded-xl text-sm font-medium outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-slate-600"
+                    className="w-full bg-card border border-white/10 text-foreground px-4 py-3.5 rounded-xl text-sm font-medium outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/60"
                   />
                 )}
                 <input
@@ -214,7 +214,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={t("email")}
-                  className="w-full bg-surface-dark border border-white/10 text-white px-4 py-3.5 rounded-xl text-sm font-medium outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-slate-600"
+                  className="w-full bg-card border border-white/10 text-foreground px-4 py-3.5 rounded-xl text-sm font-medium outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/60"
                 />
                 <input
                   type="password"
@@ -222,7 +222,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={t("password")}
-                  className="w-full bg-surface-dark border border-white/10 text-white px-4 py-3.5 rounded-xl text-sm font-medium outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-slate-600"
+                  className="w-full bg-card border border-white/10 text-foreground px-4 py-3.5 rounded-xl text-sm font-medium outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/60"
                 />
                 {isRegister && (
                   <input
@@ -231,7 +231,7 @@ export default function LoginPage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder={t("confirmPassword")}
-                    className="w-full bg-surface-dark border border-white/10 text-white px-4 py-3.5 rounded-xl text-sm font-medium outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-slate-600"
+                    className="w-full bg-card border border-white/10 text-foreground px-4 py-3.5 rounded-xl text-sm font-medium outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/60"
                   />
                 )}
                 {error && (
@@ -257,7 +257,7 @@ export default function LoginPage() {
                     setShowEmailForm(false)
                     setError("")
                   }}
-                  className="w-full text-slate-500 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors py-2"
+                  className="w-full text-muted-foreground hover:text-foreground text-xs font-bold uppercase tracking-widest transition-colors py-2"
                 >
                   {t("back")}
                 </button>
@@ -270,7 +270,7 @@ export default function LoginPage() {
             <>
               <div className="flex items-center gap-4 py-2">
                 <div className="h-px flex-1 bg-white/5" />
-                <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
                   {t("divider")}
                 </span>
                 <div className="h-px flex-1 bg-white/5" />
@@ -289,7 +289,7 @@ export default function LoginPage() {
                       const redirectUri = `${window.location.origin}/${locale}/callback/github`
                       window.location.href = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email`
                     }}
-                    className="bg-surface-dark border border-white/5 py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-white/5 transition-all text-sm font-bold text-white"
+                    className="bg-card border border-white/5 py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-white/5 transition-all text-sm font-bold text-foreground"
                   >
                     <Github size={18} /> {t("github")}
                   </button>
@@ -301,7 +301,7 @@ export default function LoginPage() {
                       const hidden = document.querySelector<HTMLElement>("#google-signin-btn div[role=button]")
                       hidden?.click()
                     }}
-                    className="bg-surface-dark border border-white/5 py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-white/5 transition-all text-sm font-bold text-white"
+                    className="bg-card border border-white/5 py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-white/5 transition-all text-sm font-bold text-foreground"
                   >
                     <svg className="size-4" viewBox="0 0 24 24">
                       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -318,7 +318,7 @@ export default function LoginPage() {
         </div>
 
         {/* Legal */}
-        <p className="text-center text-xs text-slate-600">
+        <p className="text-center text-xs text-muted-foreground/60">
           {t("agreement")}
           <br />
           <a href="#" className="text-primary hover:underline">
