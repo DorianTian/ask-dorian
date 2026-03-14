@@ -158,9 +158,24 @@ export const ritualService = {
       await ritualRepo.deleteCompletion(id, date);
       return { completed: false, completedAt: null };
     } else {
-      // Not completed → complete
-      const completedAt = await ritualRepo.insertCompletion(id, userId, date);
-      return { completed: true, completedAt: completedAt.toISOString() };
+      // Not completed → complete (handle race condition: unique constraint violation)
+      try {
+        const completedAt = await ritualRepo.insertCompletion(id, userId, date);
+        return { completed: true, completedAt: completedAt.toISOString() };
+      } catch (err: unknown) {
+        // Concurrent toggle — completion was already inserted by another request
+        if (
+          err instanceof Error &&
+          err.message.includes("idx_ritual_completion_unique")
+        ) {
+          const existing = await ritualRepo.findCompletion(id, date);
+          return {
+            completed: true,
+            completedAt: existing?.completedAt.toISOString() ?? null,
+          };
+        }
+        throw err;
+      }
     }
   },
 
