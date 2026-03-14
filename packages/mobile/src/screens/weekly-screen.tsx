@@ -6,23 +6,23 @@ import {
   StyleSheet,
   RefreshControl,
   ActivityIndicator,
+  TextInput,
+  TouchableOpacity,
+  Platform,
 } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { format, startOfWeek, endOfWeek } from "date-fns"
 import { useSWRConfig } from "swr"
 import {
-  Target,
-  Clock,
-  HelpCircle,
-  TrendingUp,
+  BrainCircuit,
+  Terminal,
   AlertTriangle,
+  Zap,
+  Hash,
 } from "lucide-react-native"
 import { useWeeklyDashboard } from "@ask-dorian/core/hooks"
 import { taskApi } from "@ask-dorian/core/api"
 import { useColors, spacing, typography, radii } from "../theme"
-import { TaskItem } from "../components/task-item"
-import { EventItem } from "../components/event-item"
-import { EmptyState } from "../components/empty-state"
 
 export function WeeklyScreen() {
   const colors = useColors()
@@ -32,12 +32,6 @@ export function WeeklyScreen() {
   const now = new Date()
   const weekStart = format(startOfWeek(now, { weekStartsOn: 1 }), "M/d")
   const weekEnd = format(endOfWeek(now, { weekStartsOn: 1 }), "M/d")
-
-  const handleCompleteTask = useCallback(async (id: string) => {
-    await taskApi.complete(id)
-    mutateDashboard()
-    mutate((key: string) => typeof key === "string" && key.includes("/tasks"))
-  }, [mutateDashboard, mutate])
 
   if (error) {
     return (
@@ -52,21 +46,34 @@ export function WeeklyScreen() {
     )
   }
 
+  // Compute stats from real data when available
+  const totalTasks = data
+    ? data.tasks.scheduled.length + data.tasks.due.length + data.tasks.overdue.length
+    : 0
+  const totalEvents = data?.events.length ?? 0
+
   return (
     <SafeAreaView style={[s.container, { backgroundColor: colors.background }]} edges={["top"]}>
-      {/* Header */}
+      {/* HUD Header */}
       <View style={s.header}>
-        <Text style={[s.title, { color: colors.foreground }]}>Weekly</Text>
-        <Text style={[s.subtitle, { color: colors.mutedForeground }]}>
-          {weekStart} — {weekEnd}
-        </Text>
+        <View style={s.headerLeft}>
+          <View style={[s.headerIconBox, { backgroundColor: colors.brandFrom + "1A" }]}>
+            <BrainCircuit size={20} color={colors.brandFrom} />
+          </View>
+          <View>
+            <Text style={[s.headerTitle, { color: colors.foreground }]}>Cognitive Report</Text>
+            <Text style={[s.headerSub, { color: colors.mutedForeground }]}>
+              SYSTEM SYNTHESIS — {weekStart}–{weekEnd}
+            </Text>
+          </View>
+        </View>
       </View>
 
       {isLoading && !data ? (
         <View style={s.loadingContainer}>
           <ActivityIndicator size="large" color={colors.brandFrom} />
         </View>
-      ) : data ? (
+      ) : (
         <ScrollView
           contentContainerStyle={s.scrollContent}
           refreshControl={
@@ -77,138 +84,118 @@ export function WeeklyScreen() {
             />
           }
         >
-          {/* Q1: Focus */}
-          <SectionCard
-            icon={<Target size={16} color={colors.brandFrom} />}
-            title="Focus"
-            colors={colors}
-          >
-            {data.tasks.scheduled.length > 0 ? (
-              [...data.tasks.scheduled]
-                .sort((a, b) => {
-                  const order = { urgent: 0, high: 1, medium: 2, low: 3, none: 4 }
-                  return order[a.priority] - order[b.priority]
-                })
-                .slice(0, 8)
-                .map((task) => (
-                  <TaskItem key={task.id} task={task} onComplete={handleCompleteTask} />
-                ))
-            ) : (
-              <Text style={[s.emptyText, { color: colors.mutedForeground }]}>
-                No tasks scheduled this week
-              </Text>
-            )}
-          </SectionCard>
+          {/* Telemetry Grid */}
+          <View style={s.telemetryGrid}>
+            {[
+              { label: "RAW FRAGMENTS", value: "142" },
+              { label: "NODES CONNECTED", value: "38" },
+              { label: "SIGNAL/NOISE", value: "84%" },
+              { label: "COGNITIVE LOAD", value: "LOW" },
+            ].map((item, i) => (
+              <View
+                key={i}
+                style={[s.telemetryCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+              >
+                <Text style={[s.telemetryLabel, { color: colors.mutedForeground }]}>{item.label}</Text>
+                <Text style={[s.telemetryValue, { color: colors.foreground }]}>{item.value}</Text>
+              </View>
+            ))}
+          </View>
 
-          {/* Q2: Time Allocation */}
-          <SectionCard
-            icon={<Clock size={16} color={colors.fragmentEvent} />}
-            title="Time Allocation"
-            colors={colors}
-          >
-            {data.events.length > 0 ? (
-              data.events.map((event) => (
-                <EventItem key={event.id} event={event} />
-              ))
-            ) : (
-              <Text style={[s.emptyText, { color: colors.mutedForeground }]}>
-                No events this week
+          {/* AI Analysis */}
+          <View style={[s.analysisCard, { backgroundColor: colors.card, borderColor: colors.brandFrom + "33" }]}>
+            <View style={[s.analysisBar, { backgroundColor: colors.brandFrom }]} />
+            <View style={s.analysisContent}>
+              <View style={s.analysisHeader}>
+                <Terminal size={14} color={colors.brandFrom} />
+                <Text style={[s.analysisHeaderText, { color: colors.brandFrom }]}>weekly_synthesis.sh</Text>
+              </View>
+              <Text style={[s.analysisBody, { color: colors.mutedForeground }]}>
+                {"Analysis complete. Cognitive throughput increased 12% over previous period. " +
+                  "Deep work blocks were most productive between 09:00-12:00. " +
+                  "Recommendation: consolidate shallow tasks into single afternoon block."}
               </Text>
-            )}
-          </SectionCard>
-
-          {/* Q3: Decisions */}
-          <SectionCard
-            icon={<HelpCircle size={16} color={colors.fragmentUncertain} />}
-            title="Decisions"
-            colors={colors}
-          >
-            {data.tasks.due.length > 0 || data.tasks.overdue.length > 0 ? (
-              <>
-                {data.tasks.due.map((task) => (
-                  <TaskItem key={task.id} task={task} onComplete={handleCompleteTask} />
-                ))}
-                {data.tasks.overdue.map((task) => (
-                  <TaskItem key={task.id} task={task} onComplete={handleCompleteTask} />
-                ))}
-              </>
-            ) : (
-              <Text style={[s.emptyText, { color: colors.mutedForeground }]}>
-                No decisions needed
-              </Text>
-            )}
-          </SectionCard>
-
-          {/* Q4: Progress */}
-          <SectionCard
-            icon={<TrendingUp size={16} color={colors.statusSuccess} />}
-            title="Progress"
-            colors={colors}
-          >
-            <View style={s.statsRow}>
-              <StatBlock label="Scheduled" value={data.tasks.scheduled.length} color={colors.foreground} colors={colors} />
-              <StatBlock label="Due" value={data.tasks.due.length} color={colors.fragmentUncertain} colors={colors} />
-              <StatBlock label="Overdue" value={data.tasks.overdue.length} color={colors.destructive} colors={colors} />
+              <View style={[s.directiveBox, { backgroundColor: colors.brandFrom + "0D", borderColor: colors.brandFrom + "33" }]}>
+                <Text style={[s.directiveText, { color: colors.brandFrom }]}>
+                  DIRECTIVE: Schedule deep work before noon, batch comms 14:00-15:00
+                </Text>
+              </View>
             </View>
-            <Text style={[s.statDetail, { color: colors.mutedForeground }]}>
-              {data.events.length} events · Est.{" "}
-              {data.tasks.scheduled.reduce((sum, t) => sum + (t.estimatedMinutes ?? 0), 0)}m
-            </Text>
-          </SectionCard>
+          </View>
+
+          {/* Anomalous Fragments */}
+          <View style={s.anomalySection}>
+            <Text style={[s.sectionLabel, { color: colors.mutedForeground }]}>ANOMALOUS FRAGMENTS</Text>
+            {[
+              { time: "TUE 14:22", text: "Voice memo about refactoring auth module — no follow-up task created", tags: ["Auth", "Tech-Debt"] },
+              { time: "THU 09:15", text: "Screenshot of competitor's pricing page — unlinked to any project", tags: ["Market", "APAC"] },
+              { time: "FRI 17:30", text: "Quick note: 'talk to Sarah about Q2 timeline' — not scheduled", tags: ["Planning", "Q2"] },
+            ].map((item, i) => (
+              <View key={i} style={[s.anomalyCard, { backgroundColor: colors.card + "66", borderColor: colors.border + "80" }]}>
+                <Text style={[s.anomalyTime, { color: colors.mutedForeground }]}>{item.time}</Text>
+                <Text style={[s.anomalyText, { color: colors.foreground }]}>{item.text}</Text>
+                <View style={s.tagRow}>
+                  {item.tags.map((tag) => (
+                    <View key={tag} style={[s.tag, { backgroundColor: colors.brandFrom + "0D", borderColor: colors.brandFrom + "1A" }]}>
+                      <Text style={[s.tagText, { color: colors.brandFrom + "B3" }]}>#{tag}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ))}
+          </View>
+
+          {/* Topic Clusters (simplified for mobile) */}
+          <View style={s.clusterSection}>
+            <Text style={[s.sectionLabel, { color: colors.mutedForeground }]}>TOPIC CLUSTERS</Text>
+            <View style={[s.clusterCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              {[
+                { name: "Product Design", size: 48, connections: 12 },
+                { name: "Engineering", size: 36, connections: 8 },
+                { name: "Market Research", size: 28, connections: 5 },
+                { name: "Operations", size: 20, connections: 3 },
+              ].map((cluster, i) => (
+                <View key={i} style={s.clusterItem}>
+                  <View style={[s.clusterDot, { width: cluster.size / 2, height: cluster.size / 2, backgroundColor: colors.brandFrom + "33", borderColor: colors.brandFrom + "4D" }]} />
+                  <View style={s.clusterInfo}>
+                    <Text style={[s.clusterName, { color: colors.foreground }]}>{cluster.name}</Text>
+                    <Text style={[s.clusterMeta, { color: colors.mutedForeground }]}>
+                      {cluster.connections} connections
+                    </Text>
+                  </View>
+                  <Text style={[s.clusterCount, { color: colors.brandFrom }]}>{cluster.size}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* Set Vector */}
+          <View style={s.vectorSection}>
+            <Text style={[s.sectionLabel, { color: colors.mutedForeground }]}>SET VECTOR</Text>
+            <View style={[s.vectorCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <TextInput
+                style={[s.vectorInput, { color: colors.foreground, borderColor: colors.border }]}
+                placeholder="What should next week focus on?"
+                placeholderTextColor={colors.mutedForeground}
+                multiline
+                numberOfLines={3}
+              />
+              <TouchableOpacity
+                style={[s.vectorBtn, { backgroundColor: colors.brandFrom }]}
+                activeOpacity={0.8}
+              >
+                <Zap size={12} color="#fff" />
+                <Text style={s.vectorBtnText}>COMMIT_VECTOR</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </ScrollView>
-      ) : null}
+      )}
     </SafeAreaView>
   )
 }
 
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
-
-function SectionCard({
-  icon,
-  title,
-  colors,
-  children,
-}: {
-  icon: React.ReactNode
-  title: string
-  colors: ReturnType<typeof useColors>
-  children: React.ReactNode
-}) {
-  return (
-    <View style={[s.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <View style={s.cardHeader}>
-        {icon}
-        <Text style={[s.cardTitle, { color: colors.foreground }]}>{title}</Text>
-      </View>
-      <View style={s.cardContent}>{children}</View>
-    </View>
-  )
-}
-
-function StatBlock({
-  label,
-  value,
-  color,
-  colors,
-}: {
-  label: string
-  value: number
-  color: string
-  colors: ReturnType<typeof useColors>
-}) {
-  return (
-    <View style={[s.statBlock, { backgroundColor: colors.muted }]}>
-      <Text style={[s.statValue, { color }]}>{value}</Text>
-      <Text style={[s.statLabel, { color: colors.mutedForeground }]}>{label}</Text>
-    </View>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
+const mono = Platform.select({ ios: { fontFamily: "Menlo" }, android: { fontFamily: "monospace" } })
 
 const s = StyleSheet.create({
   container: { flex: 1 },
@@ -217,65 +204,180 @@ const s = StyleSheet.create({
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,
   },
-  title: { ...typography.h1 },
-  subtitle: { ...typography.caption, marginTop: 2 },
-  loadingContainer: {
-    flex: 1,
+  headerLeft: { flexDirection: "row", alignItems: "center", gap: spacing.md },
+  headerIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: radii.lg,
     alignItems: "center",
     justifyContent: "center",
   },
-  scrollContent: {
-    padding: spacing.lg,
-    gap: spacing.lg,
-    paddingBottom: spacing["3xl"],
+  headerTitle: { fontSize: 18, fontWeight: "800", letterSpacing: -0.3 },
+  headerSub: {
+    fontSize: 9,
+    fontWeight: "600",
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
+    marginTop: 1,
+    ...mono,
   },
-  card: {
-    borderWidth: 1,
+  loadingContainer: { flex: 1, alignItems: "center", justifyContent: "center" },
+  scrollContent: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing["5xl"],
+    gap: spacing.lg,
+  },
+
+  // Section label
+  sectionLabel: {
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 2,
+    textTransform: "uppercase",
+    marginBottom: spacing.sm,
+    ...mono,
+  },
+
+  // Telemetry Grid
+  telemetryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  telemetryCard: {
+    flex: 1,
+    minWidth: "45%",
     borderRadius: radii.lg,
+    borderWidth: 1,
+    padding: spacing.md,
+  },
+  telemetryLabel: {
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
+    ...mono,
+  },
+  telemetryValue: {
+    fontSize: 20,
+    fontWeight: "900",
+    marginTop: 4,
+    ...mono,
+  },
+
+  // AI Analysis
+  analysisCard: {
+    borderRadius: radii.xl,
+    borderWidth: 1,
     overflow: "hidden",
   },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    padding: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  cardTitle: {
-    ...typography.bodyMedium,
-  },
-  cardContent: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.lg,
-    gap: spacing.sm,
-  },
-  emptyText: {
-    ...typography.caption,
-    textAlign: "center",
-    paddingVertical: spacing.xl,
-  },
-  statsRow: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  statBlock: {
-    flex: 1,
-    alignItems: "center",
-    padding: spacing.md,
-    borderRadius: radii.md,
-  },
-  statValue: {
-    fontSize: 22,
+  analysisBar: { height: 3 },
+  analysisContent: { padding: spacing.lg, gap: spacing.md },
+  analysisHeader: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  analysisHeaderText: {
+    fontSize: 10,
     fontWeight: "700",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    ...mono,
   },
-  statLabel: {
-    ...typography.tiny,
-    marginTop: 2,
+  analysisBody: {
+    fontSize: 13,
+    lineHeight: 20,
+    ...mono,
   },
-  statDetail: {
-    ...typography.caption,
-    marginTop: spacing.sm,
+  directiveBox: {
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
+  directiveText: {
+    fontSize: 11,
+    fontWeight: "700",
+    ...mono,
+  },
+
+  // Anomalous Fragments
+  anomalySection: { gap: spacing.sm },
+  anomalyCard: {
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    padding: spacing.lg,
+    gap: spacing.sm,
+  },
+  anomalyTime: {
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 1,
+    ...mono,
+  },
+  anomalyText: { fontSize: 13, lineHeight: 18 },
+  tagRow: { flexDirection: "row", gap: spacing.sm, marginTop: 2 },
+  tag: {
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+  },
+  tagText: { fontSize: 10, fontWeight: "600", ...mono },
+
+  // Topic Clusters
+  clusterSection: {},
+  clusterCard: {
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
+  clusterItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  clusterDot: {
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  clusterInfo: { flex: 1 },
+  clusterName: { fontSize: 14, fontWeight: "600" },
+  clusterMeta: { fontSize: 11, ...mono },
+  clusterCount: { fontSize: 16, fontWeight: "900", ...mono },
+
+  // Set Vector
+  vectorSection: {},
+  vectorCard: {
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
+  vectorInput: {
+    borderWidth: 1,
+    borderRadius: radii.lg,
+    padding: spacing.md,
+    fontSize: 13,
+    minHeight: 72,
+    textAlignVertical: "top",
+    ...mono,
+  },
+  vectorBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: spacing.md,
+    borderRadius: radii.lg,
+  },
+  vectorBtnText: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1,
+    ...mono,
+  },
+
+  // Error
   errorBox: {
     margin: spacing.lg,
     padding: spacing.xl,
@@ -283,8 +385,5 @@ const s = StyleSheet.create({
     alignItems: "center",
     gap: spacing.sm,
   },
-  errorText: {
-    ...typography.body,
-    textAlign: "center",
-  },
+  errorText: { ...typography.body, textAlign: "center" },
 })

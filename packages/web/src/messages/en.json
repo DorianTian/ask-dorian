@@ -100,7 +100,20 @@
     "pendingReview": "Pending Review",
     "processed": "Processed",
     "dropMore": "Drop more fragments",
-    "dropMoreDesc": "Dorian will automatically extract tasks and data for you."
+    "dropMoreDesc": "Dorian will automatically extract tasks and data for you.",
+    "capturePlaceholder": "Drop a thought, note, or any fragment...",
+    "toSend": "to send",
+    "capture": "Capture",
+    "noFragments": "No fragments yet",
+    "noFragmentsDesc": "Capture your first fragment using the input above",
+    "confirm": "Confirm",
+    "reject": "Reject",
+    "statusPending": "Pending",
+    "statusProcessing": "AI Processing",
+    "statusProcessed": "Extracted",
+    "statusConfirmed": "Confirmed",
+    "statusRejected": "Rejected",
+    "statusFailed": "Failed"
   },
   "knowledge": {
     "title": "Knowledge Library",

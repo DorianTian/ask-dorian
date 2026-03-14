@@ -100,7 +100,20 @@
     "pendingReview": "待审核",
     "processed": "已处理",
     "dropMore": "拖放更多碎片",
-    "dropMoreDesc": "Dorian 将自动为你提取任务和数据。"
+    "dropMoreDesc": "Dorian 将自动为你提取任务和数据。",
+    "capturePlaceholder": "输入想法、笔记、或任何碎片...",
+    "toSend": "发送",
+    "capture": "捕获",
+    "noFragments": "暂无碎片",
+    "noFragmentsDesc": "在上方输入框中捕获你的第一个碎片",
+    "confirm": "确认",
+    "reject": "拒绝",
+    "statusPending": "待处理",
+    "statusProcessing": "AI 处理中",
+    "statusProcessed": "已提取",
+    "statusConfirmed": "已确认",
+    "statusRejected": "已拒绝",
+    "statusFailed": "处理失败"
   },
   "knowledge": {
     "title": "知识库",
