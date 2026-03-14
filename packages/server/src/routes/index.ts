@@ -13,6 +13,7 @@ import { reviewRoutes } from "./review.js";
 import { notificationRoutes } from "./notifications.js";
 import { searchRoutes } from "./search.js";
 import { sseRoutes } from "./sse.js";
+import { ritualRoutes } from "./rituals.js";
 
 export const router = new Router({ prefix: "/api/v1" });
 
@@ -35,3 +36,4 @@ router.use(reviewRoutes.routes());
 router.use(notificationRoutes.routes());
 router.use(searchRoutes.routes());
 router.use(sseRoutes.routes());
+router.use(ritualRoutes.routes());
