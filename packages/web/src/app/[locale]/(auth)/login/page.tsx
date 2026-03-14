@@ -135,12 +135,12 @@ export default function LoginPage() {
       >
         {/* Header */}
         <div className="text-center space-y-4">
-          <Link
+          <a
             href="/"
             className="inline-flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-sm font-medium mb-4"
           >
             <ArrowRight size={16} className="rotate-180" /> {t("back")}
-          </Link>
+          </a>
           <div className="size-16 bg-primary rounded-2xl flex items-center justify-center text-white shadow-2xl shadow-primary/40 mx-auto">
             <Diamond size={32} />
           </div>
