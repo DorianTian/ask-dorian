@@ -246,6 +246,57 @@ export interface Knowledge {
   ftsContent: string | null
 }
 
+// --- Rituals ---
+
+export interface Ritual {
+  id: string
+  userId: string
+  taskId: string | null
+  title: string
+  isFocus: boolean
+  sortOrder: string
+  isActive: boolean
+  version: number
+  createdAt: string
+  updatedAt: string
+  deletedAt: string | null
+}
+
+export interface RitualWithCompletion extends Ritual {
+  completed: boolean
+  completedAt: string | null
+}
+
+export interface RitualProgress {
+  completed: number
+  total: number
+}
+
+export interface RitualListResponse {
+  items: RitualWithCompletion[]
+  progress: RitualProgress
+}
+
+export interface RitualToggleResponse {
+  completed: boolean
+  completedAt: string | null
+}
+
+export interface RitualDailyBreakdown {
+  date: string
+  completed: number
+  total: number
+}
+
+export interface RitualStats {
+  completionRate: number
+  totalCompleted: number
+  totalPossible: number
+  currentStreak: number
+  bestStreak: number
+  dailyBreakdown: RitualDailyBreakdown[]
+}
+
 // --- Auth ---
 
 export interface AuthTokens {
@@ -274,6 +325,7 @@ export interface TodayDashboard {
   }
   events: CalendarEvent[]
   pendingFragments: Fragment[]
+  rituals: RitualListResponse
   stats: {
     taskCounts: { status: string; count: number }[]
   }

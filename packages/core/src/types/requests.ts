@@ -30,10 +30,12 @@ export interface LoginRequest {
 }
 
 export interface GoogleOAuthRequest {
-  googleSub: string
-  email: string
-  name: string
-  avatarUrl?: string
+  idToken: string
+  deviceInfo: DeviceInfo
+}
+
+export interface GitHubOAuthRequest {
+  code: string
   deviceInfo: DeviceInfo
 }
 
@@ -195,4 +197,25 @@ export interface ListNotificationsParams {
 export interface ReviewParams {
   weekStart: string
   timezone?: string
+}
+
+// --- Ritual ---
+
+export interface CreateRitualRequest {
+  title: string
+  isFocus?: boolean
+  taskId?: string | null
+}
+
+export type UpdateRitualRequest = Partial<{
+  title: string
+  isFocus: boolean
+  sortOrder: string
+  isActive: boolean
+  taskId: string | null
+}>
+
+export interface RitualStatsParams {
+  from: string
+  to: string
 }
