@@ -8,6 +8,7 @@ import type { OnboardingScreenProps } from "../../navigation/types"
 import { useColors } from "../../theme"
 import { GoogleLogo } from "../../components/google-logo"
 import { completeOnboarding } from "../../navigation/root-navigator"
+import { FadeInView } from "../../components/fade-in-view"
 
 export function Onboarding4() {
   const colors = useColors()
@@ -33,85 +34,89 @@ export function Onboarding4() {
 
       {/* Main content */}
       <ScrollView contentContainerStyle={s.mainContent}>
-        {/* CheckCircle icon with glow — size-24 (96x96) */}
-        <View style={s.iconArea}>
-          <View style={[s.iconGlow, { backgroundColor: colors.brandFrom }]} />
-          <View style={[s.iconCircle, { backgroundColor: colors.brandFrom + "1A", borderColor: colors.brandFrom + "4D" }]}>
-            <CheckCircle size={48} color={colors.brandFrom} />
-          </View>
-        </View>
-
-        {/* Title — text-4xl font-bold leading-tight mb-4 */}
-        <Text style={[s.title, { color: colors.textPrimary }]}>You're all set!</Text>
-        <Text style={[s.subtitle, { color: colors.textTertiary }]}>
-          Your account has been created. Connect your calendar to start synchronizing your schedule.
-        </Text>
-
-        {/* Calendar card — bg-white/5 border border-white/10 rounded-xl p-6 */}
-        <View style={[s.calendarCard, { backgroundColor: colors.card + "0D", borderColor: colors.border }]}>
-          {/* Calendar image area */}
-          <View style={s.calendarImageArea}>
-            <Image
-              source={{ uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuCSJLo5XjV9qBXgEZa4tiVFBq2vhT3dBpM4jGxumZNqa6S3eb6kIPfyBKiJ6_nB-I2sDxFBClSc5RgPqLJau7P3c33KbsKNr02qpCiOjq-SrBfbFuUYrm8mfwA0YdZFLSdJ0sTfCPT__oSU2T_Jtj3GB5nKlLMztP_7OYgmfagNimV355uiigMZCFrNjnI1FAuWS9H0XXbWKXu2CTySsqYWfyxmLJapkdnhuOhGkyyxEAqO9jgZ_IKY8-ePYtf0vGiI5sV1a3yPSFE" }}
-              style={s.calendarImage}
-              resizeMode="cover"
-            />
-            <View style={s.calendarIconOverlay}>
-              <View style={[s.calendarIconBg, { borderColor: "rgba(255,255,255,0.1)" }]}>
-                <CalendarIcon size={32} color="#FFFFFF" />
-              </View>
+        {/* CheckCircle icon with glow */}
+        <FadeInView delay={0} duration={500}>
+          <View style={s.iconArea}>
+            <View style={[s.iconGlow, { backgroundColor: colors.brandFrom }]} />
+            <View style={[s.iconCircle, { backgroundColor: colors.brandFrom + "1A", borderColor: colors.brandFrom + "4D" }]}>
+              <CheckCircle size={48} color={colors.brandFrom} />
             </View>
           </View>
+        </FadeInView>
 
-          <View style={s.calendarTextArea}>
-            <Text style={[s.calendarTitle, { color: colors.textPrimary }]}>Sync your schedule</Text>
-            <Text style={[s.calendarDesc, { color: colors.textTertiary }]}>Keep track of all your appointments in one place and avoid double-booking.</Text>
+        <FadeInView delay={200}>
+          <Text style={[s.title, { color: colors.textPrimary }]}>You're all set!</Text>
+          <Text style={[s.subtitle, { color: colors.textTertiary }]}>
+            Your account has been created. Connect your calendar to start synchronizing your schedule.
+          </Text>
+        </FadeInView>
+
+        {/* Calendar card */}
+        <FadeInView delay={400} duration={600}>
+          <View style={[s.calendarCard, { backgroundColor: colors.card + "0D", borderColor: colors.border }]}>
+            <View style={s.calendarImageArea}>
+              <Image
+                source={{ uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuCSJLo5XjV9qBXgEZa4tiVFBq2vhT3dBpM4jGxumZNqa6S3eb6kIPfyBKiJ6_nB-I2sDxFBClSc5RgPqLJau7P3c33KbsKNr02qpCiOjq-SrBfbFuUYrm8mfwA0YdZFLSdJ0sTfCPT__oSU2T_Jtj3GB5nKlLMztP_7OYgmfagNimV355uiigMZCFrNjnI1FAuWS9H0XXbWKXu2CTySsqYWfyxmLJapkdnhuOhGkyyxEAqO9jgZ_IKY8-ePYtf0vGiI5sV1a3yPSFE" }}
+                style={s.calendarImage}
+                resizeMode="cover"
+              />
+              <View style={s.calendarIconOverlay}>
+                <View style={[s.calendarIconBg, { borderColor: "rgba(255,255,255,0.1)" }]}>
+                  <CalendarIcon size={32} color="#FFFFFF" />
+                </View>
+              </View>
+            </View>
+
+            <View style={s.calendarTextArea}>
+              <Text style={[s.calendarTitle, { color: colors.textPrimary }]}>Sync your schedule</Text>
+              <Text style={[s.calendarDesc, { color: colors.textTertiary }]}>Keep track of all your appointments in one place and avoid double-booking.</Text>
+            </View>
+
+            <TouchableOpacity
+              style={[s.connectButton, { backgroundColor: colors.brandFrom, shadowColor: colors.brandFrom }]}
+              onPress={handleComplete}
+              activeOpacity={0.8}
+            >
+              <CalendarIcon size={20} color="#FFFFFF" />
+              <Text style={s.connectText}>Connect Google Calendar</Text>
+            </TouchableOpacity>
           </View>
+        </FadeInView>
 
-          {/* Connect button — h-14 (56px) */}
-          <TouchableOpacity
-            style={[s.connectButton, { backgroundColor: colors.brandFrom, shadowColor: colors.brandFrom }]}
-            onPress={handleComplete}
-            activeOpacity={0.8}
-          >
-            <CalendarIcon size={20} color="#FFFFFF" />
-            <Text style={s.connectText}>Connect Google Calendar</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Login section */}
+        <FadeInView delay={650}>
+          <View style={s.loginSection}>
+            <View style={s.dividerRow}>
+              <View style={[s.dividerLine, { backgroundColor: colors.border }]} />
+              <Text style={[s.dividerText, { color: colors.textMuted }]}>or sign in to continue</Text>
+              <View style={[s.dividerLine, { backgroundColor: colors.border }]} />
+            </View>
 
-        {/* Login section — divider + auth buttons */}
-        <View style={s.loginSection}>
-          <View style={s.dividerRow}>
-            <View style={[s.dividerLine, { backgroundColor: colors.border }]} />
-            <Text style={[s.dividerText, { color: colors.textMuted }]}>or sign in to continue</Text>
-            <View style={[s.dividerLine, { backgroundColor: colors.border }]} />
+            <TouchableOpacity
+              style={[s.authButton, { backgroundColor: colors.card + "0D", borderColor: colors.border }]}
+              onPress={handleComplete}
+              activeOpacity={0.7}
+            >
+              <GoogleLogo size={20} />
+              <Text style={[s.authButtonText, { color: colors.textPrimary }]}>Continue with Google</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[s.authButton, { backgroundColor: colors.card + "0D", borderColor: colors.border }]}
+              onPress={handleComplete}
+              activeOpacity={0.7}
+            >
+              <Mail size={20} color={colors.textPrimary} />
+              <Text style={[s.authButtonText, { color: colors.textPrimary }]}>Continue with Email</Text>
+            </TouchableOpacity>
           </View>
+        </FadeInView>
 
-          {/* Google OAuth */}
-          <TouchableOpacity
-            style={[s.authButton, { backgroundColor: colors.card + "0D", borderColor: colors.border }]}
-            onPress={handleComplete}
-            activeOpacity={0.7}
-          >
-            <GoogleLogo size={20} />
-            <Text style={[s.authButtonText, { color: colors.textPrimary }]}>Continue with Google</Text>
+        <FadeInView delay={800}>
+          <TouchableOpacity onPress={handleComplete} style={s.skipBtn} activeOpacity={0.7}>
+            <Text style={[s.skipText, { color: colors.textTertiary }]}>Skip for now</Text>
           </TouchableOpacity>
-
-          {/* Email */}
-          <TouchableOpacity
-            style={[s.authButton, { backgroundColor: colors.card + "0D", borderColor: colors.border }]}
-            onPress={handleComplete}
-            activeOpacity={0.7}
-          >
-            <Mail size={20} color={colors.textPrimary} />
-            <Text style={[s.authButtonText, { color: colors.textPrimary }]}>Continue with Email</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Skip button */}
-        <TouchableOpacity onPress={handleComplete} style={s.skipBtn} activeOpacity={0.7}>
-          <Text style={[s.skipText, { color: colors.textTertiary }]}>Skip for now</Text>
-        </TouchableOpacity>
+        </FadeInView>
       </ScrollView>
     </SafeAreaView>
   )

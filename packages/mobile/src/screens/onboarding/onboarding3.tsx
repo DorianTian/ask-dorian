@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, BrainCircuit, Calendar, User, CheckCircle2 } fro
 import type { OnboardingScreenProps } from "../../navigation/types"
 import { useColors } from "../../theme"
 import { completeOnboarding } from "../../navigation/root-navigator"
+import { FadeInView } from "../../components/fade-in-view"
 
 const mono = Platform.select({ ios: { fontFamily: "Menlo" as const }, android: { fontFamily: "monospace" as const } })
 
@@ -32,61 +33,59 @@ export function Onboarding3() {
       </View>
 
       {/* Title area — px-6 text-center */}
-      <View style={s.titleArea}>
+      <FadeInView delay={0} duration={500} style={s.titleArea}>
         <Text style={[s.title, { color: colors.textPrimary }]}>Magic Processing</Text>
         <Text style={[s.titleDesc, { color: colors.textTertiary }]}>See how we turn messy notes into organized tasks in seconds.</Text>
-      </View>
+      </FadeInView>
 
       {/* Demo card — mx-6 p-6 rounded-xl bg-primary/5 border border-primary/20 */}
-      <View style={[s.demoCard, { backgroundColor: colors.brandFrom + "0D", borderColor: colors.brandFrom + "33" }]}>
-        {/* Glow circles inside card */}
-        <View style={[s.cardGlowBottom, { backgroundColor: colors.brandFrom }]} />
-        <View style={[s.cardGlowTop, { backgroundColor: colors.brandFrom }]} />
+      <FadeInView delay={250} duration={600}>
+        <View style={[s.demoCard, { backgroundColor: colors.brandFrom + "0D", borderColor: colors.brandFrom + "33" }]}>
+          <View style={[s.cardGlowBottom, { backgroundColor: colors.brandFrom }]} />
+          <View style={[s.cardGlowTop, { backgroundColor: colors.brandFrom }]} />
 
-        {/* Input section */}
-        <View style={s.inputSection}>
-          <Text style={[s.sectionLabel, { color: colors.brandFrom }]}>Input Note</Text>
-          <View style={[s.inputCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.borderLight }]}>
-            <Text style={[s.inputText, { color: colors.textSecondary }]}>"Meeting with Sarah at 4pm about UI"</Text>
+          <View style={s.inputSection}>
+            <Text style={[s.sectionLabel, { color: colors.brandFrom }]}>Input Note</Text>
+            <View style={[s.inputCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.borderLight }]}>
+              <Text style={[s.inputText, { color: colors.textSecondary }]}>"Meeting with Sarah at 4pm about UI"</Text>
+            </View>
           </View>
-        </View>
 
-        {/* AI thinking indicator */}
-        <View style={s.aiIndicator}>
-          <View style={[s.aiLine, { backgroundColor: colors.brandFrom }]} />
-          <View style={[s.aiPill, { backgroundColor: colors.brandFrom + "1A", borderColor: colors.brandFrom + "4D" }]}>
-            <BrainCircuit size={16} color={colors.brandFrom} />
-            <Text style={[s.aiText, { color: colors.brandFrom }]}>AI is thinking...</Text>
+          <View style={s.aiIndicator}>
+            <View style={[s.aiLine, { backgroundColor: colors.brandFrom }]} />
+            <View style={[s.aiPill, { backgroundColor: colors.brandFrom + "1A", borderColor: colors.brandFrom + "4D" }]}>
+              <BrainCircuit size={16} color={colors.brandFrom} />
+              <Text style={[s.aiText, { color: colors.brandFrom }]}>AI is thinking...</Text>
+            </View>
+            <View style={[s.aiLine, { backgroundColor: colors.brandFrom }]} />
           </View>
-          <View style={[s.aiLine, { backgroundColor: colors.brandFrom }]} />
-        </View>
 
-        {/* Output section */}
-        <View style={s.outputSection}>
-          <Text style={[s.sectionLabel, { color: colors.brandFrom }]}>Structured Task</Text>
-          <View style={[s.outputCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.borderLight, borderLeftColor: colors.brandFrom }]}>
-            <View style={s.outputHeader}>
-              <View style={{ flex: 1 }}>
-                <Text style={[s.outputTitle, { color: colors.textPrimary }]}>UI Review Meeting</Text>
-                <View style={s.outputDetail}>
-                  <Calendar size={12} color={colors.textTertiary} />
-                  <Text style={[s.outputDetailText, { color: colors.textTertiary }]}>Today, 4:00 PM</Text>
+          <View style={s.outputSection}>
+            <Text style={[s.sectionLabel, { color: colors.brandFrom }]}>Structured Task</Text>
+            <View style={[s.outputCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.borderLight, borderLeftColor: colors.brandFrom }]}>
+              <View style={s.outputHeader}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[s.outputTitle, { color: colors.textPrimary }]}>UI Review Meeting</Text>
+                  <View style={s.outputDetail}>
+                    <Calendar size={12} color={colors.textTertiary} />
+                    <Text style={[s.outputDetailText, { color: colors.textTertiary }]}>Today, 4:00 PM</Text>
+                  </View>
+                  <View style={s.outputDetail}>
+                    <User size={12} color={colors.textTertiary} />
+                    <Text style={[s.outputDetailText, { color: colors.textTertiary }]}>Sarah</Text>
+                  </View>
                 </View>
-                <View style={s.outputDetail}>
-                  <User size={12} color={colors.textTertiary} />
-                  <Text style={[s.outputDetailText, { color: colors.textTertiary }]}>Sarah</Text>
+                <View style={[s.checkBadge, { backgroundColor: colors.brandFrom + "1A" }]}>
+                  <CheckCircle2 size={16} color={colors.brandFrom} />
                 </View>
-              </View>
-              <View style={[s.checkBadge, { backgroundColor: colors.brandFrom + "1A" }]}>
-                <CheckCircle2 size={16} color={colors.brandFrom} />
               </View>
             </View>
           </View>
         </View>
-      </View>
+      </FadeInView>
 
       {/* Bottom buttons */}
-      <View style={s.bottomButtons}>
+      <FadeInView delay={600} style={s.bottomButtons}>
         <TouchableOpacity
           style={[s.ctaButton, { backgroundColor: colors.brandFrom, shadowColor: colors.brandFrom }]}
           onPress={() => navigation.navigate("Onboarding4")}
@@ -102,7 +101,7 @@ export function Onboarding3() {
         >
           <Text style={[s.skipText, { color: colors.textTertiary }]}>Skip for now</Text>
         </TouchableOpacity>
-      </View>
+      </FadeInView>
     </SafeAreaView>
   )
 }

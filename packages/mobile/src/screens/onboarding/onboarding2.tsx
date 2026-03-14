@@ -7,6 +7,7 @@ import { ArrowRight, X, Diamond } from "lucide-react-native"
 import type { OnboardingScreenProps } from "../../navigation/types"
 import { useColors } from "../../theme"
 import { completeOnboarding } from "../../navigation/root-navigator"
+import { FadeInView } from "../../components/fade-in-view"
 
 export function Onboarding2() {
   const colors = useColors()
@@ -33,54 +34,56 @@ export function Onboarding2() {
       </View>
 
       {/* Hero — square image area with Diamond icon */}
-      <View style={s.heroArea}>
+      <FadeInView delay={0} duration={600} style={s.heroArea}>
         <View style={[s.heroSquare, { borderColor: colors.brandFrom + "33" }]}>
           <Image
             source={{ uri: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800" }}
             style={s.heroImage}
             resizeMode="cover"
           />
-          {/* Diamond icon overlay — w-32 h-32 rounded-full bg-primary/20 border border-primary/30 */}
           <View style={[s.diamondCircle, { backgroundColor: colors.brandFrom + "33", borderColor: colors.brandFrom + "4D" }]}>
             <Diamond size={48} color={colors.brandFrom} strokeWidth={1.5} />
           </View>
         </View>
-      </View>
+      </FadeInView>
 
       {/* Bottom content */}
       <View style={s.bottomContent}>
-        {/* Title — text-3xl font-bold leading-tight mb-4 tracking-tight */}
-        <Text style={[s.title, { color: colors.textPrimary }]}>Fragment-First Philosophy</Text>
+        <FadeInView delay={200}>
+          <Text style={[s.title, { color: colors.textPrimary }]}>Fragment-First Philosophy</Text>
+        </FadeInView>
 
-        {/* Subtitle — text-lg text-slate-400 font-normal leading-relaxed mb-10 max-w-[280px] */}
-        <Text style={[s.subtitle, { color: colors.textTertiary }]}>
-          Stop losing fragments. Our system{" "}
-          <Text style={{ color: colors.brandFrom, fontWeight: "500" }}>auto-converts</Text>
-          {" "}every thought into immediate action.
-        </Text>
+        <FadeInView delay={350}>
+          <Text style={[s.subtitle, { color: colors.textTertiary }]}>
+            Stop losing fragments. Our system{" "}
+            <Text style={{ color: colors.brandFrom, fontWeight: "500" }}>auto-converts</Text>
+            {" "}every thought into immediate action.
+          </Text>
+        </FadeInView>
 
-        {/* Progress dots — 4 dots, 2nd is active bar */}
-        <View style={s.progressDots}>
-          <View style={[s.progressDotSmall, { backgroundColor: colors.brandFrom + "33" }]} />
-          <View style={[s.progressBar, { backgroundColor: colors.brandFrom }]} />
-          <View style={[s.progressDotSmall, { backgroundColor: colors.brandFrom + "33" }]} />
-          <View style={[s.progressDotSmall, { backgroundColor: colors.brandFrom + "33" }]} />
-        </View>
+        <FadeInView delay={500}>
+          <View style={s.progressDots}>
+            <View style={[s.progressDotSmall, { backgroundColor: colors.brandFrom + "33" }]} />
+            <View style={[s.progressBar, { backgroundColor: colors.brandFrom }]} />
+            <View style={[s.progressDotSmall, { backgroundColor: colors.brandFrom + "33" }]} />
+            <View style={[s.progressDotSmall, { backgroundColor: colors.brandFrom + "33" }]} />
+          </View>
+        </FadeInView>
 
-        {/* Continue button */}
-        <TouchableOpacity
-          style={[s.ctaButton, { backgroundColor: colors.brandFrom, shadowColor: colors.brandFrom }]}
-          onPress={() => navigation.navigate("Onboarding3")}
-          activeOpacity={0.8}
-        >
-          <Text style={s.ctaText}>Continue</Text>
-          <ArrowRight size={20} color="#FFFFFF" />
-        </TouchableOpacity>
+        <FadeInView delay={650}>
+          <TouchableOpacity
+            style={[s.ctaButton, { backgroundColor: colors.brandFrom, shadowColor: colors.brandFrom }]}
+            onPress={() => navigation.navigate("Onboarding3")}
+            activeOpacity={0.8}
+          >
+            <Text style={s.ctaText}>Continue</Text>
+            <ArrowRight size={20} color="#FFFFFF" />
+          </TouchableOpacity>
 
-        {/* Skip button */}
-        <TouchableOpacity onPress={handleSkip} style={s.skipBtn} activeOpacity={0.7}>
-          <Text style={[s.skipText, { color: colors.textMuted }]}>Skip Intro</Text>
-        </TouchableOpacity>
+          <TouchableOpacity onPress={handleSkip} style={s.skipBtn} activeOpacity={0.7}>
+            <Text style={[s.skipText, { color: colors.textMuted }]}>Skip Intro</Text>
+          </TouchableOpacity>
+        </FadeInView>
       </View>
     </SafeAreaView>
   )

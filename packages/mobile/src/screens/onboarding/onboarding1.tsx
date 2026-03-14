@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import { useNavigation } from "@react-navigation/native"
 import type { OnboardingScreenProps } from "../../navigation/types"
 import { useColors } from "../../theme"
+import { FadeInView } from "../../components/fade-in-view"
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window")
 
@@ -19,7 +20,7 @@ export function Onboarding1() {
       <View style={[s.glowBottomLeft, { backgroundColor: colors.brandFrom + "0D" }]} />
 
       {/* Hero image area */}
-      <View style={s.heroArea}>
+      <FadeInView delay={0} duration={600} style={s.heroArea}>
         <View style={s.heroImageContainer}>
           <Image
             source={{ uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuBV7YHrBhDXl_g_PzH72vJlg0WiQdvfJ597Q9MMQIwnmpeSQjoWi53y2Vg_lNLwSPgYDvtY_YjxqUmyWv0Tn23iz6scMCUr_B1KV-2duHZpBvjrKpwKS38oOPb_b67gLo1k5VqXKAVw3ymksFwNuRDykRM0dtGMc3_AAc_grrJ4LHEA4IaX_BapAG7dttm9rXKvifQRtDOiFyZJrgld72Vi7ynm_Ymy6gShNwIiuiXMqWS3cel1mtXZ0TK4dBNRdJIoexebuV94AzU" }}
@@ -27,45 +28,49 @@ export function Onboarding1() {
             resizeMode="cover"
           />
         </View>
-      </View>
+      </FadeInView>
 
       {/* Bottom content */}
       <View style={s.bottomContent}>
-        {/* Step badge — px-3 py-1 rounded-full bg-primary/10 border border-primary/20 */}
-        <View style={[s.stepBadge, { backgroundColor: colors.brandFrom + "1A", borderColor: colors.brandFrom + "33" }]}>
-          <Text style={[s.stepBadgeText, { color: colors.brandFrom }]}>Step 01</Text>
-        </View>
+        <FadeInView delay={200}>
+          <View style={[s.stepBadge, { backgroundColor: colors.brandFrom + "1A", borderColor: colors.brandFrom + "33" }]}>
+            <Text style={[s.stepBadgeText, { color: colors.brandFrom }]}>Step 01</Text>
+          </View>
+        </FadeInView>
 
-        {/* Title — text-4xl font-bold tracking-tight text-white mb-4 */}
-        <Text style={[s.title, { color: colors.foreground }]}>Ask Dorian.</Text>
+        <FadeInView delay={350}>
+          <Text style={[s.title, { color: colors.foreground }]}>Ask Dorian.</Text>
+        </FadeInView>
 
-        {/* Subtitle — text-xl text-slate-400 font-light leading-relaxed */}
-        <Text style={[s.subtitle, { color: colors.textTertiary }]}>
-          Stop losing{" "}
-          <Text style={{ color: colors.brandFrom, fontWeight: "500" }}>fragments</Text>
-          {" "}of your brilliance.
-        </Text>
+        <FadeInView delay={500}>
+          <Text style={[s.subtitle, { color: colors.textTertiary }]}>
+            Stop losing{" "}
+            <Text style={{ color: colors.brandFrom, fontWeight: "500" }}>fragments</Text>
+            {" "}of your brilliance.
+          </Text>
+        </FadeInView>
 
-        {/* Description — text-sm text-slate-500 mb-10 */}
-        <Text style={[s.description, { color: colors.textMuted }]}>
-          Every thought, captured and crystallized into a structured knowledge base. Your second brain, refined.
-        </Text>
+        <FadeInView delay={650}>
+          <Text style={[s.description, { color: colors.textMuted }]}>
+            Every thought, captured and crystallized into a structured knowledge base. Your second brain, refined.
+          </Text>
+        </FadeInView>
 
-        {/* CTA */}
-        <TouchableOpacity
-          style={[s.ctaButton, { backgroundColor: colors.brandFrom, shadowColor: colors.brandFrom }]}
-          onPress={() => navigation.navigate("Onboarding2")}
-          activeOpacity={0.8}
-        >
-          <Text style={s.ctaText}>Get Started</Text>
-        </TouchableOpacity>
+        <FadeInView delay={800}>
+          <TouchableOpacity
+            style={[s.ctaButton, { backgroundColor: colors.brandFrom, shadowColor: colors.brandFrom }]}
+            onPress={() => navigation.navigate("Onboarding2")}
+            activeOpacity={0.8}
+          >
+            <Text style={s.ctaText}>Get Started</Text>
+          </TouchableOpacity>
 
-        {/* Progress dots — bar + 2 dots */}
-        <View style={s.progressDots}>
-          <View style={[s.progressBar, { backgroundColor: colors.brandFrom }]} />
-          <View style={[s.progressDot, { backgroundColor: colors.surfaceHover }]} />
-          <View style={[s.progressDot, { backgroundColor: colors.surfaceHover }]} />
-        </View>
+          <View style={s.progressDots}>
+            <View style={[s.progressBar, { backgroundColor: colors.brandFrom }]} />
+            <View style={[s.progressDot, { backgroundColor: colors.surfaceHover }]} />
+            <View style={[s.progressDot, { backgroundColor: colors.surfaceHover }]} />
+          </View>
+        </FadeInView>
       </View>
     </SafeAreaView>
   )

@@ -11,7 +11,13 @@ const Stack = createNativeStackNavigator<OnboardingStackParamList>()
 
 export function OnboardingStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        animation: "fade",
+        animationDuration: 400,
+      }}
+    >
       <Stack.Screen name="Onboarding1" component={Onboarding1} />
       <Stack.Screen name="Onboarding2" component={Onboarding2} />
       <Stack.Screen name="Onboarding3" component={Onboarding3} />
