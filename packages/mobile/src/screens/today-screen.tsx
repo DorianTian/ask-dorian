@@ -755,7 +755,6 @@ const s = StyleSheet.create({
     position: "absolute",
     left: 0,
     right: spacing.md,
-    zIndex: 20,
     borderWidth: 1,
     borderRadius: radii.xl,
     padding: spacing.lg,
