@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">Ask Dorian</h1>
-  <p align="center"><strong>碎片输入驱动的个人执行中枢</strong></p>
-  <p align="center"><strong>Fragment-driven personal execution hub</strong></p>
+  <p align="center"><strong>别再丢失碎片了。自动把一切变成行动。</strong></p>
+  <p align="center"><strong>Stop losing fragments. Auto-convert everything into action.</strong></p>
 </p>
 
 ---
@@ -355,6 +355,6 @@ pnpm db:migrate            # Database migrations
 ---
 
 <p align="center">
-  <strong>别再整理了。开始做事。/ Stop organizing. Start doing.</strong><br/>
+  <strong>Crystallize Your Thoughts.</strong><br/>
   <a href="https://askdorian.com">askdorian.com</a>
 </p>
