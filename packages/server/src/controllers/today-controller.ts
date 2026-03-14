@@ -3,6 +3,7 @@ import { z } from "zod";
 import { taskService } from "../services/task-service.js";
 import { eventService } from "../services/event-service.js";
 import { fragmentService } from "../services/fragment-service.js";
+import { ritualService } from "../services/ritual-service.js";
 
 const todayQuerySchema = z.object({
   timezone: z.string().max(50).default("UTC"),
@@ -28,12 +29,14 @@ export const todayController = {
       todayEvents,
       pendingFragments,
       statusCounts,
+      ritualsResult,
     ] = await Promise.all([
       taskService.getScheduledForDate(userId, dateStr),
       taskService.getOverdue(userId, dateStr),
       eventService.getToday(userId, query.timezone),
       fragmentService.list(userId, { status: "pending", limit: 20 }),
       taskService.getStatusCounts(userId),
+      ritualService.list(userId, dateStr),
     ]);
 
     ctx.body = {
@@ -45,6 +48,7 @@ export const todayController = {
       },
       events: todayEvents,
       pendingFragments,
+      rituals: ritualsResult,
       stats: {
         taskCounts: statusCounts,
       },
