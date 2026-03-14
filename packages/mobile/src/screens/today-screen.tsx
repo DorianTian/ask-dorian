@@ -139,6 +139,8 @@ export function TodayScreen() {
   const isWide = windowWidth >= WIDE_BREAKPOINT
   const { data: dashboard, mutate: mutateDashboard } = useTodayDashboard()
 
+  const [blocksWidth, setBlocksWidth] = useState(0)
+
   // Real-time clock for countdown & current-time indicator
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
@@ -208,6 +210,10 @@ export function TodayScreen() {
       const bottomPct = pct(Math.min(block.endHour, TL_END))
       const heightPct = Math.max(bottomPct - topPct, 3) // min 3% so tiny blocks are visible
 
+      // Collision-aware pixel positioning
+      const leftPx = blocksWidth > 0 ? (block.col / block.totalCols) * blocksWidth : 0
+      const widthPx = blocksWidth > 0 ? (blocksWidth / block.totalCols) - 4 : undefined
+
       if (block.status === "completed") {
         return (
           <View
@@ -220,6 +226,7 @@ export function TodayScreen() {
                 backgroundColor: "rgba(0,0,0,0.4)",
                 borderColor: colors.border + "80",
                 opacity: 0.6,
+                ...(widthPx != null ? { left: leftPx, width: widthPx } : {}),
               },
             ]}
           >
@@ -251,6 +258,7 @@ export function TodayScreen() {
                 minHeight: 140,
                 backgroundColor: colors.brandFrom + "1A",
                 borderColor: colors.brandFrom + "80",
+                ...(widthPx != null ? { left: leftPx, width: widthPx } : {}),
               },
             ]}
           >
@@ -311,6 +319,7 @@ export function TodayScreen() {
               height: `${heightPct}%`,
               backgroundColor: colors.card + "66",
               borderColor: colors.border + "80",
+              ...(widthPx != null ? { left: leftPx, width: widthPx } : {}),
             },
           ]}
         >
@@ -323,7 +332,7 @@ export function TodayScreen() {
         </View>
       )
     },
-    [colors, mono, activeRemainingMin, completeTask],
+    [colors, mono, activeRemainingMin, completeTask, blocksWidth],
   )
 
   // -----------------------------------------------------------------------
@@ -351,17 +360,33 @@ export function TodayScreen() {
 
       {/* Timeline grid: time axis + blocks */}
       <View style={s.timelineGrid}>
-        {/* Time axis labels */}
+        {/* Time axis labels — absolutely positioned */}
         <View style={[s.timeAxis, { borderRightColor: colors.border + "80" }]}>
-          {TIME_LABELS.map((label) => (
-            <Text key={label} style={[s.timeAxisLabel, { color: colors.textMuted }, mono]}>
-              {label}
+          {TIME_LABELS.map((h) => (
+            <Text
+              key={h}
+              style={[
+                s.timeAxisLabel,
+                {
+                  color: colors.textMuted,
+                  position: "absolute",
+                  top: `${pct(h)}%`,
+                  right: 0,
+                  transform: [{ translateY: -6 }],
+                },
+                mono,
+              ]}
+            >
+              {h === 24 ? "00:00" : `${String(h).padStart(2, "0")}:00`}
             </Text>
           ))}
         </View>
 
         {/* Blocks area */}
-        <View style={s.blocksArea}>
+        <View
+          style={s.blocksArea}
+          onLayout={(e) => setBlocksWidth(e.nativeEvent.layout.width)}
+        >
           {/* Current time indicator */}
           {showNowLine && (
             <View style={[s.nowIndicator, { top: `${nowPercent}%` }]}>
@@ -391,8 +416,10 @@ export function TodayScreen() {
             style={[
               s.dropZone,
               {
-                top: "75%",
-                height: "8%",
+                top: timelineBlocks.length > 0
+                  ? `${pct(Math.max(...timelineBlocks.map(b => b.endHour)) + 0.5)}%`
+                  : "75%",
+                height: "5%",
                 borderColor: colors.brandFrom + "4D",
                 backgroundColor: colors.brandFrom + "0D",
               },
@@ -774,8 +801,7 @@ const s = StyleSheet.create({
   },
   timeAxis: {
     width: TIME_AXIS_WIDTH,
-    justifyContent: "space-between",
-    paddingVertical: 4,
+    position: "relative" as const,
     borderRightWidth: 1,
     paddingRight: spacing.sm,
     height: TIMELINE_HEIGHT,
@@ -794,7 +820,7 @@ const s = StyleSheet.create({
   posBlock: {
     position: "absolute",
     left: 0,
-    right: spacing.md,
+    right: 0,
     borderWidth: 1,
     borderRadius: radii.xl,
     padding: spacing.md,
@@ -811,13 +837,12 @@ const s = StyleSheet.create({
   posBlockActive: {
     position: "absolute",
     left: 0,
-    right: spacing.md,
+    right: 0,
     borderWidth: 1,
     borderRadius: radii.xl,
     padding: spacing.lg,
     gap: spacing.sm,
     zIndex: 20,
-    // shadow for glow effect
     shadowColor: "#10B981",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.15,
