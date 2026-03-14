@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react"
+import React, { useState, useCallback, useRef } from "react"
 import {
   View,
   Text,
@@ -7,19 +7,26 @@ import {
   TextInput,
   TouchableOpacity,
   Platform,
+  ActivityIndicator,
+  RefreshControl,
+  Modal,
+  Animated,
+  Dimensions,
+  Pressable,
+  ScrollView,
 } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import {
   Search,
-  Diamond,
-  FlaskConical,
-  Archive,
+  FileText,
   LayoutGrid,
   List,
   ChevronDown,
   X,
+  BookOpen,
 } from "lucide-react-native"
-import type { LucideIcon } from "lucide-react-native"
+import { useKnowledge } from "@ask-dorian/core/hooks"
+import type { Knowledge } from "@ask-dorian/core/types"
 import { useColors } from "../theme"
 
 const mono = Platform.select({
@@ -27,63 +34,65 @@ const mono = Platform.select({
   android: { fontFamily: "monospace" as const },
 })
 
-interface KnowledgeItem {
-  id: string
-  title: string
-  desc: string
-  tags: string[]
-  time: string
-  type: string
-  icon: LucideIcon
+function formatRelativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const hours = Math.floor(diff / 3_600_000)
+  if (hours < 1) return "Just now"
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days}d ago`
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" })
 }
-
-const MOCK_DATA: KnowledgeItem[] = [
-  {
-    id: "1",
-    title: "Q4 Market Expansion Thesis",
-    desc: "Comprehensive analysis of the APAC tech corridor and identified entry points for modular AI units.",
-    tags: ["Market", "APAC"],
-    time: "2h ago",
-    type: "Strategy",
-    icon: Diamond,
-  },
-  {
-    id: "2",
-    title: "Neural Lattice Performance",
-    desc: "Experimental data regarding the latency of sub-nanosecond processing in distributed crystal cores.",
-    tags: ["AI", "Hardware"],
-    time: "Yesterday",
-    type: "Research",
-    icon: FlaskConical,
-  },
-  {
-    id: "3",
-    title: "Legacy System Deprecation",
-    desc: "Historical records of the transition from monolithic to decentralized Dorian architecture.",
-    tags: ["Legacy", "DevOps"],
-    time: "Oct 12",
-    type: "Archive",
-    icon: Archive,
-  },
-]
 
 export function KnowledgeScreen() {
   const colors = useColors()
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [searchText, setSearchText] = useState("")
+  const { data: items, isLoading, mutate } = useKnowledge()
+  const [selectedItem, setSelectedItem] = useState<Knowledge | null>(null)
+  const slideAnim = useRef(new Animated.Value(0)).current
+  const screenHeight = Dimensions.get("window").height
+
+  const filtered = (items ?? []).filter((item) => {
+    if (!searchText) return true
+    const q = searchText.toLowerCase()
+    return (
+      item.title.toLowerCase().includes(q) ||
+      item.content.toLowerCase().includes(q) ||
+      item.tags.some((t) => t.toLowerCase().includes(q))
+    )
+  })
+
+  const openSheet = useCallback((item: Knowledge) => {
+    setSelectedItem(item)
+    Animated.spring(slideAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      tension: 65,
+      friction: 11,
+    }).start()
+  }, [slideAnim])
+
+  const closeSheet = useCallback(() => {
+    Animated.timing(slideAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => setSelectedItem(null))
+  }, [slideAnim])
 
   const renderGridItem = useCallback(
-    ({ item }: { item: KnowledgeItem }) => (
-      <KnowledgeCardGrid item={item} colors={colors} />
+    ({ item }: { item: Knowledge }) => (
+      <KnowledgeCardGrid item={item} colors={colors} onPress={() => openSheet(item)} />
     ),
-    [colors]
+    [colors, openSheet]
   )
 
   const renderListItem = useCallback(
-    ({ item }: { item: KnowledgeItem }) => (
-      <KnowledgeCardList item={item} colors={colors} />
+    ({ item }: { item: Knowledge }) => (
+      <KnowledgeCardList item={item} colors={colors} onPress={() => openSheet(item)} />
     ),
-    [colors]
+    [colors, openSheet]
   )
 
   return (
@@ -98,8 +107,8 @@ export function KnowledgeScreen() {
               style={[
                 s.viewToggle,
                 {
-                  backgroundColor: "#18181B", // bg-surface
-                  borderColor: "#27272A", // border-border
+                  backgroundColor: colors.card,
+                  borderColor: colors.border,
                 },
               ]}
             >
@@ -113,7 +122,7 @@ export function KnowledgeScreen() {
               >
                 <LayoutGrid
                   size={16}
-                  color={viewMode === "grid" ? colors.foreground : "#64748B"}
+                  color={viewMode === "grid" ? colors.foreground : colors.textMuted}
                 />
               </TouchableOpacity>
               <TouchableOpacity
@@ -126,7 +135,7 @@ export function KnowledgeScreen() {
               >
                 <List
                   size={16}
-                  color={viewMode === "list" ? colors.foreground : "#64748B"}
+                  color={viewMode === "list" ? colors.foreground : colors.textMuted}
                 />
               </TouchableOpacity>
             </View>
@@ -136,32 +145,31 @@ export function KnowledgeScreen() {
               style={[
                 s.filterButton,
                 {
-                  backgroundColor: "#18181B", // bg-surface
-                  borderColor: "#27272A", // border-border
+                  backgroundColor: colors.card,
+                  borderColor: colors.border,
                 },
               ]}
               activeOpacity={0.7}
             >
               <Text style={[s.filterText, { color: colors.foreground }]}>Filter</Text>
-              <ChevronDown size={14} color="#94A3B8" />
+              <ChevronDown size={14} color={colors.textTertiary} />
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Search bar */}
         <View style={s.searchContainer}>
-          <Search size={20} color="#64748B" style={s.searchIconLeft} />
+          <Search size={20} color={colors.textMuted} style={s.searchIconLeft} />
           <TextInput
             style={[
               s.searchInput,
               {
-                backgroundColor: "#18181BCC", // bg-surface/80
-                borderColor: "#27272A", // border-border
+                backgroundColor: colors.card + "CC",
                 color: colors.foreground,
               },
             ]}
             placeholder="Search your second brain..."
-            placeholderTextColor="#64748B"
+            placeholderTextColor={colors.textMuted}
             value={searchText}
             onChangeText={setSearchText}
           />
@@ -171,32 +179,138 @@ export function KnowledgeScreen() {
               onPress={() => setSearchText("")}
               activeOpacity={0.7}
             >
-              <X size={16} color="#64748B" />
+              <X size={16} color={colors.textMuted} />
             </TouchableOpacity>
           )}
         </View>
       </View>
 
-      {/* Card list */}
-      {viewMode === "grid" ? (
+      {/* Loading */}
+      {isLoading && !items ? (
+        <View style={s.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.brandFrom} />
+        </View>
+      ) : filtered.length === 0 ? (
+        <View style={s.emptyContainer}>
+          <BookOpen size={40} color={colors.mutedForeground} />
+          <Text style={[s.emptyText, { color: colors.mutedForeground }]}>
+            {searchText ? "No results found" : "No knowledge entries yet"}
+          </Text>
+        </View>
+      ) : viewMode === "grid" ? (
         <FlatList
-          data={MOCK_DATA}
+          data={filtered}
           renderItem={renderGridItem}
           keyExtractor={(item) => item.id}
           numColumns={2}
           columnWrapperStyle={s.gridRow}
           contentContainerStyle={s.listContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={false} onRefresh={() => mutate()} tintColor={colors.brandFrom} />
+          }
         />
       ) : (
         <FlatList
-          data={MOCK_DATA}
+          data={filtered}
           renderItem={renderListItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={s.listContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={false} onRefresh={() => mutate()} tintColor={colors.brandFrom} />
+          }
         />
       )}
+
+      {/* Bottom Sheet Detail */}
+      <Modal
+        visible={selectedItem !== null}
+        transparent
+        animationType="none"
+        onRequestClose={closeSheet}
+      >
+        <Pressable style={s.sheetBackdrop} onPress={closeSheet}>
+          <Animated.View
+            style={[
+              s.sheetContainer,
+              {
+                backgroundColor: colors.card,
+                height: screenHeight * 0.7,
+                transform: [{
+                  translateY: slideAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [screenHeight * 0.7, 0],
+                  }),
+                }],
+              },
+            ]}
+          >
+            <Pressable onPress={() => {}} style={{ flex: 1 }}>
+              {/* Drag handle */}
+              <View style={s.sheetHandle}>
+                <View style={[s.sheetHandleBar, { backgroundColor: colors.border }]} />
+              </View>
+
+              {/* Header: badge + close */}
+              <View style={s.sheetHeader}>
+                <View
+                  style={[
+                    s.typeBadge,
+                    { backgroundColor: colors.brandFrom + "1A", borderColor: colors.brandFrom + "33" },
+                  ]}
+                >
+                  <FileText size={12} color={colors.brandFrom} />
+                  <Text style={[s.typeBadgeText, { color: colors.brandFrom }]}>
+                    {selectedItem?.type}
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={closeSheet} activeOpacity={0.7}>
+                  <X size={20} color={colors.textMuted} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Title + time */}
+              <View style={s.sheetTitleSection}>
+                <Text style={[s.sheetTitle, { color: colors.foreground }]}>
+                  {selectedItem?.title}
+                </Text>
+                <Text style={[s.sheetTime, { color: colors.textMuted }, mono]}>
+                  {selectedItem ? formatRelativeTime(selectedItem.updatedAt) : ""}
+                </Text>
+              </View>
+
+              {/* Divider */}
+              <View style={[s.sheetDivider, { backgroundColor: colors.border + "40" }]} />
+
+              {/* Content */}
+              <ScrollView
+                style={s.sheetContent}
+                contentContainerStyle={s.sheetContentInner}
+                showsVerticalScrollIndicator={false}
+              >
+                <Text style={[s.sheetContentText, { color: colors.textSecondary }]}>
+                  {selectedItem?.content}
+                </Text>
+              </ScrollView>
+
+              {/* Tags */}
+              {selectedItem && selectedItem.tags.length > 0 && (
+                <>
+                  <View style={[s.sheetDivider, { backgroundColor: colors.border + "40" }]} />
+                  <View style={s.sheetTags}>
+                    {selectedItem.tags.map((tag) => (
+                      <Text key={tag} style={[s.tagText, { color: colors.textMuted }]}>
+                        #{tag}
+                      </Text>
+                    ))}
+                  </View>
+                </>
+              )}
+            </Pressable>
+          </Animated.View>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   )
 }
@@ -206,39 +320,34 @@ export function KnowledgeScreen() {
 function KnowledgeCardGrid({
   item,
   colors,
+  onPress,
 }: {
-  item: KnowledgeItem
+  item: Knowledge
   colors: ReturnType<typeof useColors>
+  onPress: () => void
 }) {
-  const Icon = item.icon
-  const isArchive = item.type === "Archive"
-
   return (
-    <TouchableOpacity style={s.gridCard} activeOpacity={0.7}>
-      {/* Glow decoration */}
-      <View style={s.glowCircle} />
+    <TouchableOpacity
+      style={[s.gridCard, { backgroundColor: colors.card + "66", borderColor: colors.border + "80" }]}
+      activeOpacity={0.7}
+      onPress={onPress}
+    >
+      <View style={[s.glowCircle, { backgroundColor: colors.brandFrom + "0D" }]} />
 
       {/* Badge + Time row */}
       <View style={[s.cardHeaderRow, { zIndex: 10 }]}>
         <View
           style={[
             s.typeBadge,
-            isArchive
-              ? { backgroundColor: "#18181B", borderColor: "#27272A" }
-              : { backgroundColor: colors.brandFrom + "1A", borderColor: colors.brandFrom + "33" },
+            { backgroundColor: colors.brandFrom + "1A", borderColor: colors.brandFrom + "33" },
           ]}
         >
-          <Icon size={12} color={isArchive ? "#94A3B8" : colors.brandFrom} />
-          <Text
-            style={[
-              s.typeBadgeText,
-              { color: isArchive ? "#94A3B8" : colors.brandFrom },
-            ]}
-          >
+          <FileText size={12} color={colors.brandFrom} />
+          <Text style={[s.typeBadgeText, { color: colors.brandFrom }]}>
             {item.type}
           </Text>
         </View>
-        <Text style={s.timeText}>{item.time}</Text>
+        <Text style={[s.timeText, { color: colors.textMuted }]}>{formatRelativeTime(item.updatedAt)}</Text>
       </View>
 
       {/* Title */}
@@ -246,19 +355,21 @@ function KnowledgeCardGrid({
         {item.title}
       </Text>
 
-      {/* Description */}
-      <Text style={s.gridCardDesc} numberOfLines={2}>
-        {item.desc}
+      {/* Summary / Content preview */}
+      <Text style={[s.gridCardDesc, { color: colors.textTertiary }]} numberOfLines={2}>
+        {item.summary ?? item.content}
       </Text>
 
       {/* Tags */}
-      <View style={[s.tagsRow, { zIndex: 10, marginTop: "auto" }]}>
-        {item.tags.map((tag) => (
-          <Text key={tag} style={s.tagText}>
-            #{tag}
-          </Text>
-        ))}
-      </View>
+      {item.tags.length > 0 && (
+        <View style={[s.tagsRow, { zIndex: 10, marginTop: "auto" }]}>
+          {item.tags.map((tag) => (
+            <Text key={tag} style={[s.tagText, { color: colors.textMuted }]}>
+              #{tag}
+            </Text>
+          ))}
+        </View>
+      )}
     </TouchableOpacity>
   )
 }
@@ -268,35 +379,30 @@ function KnowledgeCardGrid({
 function KnowledgeCardList({
   item,
   colors,
+  onPress,
 }: {
-  item: KnowledgeItem
+  item: Knowledge
   colors: ReturnType<typeof useColors>
+  onPress: () => void
 }) {
-  const Icon = item.icon
-  const isArchive = item.type === "Archive"
-
   return (
-    <TouchableOpacity style={s.listCard} activeOpacity={0.7}>
-      {/* Glow decoration */}
-      <View style={s.glowCircleList} />
+    <TouchableOpacity
+      style={[s.listCard, { backgroundColor: colors.card + "66", borderColor: colors.border + "80" }]}
+      activeOpacity={0.7}
+      onPress={onPress}
+    >
+      <View style={[s.glowCircleList, { backgroundColor: colors.brandFrom + "0D" }]} />
 
       {/* Badge */}
       <View style={[s.listBadgeCol, { zIndex: 10 }]}>
         <View
           style={[
             s.typeBadge,
-            isArchive
-              ? { backgroundColor: "#18181B", borderColor: "#27272A" }
-              : { backgroundColor: colors.brandFrom + "1A", borderColor: colors.brandFrom + "33" },
+            { backgroundColor: colors.brandFrom + "1A", borderColor: colors.brandFrom + "33" },
           ]}
         >
-          <Icon size={12} color={isArchive ? "#94A3B8" : colors.brandFrom} />
-          <Text
-            style={[
-              s.typeBadgeText,
-              { color: isArchive ? "#94A3B8" : colors.brandFrom },
-            ]}
-          >
+          <FileText size={12} color={colors.brandFrom} />
+          <Text style={[s.typeBadgeText, { color: colors.brandFrom }]}>
             {item.type}
           </Text>
         </View>
@@ -305,21 +411,23 @@ function KnowledgeCardList({
       {/* Title + Desc */}
       <View style={[s.listContentCol, { zIndex: 10 }]}>
         <Text style={[s.listCardTitle, { color: colors.foreground }]}>{item.title}</Text>
-        <Text style={s.listCardDesc} numberOfLines={1}>
-          {item.desc}
+        <Text style={[s.listCardDesc, { color: colors.textTertiary }]} numberOfLines={1}>
+          {item.summary ?? item.content}
         </Text>
       </View>
 
       {/* Tags + Time */}
       <View style={[s.listMetaCol, { zIndex: 10 }]}>
-        <View style={s.tagsRow}>
-          {item.tags.map((tag) => (
-            <Text key={tag} style={s.tagText}>
-              #{tag}
-            </Text>
-          ))}
-        </View>
-        <Text style={s.timeText}>{item.time}</Text>
+        {item.tags.length > 0 && (
+          <View style={s.tagsRow}>
+            {item.tags.slice(0, 2).map((tag) => (
+              <Text key={tag} style={[s.tagText, { color: colors.textMuted }]}>
+                #{tag}
+              </Text>
+            ))}
+          </View>
+        )}
+        <Text style={[s.timeText, { color: colors.textMuted }]}>{formatRelativeTime(item.updatedAt)}</Text>
       </View>
     </TouchableOpacity>
   )
@@ -330,8 +438,8 @@ const s = StyleSheet.create({
 
   // Header section
   headerSection: {
-    paddingHorizontal: 16, // p-4
-    gap: 32, // space-y-8 top-level, but between header and search just use gap
+    paddingHorizontal: 16,
+    gap: 32,
     paddingTop: 12,
     paddingBottom: 8,
   },
@@ -339,33 +447,33 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 16, // gap-4
+    gap: 16,
   },
   headerTitle: {
-    fontSize: 30, // text-3xl
-    fontWeight: "700", // font-bold
-    letterSpacing: -0.75, // tracking-tight ~ -0.025 * 30
+    fontSize: 30,
+    fontWeight: "700",
+    letterSpacing: -0.75,
   },
   headerControls: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12, // gap-3
+    gap: 12,
   },
 
   // View toggle
   viewToggle: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 8, // rounded-lg
+    borderRadius: 8,
     borderWidth: 1,
-    padding: 4, // p-1
+    padding: 4,
   },
   toggleBtn: {
-    padding: 6, // p-1.5
-    borderRadius: 6, // rounded-md
+    padding: 6,
+    borderRadius: 6,
   },
   toggleBtnActive: {
-    backgroundColor: "rgba(255,255,255,0.1)", // bg-white/10
+    backgroundColor: "rgba(255,255,255,0.1)",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -377,77 +485,77 @@ const s = StyleSheet.create({
   filterButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8, // gap-2
-    borderRadius: 8, // rounded-lg
+    gap: 8,
+    borderRadius: 8,
     borderWidth: 1,
-    paddingHorizontal: 12, // px-3
-    paddingVertical: 8, // py-2
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   filterText: {
-    fontSize: 14, // text-sm
-    fontWeight: "500", // font-medium
+    fontSize: 14,
+    fontWeight: "500",
   },
 
   // Search bar
   searchContainer: {
     position: "relative",
-    marginTop: 16,
   },
   searchIconLeft: {
     position: "absolute",
-    left: 16, // left-4
+    left: 16,
     top: "50%",
-    marginTop: -10, // half of icon size 20
+    marginTop: -10,
     zIndex: 1,
   },
   searchInput: {
     width: "100%",
-    borderRadius: 12, // rounded-xl
-    borderWidth: 1,
-    paddingLeft: 48, // pl-12
-    paddingRight: 48, // pr-12
-    paddingVertical: 14, // py-3.5
-    fontSize: 14, // text-sm
+    borderRadius: 12,
+    paddingLeft: 48,
+    paddingRight: 48,
+    paddingVertical: 14,
+    fontSize: 14,
   },
   searchClearBtn: {
     position: "absolute",
-    right: 16, // right-4
+    right: 16,
     top: "50%",
-    marginTop: -8, // half of icon size 16
+    marginTop: -8,
     zIndex: 1,
   },
+
+  // Loading / Empty
+  loadingContainer: { flex: 1, alignItems: "center", justifyContent: "center" },
+  emptyContainer: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
+  emptyText: { fontSize: 14, textAlign: "center" },
 
   // List content
   listContent: {
     paddingHorizontal: 16,
     paddingBottom: 48,
-    gap: 16, // grid gap-6 for grid mode doesn't apply here; we use columnWrapperStyle for grid rows
+    gap: 16,
   },
   gridRow: {
-    gap: 16, // gap between columns in grid
+    gap: 16,
   },
 
   // Grid Card
   gridCard: {
     flex: 1,
-    backgroundColor: "#18181B66", // bg-surface/40
-    borderColor: "#27272A80", // border-border/50
     borderWidth: 1,
-    borderRadius: 16, // rounded-2xl
-    padding: 24, // p-6
+    borderRadius: 16,
+    padding: 24,
     overflow: "hidden",
     minHeight: 200,
   },
 
-  // Glow circle (decorative, simulating blur)
+  // Glow circle
   glowCircle: {
     position: "absolute",
-    right: -32, // -right-8
-    top: -32, // -top-8
-    width: 128, // size-32
+    right: -32,
+    top: -32,
+    width: 128,
     height: 128,
-    borderRadius: 9999, // rounded-full
-    backgroundColor: "#10B9810D", // bg-primary/5
+    borderRadius: 9999,
   },
   glowCircleList: {
     position: "absolute",
@@ -456,53 +564,50 @@ const s = StyleSheet.create({
     width: 128,
     height: 128,
     borderRadius: 9999,
-    backgroundColor: "#10B9810D",
   },
 
-  // Card header row (badge + time)
+  // Card header row
   cardHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 16, // mb-4
+    marginBottom: 16,
   },
 
-  // Type badge (pill)
+  // Type badge
   typeBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6, // gap-1.5
-    borderRadius: 9999, // rounded-full
+    gap: 6,
+    borderRadius: 9999,
     borderWidth: 1,
-    paddingHorizontal: 10, // px-2.5
-    paddingVertical: 4, // py-1
+    paddingHorizontal: 10,
+    paddingVertical: 4,
   },
   typeBadgeText: {
-    fontSize: 10, // text-[10px]
-    fontWeight: "700", // font-bold
+    fontSize: 10,
+    fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: 1.6, // tracking-widest
+    letterSpacing: 1.6,
   },
 
   // Time text
   timeText: {
-    fontSize: 10, // text-[10px]
-    color: "#64748B", // text-slate-500
+    fontSize: 10,
     ...mono,
   },
 
   // Grid card title
   gridCardTitle: {
-    fontSize: 18, // text-lg
-    fontWeight: "700", // font-bold
-    marginBottom: 8, // mb-2
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 8,
   },
 
   // Grid card desc
   gridCardDesc: {
-    fontSize: 14, // text-sm
-    color: "#94A3B8", // text-slate-400
-    marginBottom: 16, // mb-4
+    fontSize: 14,
+    marginBottom: 16,
     zIndex: 10,
     flex: 1,
   },
@@ -510,26 +615,23 @@ const s = StyleSheet.create({
   // Tags row
   tagsRow: {
     flexDirection: "row",
-    gap: 8, // gap-2
+    gap: 8,
   },
   tagText: {
-    fontSize: 12, // text-xs
-    color: "#64748B", // text-slate-500
+    fontSize: 12,
     ...mono,
   },
 
   // List Card
   listCard: {
-    backgroundColor: "#18181B66", // bg-surface/40
-    borderColor: "#27272A80", // border-border/50
     borderWidth: 1,
-    borderRadius: 16, // rounded-2xl
-    paddingHorizontal: 20, // p-4 sm:p-5 → use 20 for mobile
+    borderRadius: 16,
+    paddingHorizontal: 20,
     paddingVertical: 16,
     overflow: "hidden",
     flexDirection: "row",
     alignItems: "center",
-    gap: 16, // gap-4
+    gap: 16,
   },
 
   // List badge column
@@ -542,19 +644,80 @@ const s = StyleSheet.create({
     flex: 1,
   },
   listCardTitle: {
-    fontSize: 16, // text-base
-    fontWeight: "700", // font-bold
-    marginBottom: 4, // mb-1
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 4,
   },
   listCardDesc: {
-    fontSize: 14, // text-sm
-    color: "#94A3B8", // text-slate-400
+    fontSize: 14,
   },
 
   // List meta column
   listMetaCol: {
     flexShrink: 0,
     alignItems: "flex-end",
-    gap: 8, // gap for tags and time
+    gap: 8,
+  },
+
+  // Bottom Sheet
+  sheetBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "flex-end",
+  },
+  sheetContainer: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: "hidden",
+  },
+  sheetHandle: {
+    alignItems: "center",
+    paddingVertical: 12,
+  },
+  sheetHandleBar: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+  },
+  sheetHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  sheetTitleSection: {
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    gap: 4,
+  },
+  sheetTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+  },
+  sheetTime: {
+    fontSize: 11,
+  },
+  sheetDivider: {
+    height: 1,
+    marginHorizontal: 20,
+  },
+  sheetContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  sheetContentInner: {
+    paddingVertical: 16,
+  },
+  sheetContentText: {
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  sheetTags: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
 })
