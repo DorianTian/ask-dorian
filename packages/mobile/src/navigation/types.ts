@@ -1,3 +1,4 @@
+// packages/mobile/src/navigation/types.ts
 import type { NativeStackScreenProps } from "@react-navigation/native-stack"
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs"
 import type {
@@ -6,16 +7,18 @@ import type {
 } from "@react-navigation/native"
 
 // ---------------------------------------------------------------------------
-// Auth Stack
+// Onboarding Stack (replaces AuthStack)
 // ---------------------------------------------------------------------------
 
-export type AuthStackParamList = {
-  Login: undefined
-  Register: undefined
+export type OnboardingStackParamList = {
+  Onboarding1: undefined
+  Onboarding2: undefined
+  Onboarding3: undefined
+  Onboarding4: undefined
 }
 
-export type AuthScreenProps<T extends keyof AuthStackParamList> =
-  NativeStackScreenProps<AuthStackParamList, T>
+export type OnboardingScreenProps<T extends keyof OnboardingStackParamList> =
+  NativeStackScreenProps<OnboardingStackParamList, T>
 
 // ---------------------------------------------------------------------------
 // Main Tabs
@@ -23,10 +26,10 @@ export type AuthScreenProps<T extends keyof AuthStackParamList> =
 
 export type MainTabParamList = {
   Today: undefined
-  Inbox: undefined
-  Weekly: undefined
-  Projects: undefined
   Review: undefined
+  DailyReview: undefined
+  Library: undefined
+  Settings: undefined
 }
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> =
@@ -36,10 +39,10 @@ export type MainTabScreenProps<T extends keyof MainTabParamList> =
   >
 
 // ---------------------------------------------------------------------------
-// Root Stack (Auth vs Main switch)
+// Root Stack (Onboarding vs Main switch)
 // ---------------------------------------------------------------------------
 
 export type RootStackParamList = {
-  Auth: NavigatorScreenParams<AuthStackParamList>
+  Onboarding: NavigatorScreenParams<OnboardingStackParamList>
   Main: NavigatorScreenParams<MainTabParamList>
 }
