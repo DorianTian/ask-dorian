@@ -7,9 +7,10 @@ out/
 build/
 
 # env
-.env
-.env.local
-.env.*.local
+# .env
+# .env.local
+# .env.*.local
+.env.production
 
 # credentials
 .credentials.local.md

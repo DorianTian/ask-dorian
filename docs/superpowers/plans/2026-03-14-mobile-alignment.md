@@ -1403,7 +1403,7 @@ Replace the mobile section:
 │   │   │   │   ├── today-screen.tsx          # Daily Telemetry (HUD)
 │   │   │   │   ├── weekly-screen.tsx         # Cognitive Report (HUD)
 │   │   │   │   ├── daily-review-screen.tsx   # Card-based fragment review
-│   │   │   │   ├── knowledge-screen.tsx      # Knowledge Library (search + grid/list)
+│   │   │   │   ├── knowledge-screen.tsx      # Library (search + grid/list)
 │   │   │   │   ├── settings-screen.tsx       # User settings + logout
 │   │   │   │   └── onboarding/              # 4-step onboarding flow
 │   │   │   │       ├── onboarding1.tsx       # Welcome

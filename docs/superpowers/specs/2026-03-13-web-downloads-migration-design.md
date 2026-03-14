@@ -41,9 +41,9 @@ Migrate the Downloads ask-dorian Vite SPA UI (design, components, interactions, 
 | `/` | Landing | Downloads `Landing.tsx` — public, no auth |
 | `/[locale]/(auth)/login` | Login | Downloads `Login.tsx` — replaces current login+register |
 | `/[locale]/(app)/today` | Dashboard | Downloads `Dashboard.tsx` |
-| `/[locale]/(app)/stream` | Fragment Stream | Downloads `FragmentStream.tsx` (was `/inbox`) |
-| `/[locale]/(app)/knowledge` | Knowledge Library | Downloads `KnowledgeLibrary.tsx` |
-| `/[locale]/(app)/review` | Weekly Review | Downloads `WeeklyReview.tsx` |
+| `/[locale]/(app)/stream` | Stream | Downloads `FragmentStream.tsx` (was `/inbox`) |
+| `/[locale]/(app)/knowledge` | Library | Downloads `KnowledgeLibrary.tsx` |
+| `/[locale]/(app)/review` | Review | Downloads `WeeklyReview.tsx` |
 | `/[locale]/(app)/settings` | Settings | Downloads `Settings.tsx` |
 | `/[locale]/(app)/support` | Support & Help | Downloads `Support.tsx` |
 
@@ -250,26 +250,26 @@ Keep all 18 existing shadcn/ui components. CSS variables will be updated to matc
   - Blocks: 08:00 Morning Ritual (completed), 09:00 drop zone, 10:00 Weekly Sync (Team), 12:00 Mindful Lunch
 - **Stats** (4-col grid): Focus Score "92" (+4%), Deep Work "3.2 hrs", Tasks Done "14/22", Energy Peak "10:00 - 12:30"
 
-### Fragment Stream
+### Stream
 
-- Header: "Fragment Stream" title + "Real-time AI processing of your incoming data." subtitle
+- Header: "Stream" title + "Real-time AI processing of your incoming data." subtitle
 - View toggle: List/Grid
 - Tabs: "All Fragments", "Pending Review", "Processed"
 - Fragment cards (via FragmentCard component)
 - Drop zone: UploadCloud icon + "Drop more fragments" + "Dorian will automatically extract tasks and data for you."
 
-### Knowledge Library
+### Library
 
-- Header: "Knowledge Library" title + "AI-curated fragments of your collective intelligence." subtitle
+- Header: "Library" title + "AI-curated fragments of your collective intelligence." subtitle
 - Grid/List view toggle
 - Filter dropdown: All, Thought, Screenshot, Voice, Link
 - Search bar with loading spinner
 - 6 mock cards: Neural Synapse Mapping, Visual Cortex Simulation, CRISPR Editing Log, Quantum Entanglement Protocol, Sustainable Energy Grid, Linguistic Pattern Analysis
 - Each card: project badge + type icon + title + summary + tags
 
-### Weekly Review
+### Review
 
-- Header: "Weekly Review" title + subtitle + Share/Export buttons
+- Header: "Review" title + subtitle + Share/Export buttons
 - 3 stat cards: Focus Score "92" (+4%), Deep Work "24.5 hrs", Completed "48 tasks"
 - Focus Intensity bar chart (Mon-Sun: 40,60,50,80,95,70,85)
 - Key Accomplishments (4 items)
@@ -357,9 +357,9 @@ export const routing = defineRouting({
   "landing": { "badge": "Fragment-First Philosophy", "headline": "CRYSTALLIZE", "headlineGradient": "YOUR THOUGHTS", "subtitle": "...", "cta": "Start Your Flow", "demo": "Watch Demo", ... },
   "login": { "back": "Back to home", "welcome": "Welcome Back", "subtitle": "Sign in to your crystalline flow.", "email": "Continue with Email", "divider": "Or continue with", ... },
   "today": { "aiSummaryBadge": "AI Morning Summary", "aiSummary": "...", "fullBriefing": "Full Briefing", "morningRitual": "Morning Ritual", "dailyTimeline": "Daily Timeline", ... },
-  "stream": { "title": "Fragment Stream", "subtitle": "Real-time AI processing of your incoming data.", "tabs": { ... }, ... },
-  "knowledge": { "title": "Knowledge Library", "subtitle": "AI-curated fragments of your collective intelligence.", ... },
-  "review": { "title": "Weekly Review", ... },
+  "stream": { "title": "Stream", "subtitle": "Real-time AI processing of your incoming data.", "tabs": { ... }, ... },
+  "knowledge": { "title": "Library", "subtitle": "AI-curated fragments of your collective intelligence.", ... },
+  "review": { "title": "Review", ... },
   "settings": { ... },
   "support": { "title": "How can we help?", ... }
 }

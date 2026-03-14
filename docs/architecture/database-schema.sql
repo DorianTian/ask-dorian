@@ -1,8 +1,8 @@
 -- ============================================================
 -- Ask Dorian — 完整数据库 Schema (PostgreSQL 16 + pgvector)
 -- ============================================================
--- 版本: v1.1
--- 日期: 2026-03-10
+-- 版本: v1.2
+-- 日期: 2026-03-14
 -- 设计原则:
 --   1. FK + 多态混用：确定性 1:N 用 FK，动态跨类型关系用 entity_relationship
 --   2. ENUM 用于极其稳定的分类，VARCHAR + CHECK 用于可能变更的分类
@@ -376,7 +376,8 @@ CREATE TABLE IF NOT EXISTS fragments (
   input_source        VARCHAR(50) NOT NULL DEFAULT 'inbox'
                       CHECK (input_source IN (
                         'cmd_k', 'inbox', 'voice', 'wechat', 'slack', 'telegram',
-                        'email', 'chrome_ext', 'api', 'import', 'shortcut', 'share_sheet'
+                        'email', 'chrome_ext', 'api', 'import', 'shortcut', 'share_sheet',
+                        'web_capture_bar'
                       )),
                       -- 输入来源渠道（VARCHAR + CHECK，方便扩展新渠道）
   input_device        VARCHAR(50),
@@ -475,7 +476,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   due_time            TIMETZ,
                       -- 精确截止时间
   scheduled_date      DATE,
-                      -- 排入执行日期（今日面板核心）
+                      -- 排入执行日期（Today 核心）
   scheduled_start     TIMESTAMPTZ,
                       -- Timeboxing 开始
   scheduled_end       TIMESTAMPTZ,
@@ -948,3 +949,49 @@ CREATE TABLE IF NOT EXISTS attachments (
 
 CREATE INDEX IF NOT EXISTS idx_attach_entity         ON attachments (entity_type, entity_id) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_attach_user           ON attachments (user_id, created_at DESC) WHERE deleted_at IS NULL;
+
+-- ========================
+-- 17. rituals — 晨间仪式模板
+-- ========================
+-- 独立轻量表，不复用 tasks 表（语义不同）
+-- 可选关联 Task（task_id nullable），桥接但不耦合
+-- 纯清单型，无时间绑定（Timeline 中作为整体 block 渲染）
+CREATE TABLE IF NOT EXISTS rituals (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id             UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  task_id             UUID REFERENCES tasks(id) ON DELETE SET NULL,
+                      -- 可选关联 Task，删除 task 时 SET NULL 保留 ritual
+  title               VARCHAR(200) NOT NULL,
+  is_focus            BOOLEAN NOT NULL DEFAULT false,
+                      -- Focus Phase 标记（Timeboxing badge）
+  sort_order          VARCHAR(255) NOT NULL DEFAULT '0|hzzzzz:',
+                      -- Fractional indexing，与 tasks/projects 一致
+  is_active           BOOLEAN NOT NULL DEFAULT true,
+                      -- 软停用（暂停参与每日列表，不删除）
+  version             INT NOT NULL DEFAULT 1,
+                      -- 乐观锁，跨端冲突检测
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  deleted_at          TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_rituals_user_active ON rituals (user_id) WHERE is_active = true AND deleted_at IS NULL;
+
+-- ========================
+-- 18. ritual_completions — 每日打卡记录
+-- ========================
+-- 独立表保留完成历史，支持 Review 统计（streak、完成率等）
+-- 同一仪式同一天只能打一次（UNIQUE 约束）
+CREATE TABLE IF NOT EXISTS ritual_completions (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ritual_id           UUID NOT NULL REFERENCES rituals(id) ON DELETE CASCADE,
+  user_id             UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                      -- 冗余 user_id，方便按用户+日期聚合查询
+  completed_date      DATE NOT NULL,
+                      -- 打卡日期（业务日期，非时间戳）
+  completed_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                      -- 实际打卡时间
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_ritual_completion_unique ON ritual_completions (ritual_id, completed_date);
+CREATE INDEX IF NOT EXISTS idx_ritual_completions_user_date ON ritual_completions (user_id, completed_date);

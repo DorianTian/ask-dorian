@@ -15,6 +15,7 @@
 不是"风格统一"或"视觉对齐"，而是每个屏幕的**颜色值、字号、字重、间距、圆角、布局比例、元素层级**都必须与参考项目完全一致。Tailwind class 必须精确解析为对应的 RN 数值（如 `text-3xl` = `fontSize: 30`, `p-6` = `padding: 24`, `rounded-2xl` = `borderRadius: 16`, `text-slate-400` = `color: "#94A3B8"`）。
 
 **设计原则：**
+
 - **样式 1:1 精确转换** — 参考项目每个 Tailwind class 必须解析为精确的 RN 样式值，不允许"差不多"或"近似"
 - 模块结构 1:1 对齐参考项目（5 主屏 + 4 Onboarding）
 - 技术栈不变：React Native + React Navigation + Zustand + SWR + lucide-react-native
@@ -34,13 +35,13 @@
 └─────────┴──────────┴──────────┴──────────┴──────────┘
 ```
 
-| 位置 | Tab Label | Icon | Screen | 参考文件 |
-|------|-----------|------|--------|----------|
-| 1 | Today | `Home` | TodayScreen | `Dashboard.tsx` ✅ 已完成 |
-| 2 | Review | `CalendarCheck` | WeeklyScreen | `WeeklyReview.tsx` ✅ 已完成 |
-| 3 | + (FAB) | `Plus` | DailyReviewScreen | `DailyReview.tsx` **NEW** |
-| 4 | Library | `BookOpen` | KnowledgeScreen | `KnowledgeBase.tsx` **NEW** |
-| 5 | Settings | `Settings` | SettingsScreen | `Settings.tsx` **NEW** |
+| 位置 | Tab Label | Icon            | Screen            | 参考文件                     |
+| ---- | --------- | --------------- | ----------------- | ---------------------------- |
+| 1    | Today     | `Home`          | TodayScreen       | `Dashboard.tsx` ✅ 已完成    |
+| 2    | Review    | `CalendarCheck` | WeeklyScreen      | `WeeklyReview.tsx` ✅ 已完成 |
+| 3    | + (FAB)   | `Plus`          | DailyReviewScreen | `DailyReview.tsx` **NEW**    |
+| 4    | Library   | `BookOpen`      | KnowledgeScreen   | `KnowledgeBase.tsx` **NEW**  |
+| 5    | Settings  | `Settings`      | SettingsScreen    | `Settings.tsx` **NEW**       |
 
 **Center FAB 实现：** 使用自定义 `tabBar` prop 替代默认 tab bar，以支持 FAB 凸起效果（默认 tab bar 会 clip overflow）。FAB 不显示 label，其余 4 个 tab 正常显示 icon + label。FAB 需要根据 `useSafeAreaInsets().bottom` 动态调整垂直位置，兼容有/无 home indicator 的设备。
 
@@ -52,12 +53,12 @@ Onboarding1 → Onboarding2 → Onboarding3 → Onboarding4 → Main (Dashboard)
      └──────────────┴──────────────┴──── Skip ────┘
 ```
 
-| Screen | 内容 | 参考文件 |
-|--------|------|----------|
+| Screen      | 内容                                                        | 参考文件          |
+| ----------- | ----------------------------------------------------------- | ----------------- |
 | Onboarding1 | Welcome — "Ask Dorian. Stop losing fragments" + Get Started | `Onboarding1.tsx` |
-| Onboarding2 | Fragment-First Philosophy — Diamond icon + Continue/Skip | `Onboarding2.tsx` |
-| Onboarding3 | Magic Processing — Input→AI→Structured Task 演示 | `Onboarding3.tsx` |
-| Onboarding4 | You're all set — Connect Google Calendar / Skip | `Onboarding4.tsx` |
+| Onboarding2 | Fragment-First Philosophy — Diamond icon + Continue/Skip    | `Onboarding2.tsx` |
+| Onboarding3 | Magic Processing — Input→AI→Structured Task 演示            | `Onboarding3.tsx` |
+| Onboarding4 | You're all set — Connect Google Calendar / Skip             | `Onboarding4.tsx` |
 
 ### 2.3 Onboarding / Auth 状态机
 
@@ -77,6 +78,7 @@ App 启动
 ```
 
 **关键决策：**
+
 - 新增 `hasCompletedOnboarding` flag 存储在 AsyncStorage（通过 `lib/storage.ts`）
 - `root-navigator.tsx` 的判断逻辑从 `isAuthenticated` 改为 `hasCompletedOnboarding`
 - 现有 `auth-provider.tsx` 和 `useAuth` 保留不动（未来加登录时复用）
@@ -84,6 +86,7 @@ App 启动
 - Onboarding 完成后不触发真实登录（MVP 只做视觉对齐）
 
 **进度指示点标准化（修正参考项目的不一致）：**
+
 - 统一为 4 个点，当前步骤用长条高亮，其余为小圆点
 - Onboarding4 不显示进度点（终态页面）
 
@@ -96,6 +99,7 @@ App 启动
 卡片式碎片 review 界面，用户逐条处理待确认的 fragment。
 
 **结构：**
+
 - Header：标题 "Daily Review" + 待处理数 + time block badge（右侧，primary/10 bg）
 - 主卡片（当前 fragment）：
   - 状态标签（pulsing dot + "Pending Task"）
@@ -116,7 +120,8 @@ App 启动
 知识库搜索 + grid/list 双视图。
 
 **结构：**
-- Header：标题 "Knowledge Library"
+
+- Header：标题 "Library"
 - 右上角：Grid/List 切换（LayoutGrid/List icon toggle）+ Filter 按钮（ChevronDown）
 - 搜索栏：full-width input（Search icon left, X clear right），圆角，focus 时 border→primary + shadow
 - 知识卡片列表：
@@ -126,6 +131,7 @@ App 启动
   - Press 效果：TouchableOpacity activeOpacity
 
 **数据：** Mock 数据 3 张卡片：
+
 1. "Q4 Market Expansion Thesis" — Strategy (Diamond icon)
 2. "Neural Lattice Performance" — Research (FlaskConical icon)
 3. "Legacy System Deprecation" — Archive (Archive icon)
@@ -135,6 +141,7 @@ App 启动
 用户设置页面，分组列表样式。
 
 **结构：**
+
 - 用户信息卡片：头像（Image uri / 渐变占位 fallback）、用户名 "Dorian"、邮箱、"Manage Account" text button (primary)
 - Preferences 分组（section header + 分组卡片）：
   - Appearance（Moon icon → 值 "Dark" + ChevronRight）
@@ -146,6 +153,7 @@ App 启动
 - Log Out 按钮（红色 outline border, 底部，LogOut icon + text）
 
 **交互：**
+
 - 设置项只展示入口，press 无响应（MVP）
 - Log Out → 清除 `hasCompletedOnboarding` → 回到 Onboarding1
 
@@ -154,17 +162,20 @@ App 启动
 4 页引导流程，全屏 dark 背景 + brand glow 效果。
 
 **Onboarding1 — Welcome：**
+
 - 背景：两个 primary 色 glow 圆形（用大尺寸半透明 View + borderRadius 模拟 blur）
 - 中心：hero 图片（`Image` uri + opacity 0.4）
 - 底部：Step 01 badge（pill 样式）→ 标题 "Ask Dorian." → 副标题 → 说明文字
 - CTA："Get Started" full-width primary button → 进度指示（bar + 2 dots）
 
 **Onboarding2 — Fragment-First：**
+
 - 顶部：X close button (left) + "Ask Dorian" title (center)
 - 中心：方形图片区域（Image + 半透明 overlay）+ Diamond icon 居中叠加
 - 底部：标题 "Fragment-First Philosophy" → 副标题 → 进度指示 → "Continue" button + "Skip Intro" text
 
 **Onboarding3 — Magic Processing：**
+
 - 顶部：← back button + "First Value" title
 - 进度指示点
 - 标题 "Magic Processing" → 说明
@@ -175,6 +186,7 @@ App 启动
 - 底部："Continue" + "Skip for now"
 
 **Onboarding4 — You're all set：**
+
 - 顶部：← back + "Step 3 of 3"
 - CheckCircle icon（大号 48px, 带背景 glow View）
 - 标题 "You're all set!" → 说明
@@ -182,6 +194,7 @@ App 启动
 - "Skip for now" text button
 
 **渐变/模糊处理：** 参考项目大量使用 radial-gradient 和 blur。RN 不原生支持这些效果：
+
 - Radial gradient → 用大尺寸半透明圆形 View（`borderRadius: 999`, `opacity: 0.1-0.2`）模拟
 - `blur-[100px]` → 跳过 blur filter，靠大尺寸 + 低透明度实现近似效果
 - 不引入 `react-native-linear-gradient` 或 `expo-linear-gradient`（避免增加依赖，纯色/半透明足够）
@@ -192,59 +205,59 @@ App 启动
 
 ### 4.1 删除（9 files）
 
-| 路径 | 原因 |
-|------|------|
-| `screens/auth/login-screen.tsx` | 被 Onboarding 替换 |
-| `screens/auth/register-screen.tsx` | 被 Onboarding 替换 |
-| `screens/inbox-screen.tsx` | 参考项目无此模块 |
-| `screens/projects-screen.tsx` | 参考项目无此模块 |
-| `screens/review-screen.tsx` | 被 WeeklyScreen (Review tab) 替代 |
-| `components/fragment-card.tsx` | 仅被 inbox-screen 使用，一并删除 |
-| `components/task-item.tsx` | 仅被 review-screen 使用，删除后无消费者 |
-| `components/event-item.tsx` | 仅被 review-screen 使用，删除后无消费者 |
-| `components/empty-state.tsx` | 所有消费者 (inbox/review/projects) 均被删除，无消费者 |
+| 路径                               | 原因                                                  |
+| ---------------------------------- | ----------------------------------------------------- |
+| `screens/auth/login-screen.tsx`    | 被 Onboarding 替换                                    |
+| `screens/auth/register-screen.tsx` | 被 Onboarding 替换                                    |
+| `screens/inbox-screen.tsx`         | 参考项目无此模块                                      |
+| `screens/projects-screen.tsx`      | 参考项目无此模块                                      |
+| `screens/review-screen.tsx`        | 被 WeeklyScreen (Review tab) 替代                     |
+| `components/fragment-card.tsx`     | 仅被 inbox-screen 使用，一并删除                      |
+| `components/task-item.tsx`         | 仅被 review-screen 使用，删除后无消费者               |
+| `components/event-item.tsx`        | 仅被 review-screen 使用，删除后无消费者               |
+| `components/empty-state.tsx`       | 所有消费者 (inbox/review/projects) 均被删除，无消费者 |
 
 ### 4.2 新建（7 files）
 
-| 路径 | 对应参考 |
-|------|----------|
-| `screens/daily-review-screen.tsx` | `DailyReview.tsx` |
-| `screens/knowledge-screen.tsx` | `KnowledgeBase.tsx` |
-| `screens/settings-screen.tsx` | `Settings.tsx` |
-| `screens/onboarding/onboarding1.tsx` | `Onboarding1.tsx` |
-| `screens/onboarding/onboarding2.tsx` | `Onboarding2.tsx` |
-| `screens/onboarding/onboarding3.tsx` | `Onboarding3.tsx` |
-| `screens/onboarding/onboarding4.tsx` | `Onboarding4.tsx` |
+| 路径                                 | 对应参考            |
+| ------------------------------------ | ------------------- |
+| `screens/daily-review-screen.tsx`    | `DailyReview.tsx`   |
+| `screens/knowledge-screen.tsx`       | `KnowledgeBase.tsx` |
+| `screens/settings-screen.tsx`        | `Settings.tsx`      |
+| `screens/onboarding/onboarding1.tsx` | `Onboarding1.tsx`   |
+| `screens/onboarding/onboarding2.tsx` | `Onboarding2.tsx`   |
+| `screens/onboarding/onboarding3.tsx` | `Onboarding3.tsx`   |
+| `screens/onboarding/onboarding4.tsx` | `Onboarding4.tsx`   |
 
 ### 4.3 修改（5 files）
 
-| 路径 | 改动 |
-|------|------|
-| `navigation/types.ts` | AuthStack → OnboardingStack ParamList；MainTab → 新 5 tab |
-| `navigation/auth-stack.tsx` | 重命名为 onboarding-stack，Login/Register → Onboarding1-4 |
-| `navigation/main-tabs.tsx` | 5 tab 重构 + 自定义 tabBar + center FAB |
-| `navigation/root-navigator.tsx` | `isAuthenticated` → `hasCompletedOnboarding` 判断逻辑 |
-| `App.tsx` | 更新 linking config screens + StatusBar `light-content` |
+| 路径                            | 改动                                                      |
+| ------------------------------- | --------------------------------------------------------- |
+| `navigation/types.ts`           | AuthStack → OnboardingStack ParamList；MainTab → 新 5 tab |
+| `navigation/auth-stack.tsx`     | 重命名为 onboarding-stack，Login/Register → Onboarding1-4 |
+| `navigation/main-tabs.tsx`      | 5 tab 重构 + 自定义 tabBar + center FAB                   |
+| `navigation/root-navigator.tsx` | `isAuthenticated` → `hasCompletedOnboarding` 判断逻辑     |
+| `App.tsx`                       | 更新 linking config screens + StatusBar `light-content`   |
 
 ### 4.4 保留不变
 
-| 路径 | 说明 |
-|------|------|
-| `screens/today-screen.tsx` | ✅ 已完成 |
-| `screens/weekly-screen.tsx` | ✅ 已完成 |
-| `theme/colors.ts` | ✅ 已完成 |
-| `theme/spacing.ts` | 不变 |
-| `theme/index.ts` | 不变 |
-| `components/quick-capture.tsx` | TodayScreen 使用，保留 |
-| `providers/auth-provider.tsx` | 保留（未来加登录复用） |
-| `lib/config.ts` | 不变 |
-| `lib/storage.ts` | 不变 |
-| `index.web.tsx` | 不变（linking config 变更在 App.tsx 处理） |
+| 路径                           | 说明                                       |
+| ------------------------------ | ------------------------------------------ |
+| `screens/today-screen.tsx`     | ✅ 已完成                                  |
+| `screens/weekly-screen.tsx`    | ✅ 已完成                                  |
+| `theme/colors.ts`              | ✅ 已完成                                  |
+| `theme/spacing.ts`             | 不变                                       |
+| `theme/index.ts`               | 不变                                       |
+| `components/quick-capture.tsx` | TodayScreen 使用，保留                     |
+| `providers/auth-provider.tsx`  | 保留（未来加登录复用）                     |
+| `lib/config.ts`                | 不变                                       |
+| `lib/storage.ts`               | 不变                                       |
+| `index.web.tsx`                | 不变（linking config 变更在 App.tsx 处理） |
 
 ### 4.5 文档更新
 
-| 路径 | 改动 |
-|------|------|
+| 路径                                          | 改动                            |
+| --------------------------------------------- | ------------------------------- |
 | `docs/architecture/technical-architecture.md` | 更新 mobile 目录结构 + 模块说明 |
 
 ---
@@ -257,162 +270,162 @@ App 启动
 
 #### Spacing（Tailwind 默认 1 unit = 4px）
 
-| Tailwind | RN value |
-|---|---|
-| `p-1` / `m-1` | `4` |
-| `p-1.5` | `6` |
-| `p-2` | `8` |
-| `p-2.5` | `10` |
-| `p-3` | `12` |
-| `p-4` | `16` |
-| `p-5` | `20` |
-| `p-6` | `24` |
-| `p-8` | `32` |
-| `p-12` | `48` |
-| `gap-1` | `4` |
-| `gap-1.5` | `6` |
-| `gap-2` | `8` |
-| `gap-3` | `12` |
-| `gap-4` | `16` |
-| `gap-6` | `24` |
+| Tailwind      | RN value |
+| ------------- | -------- |
+| `p-1` / `m-1` | `4`      |
+| `p-1.5`       | `6`      |
+| `p-2`         | `8`      |
+| `p-2.5`       | `10`     |
+| `p-3`         | `12`     |
+| `p-4`         | `16`     |
+| `p-5`         | `20`     |
+| `p-6`         | `24`     |
+| `p-8`         | `32`     |
+| `p-12`        | `48`     |
+| `gap-1`       | `4`      |
+| `gap-1.5`     | `6`      |
+| `gap-2`       | `8`      |
+| `gap-3`       | `12`     |
+| `gap-4`       | `16`     |
+| `gap-6`       | `24`     |
 
 #### Font Size
 
-| Tailwind | RN fontSize |
-|---|---|
-| `text-[8px]` | `8` |
-| `text-[9px]` | `9` |
-| `text-[10px]` | `10` |
-| `text-[11px]` | `11` |
-| `text-xs` | `12` |
-| `text-sm` | `14` |
-| `text-base` | `16` |
-| `text-lg` | `18` |
-| `text-xl` | `20` |
-| `text-2xl` | `24` |
-| `text-3xl` | `30` |
-| `text-4xl` | `36` |
-| `text-5xl` | `48` |
+| Tailwind      | RN fontSize |
+| ------------- | ----------- |
+| `text-[8px]`  | `8`         |
+| `text-[9px]`  | `9`         |
+| `text-[10px]` | `10`        |
+| `text-[11px]` | `11`        |
+| `text-xs`     | `12`        |
+| `text-sm`     | `14`        |
+| `text-base`   | `16`        |
+| `text-lg`     | `18`        |
+| `text-xl`     | `20`        |
+| `text-2xl`    | `24`        |
+| `text-3xl`    | `30`        |
+| `text-4xl`    | `36`        |
+| `text-5xl`    | `48`        |
 
 #### Font Weight
 
-| Tailwind | RN fontWeight |
-|---|---|
-| `font-normal` | `"400"` |
-| `font-medium` | `"500"` |
-| `font-semibold` | `"600"` |
-| `font-bold` | `"700"` |
-| `font-black` | `"900"` |
+| Tailwind        | RN fontWeight |
+| --------------- | ------------- |
+| `font-normal`   | `"400"`       |
+| `font-medium`   | `"500"`       |
+| `font-semibold` | `"600"`       |
+| `font-bold`     | `"700"`       |
+| `font-black`    | `"900"`       |
 
 #### Letter Spacing
 
-| Tailwind | RN letterSpacing |
-|---|---|
-| `tracking-tight` | `-0.025 * fontSize` (约 -0.3 ~ -0.5) |
-| `tracking-tighter` | `-0.05 * fontSize` |
-| `tracking-normal` | `0` |
-| `tracking-wider` | `0.5` |
-| `tracking-widest` | `1.6` |
-| `tracking-[0.2em]` | `0.2 * fontSize` |
+| Tailwind           | RN letterSpacing                     |
+| ------------------ | ------------------------------------ |
+| `tracking-tight`   | `-0.025 * fontSize` (约 -0.3 ~ -0.5) |
+| `tracking-tighter` | `-0.05 * fontSize`                   |
+| `tracking-normal`  | `0`                                  |
+| `tracking-wider`   | `0.5`                                |
+| `tracking-widest`  | `1.6`                                |
+| `tracking-[0.2em]` | `0.2 * fontSize`                     |
 
 #### Border Radius
 
-| Tailwind | RN borderRadius |
-|---|---|
-| `rounded` | `4` |
-| `rounded-md` | `6` |
-| `rounded-lg` | `8` |
-| `rounded-xl` | `12` |
-| `rounded-2xl` | `16` |
-| `rounded-3xl` | `24` |
-| `rounded-full` | `9999` |
+| Tailwind       | RN borderRadius |
+| -------------- | --------------- |
+| `rounded`      | `4`             |
+| `rounded-md`   | `6`             |
+| `rounded-lg`   | `8`             |
+| `rounded-xl`   | `12`            |
+| `rounded-2xl`  | `16`            |
+| `rounded-3xl`  | `24`            |
+| `rounded-full` | `9999`          |
 
 #### Tailwind Colors → Hex（参考项目 dark theme 精确值）
 
-| Tailwind | Hex |
-|---|---|
-| `text-slate-100` | `#F1F5F9` |
-| `text-slate-200` | `#E2E8F0` |
-| `text-slate-300` | `#CBD5E1` |
-| `text-slate-400` | `#94A3B8` |
-| `text-slate-500` | `#64748B` |
-| `text-slate-600` | `#475569` |
-| `text-slate-700` | `#334155` |
-| `text-slate-800` | `#1E293B` |
-| `text-white` | `#FFFFFF` |
-| `bg-bg` | `#09090B` (colors.background) |
-| `bg-surface` | `#18181B` (colors.card) |
-| `border-border` | `#27272A` (colors.border) |
-| `text-primary` | `#10B981` (colors.brandFrom) |
-| `bg-primary` | `#10B981` |
-| `text-red-500` | `#EF4444` |
-| `text-orange-400` | `#FB923C` |
-| `text-blue-400` | `#60A5FA` |
-| `text-purple-400` | `#C084FC` |
+| Tailwind          | Hex                           |
+| ----------------- | ----------------------------- |
+| `text-slate-100`  | `#F1F5F9`                     |
+| `text-slate-200`  | `#E2E8F0`                     |
+| `text-slate-300`  | `#CBD5E1`                     |
+| `text-slate-400`  | `#94A3B8`                     |
+| `text-slate-500`  | `#64748B`                     |
+| `text-slate-600`  | `#475569`                     |
+| `text-slate-700`  | `#334155`                     |
+| `text-slate-800`  | `#1E293B`                     |
+| `text-white`      | `#FFFFFF`                     |
+| `bg-bg`           | `#09090B` (colors.background) |
+| `bg-surface`      | `#18181B` (colors.card)       |
+| `border-border`   | `#27272A` (colors.border)     |
+| `text-primary`    | `#10B981` (colors.brandFrom)  |
+| `bg-primary`      | `#10B981`                     |
+| `text-red-500`    | `#EF4444`                     |
+| `text-orange-400` | `#FB923C`                     |
+| `text-blue-400`   | `#60A5FA`                     |
+| `text-purple-400` | `#C084FC`                     |
 
 #### Opacity 后缀 → Hex Alpha
 
 | Tailwind | Hex suffix |
-|---|---|
-| `/5` | `0D` |
-| `/10` | `1A` |
-| `/15` | `26` |
-| `/20` | `33` |
-| `/30` | `4D` |
-| `/40` | `66` |
-| `/50` | `80` |
-| `/60` | `99` |
-| `/70` | `B3` |
-| `/80` | `CC` |
-| `/90` | `E6` |
+| -------- | ---------- |
+| `/5`     | `0D`       |
+| `/10`    | `1A`       |
+| `/15`    | `26`       |
+| `/20`    | `33`       |
+| `/30`    | `4D`       |
+| `/40`    | `66`       |
+| `/50`    | `80`       |
+| `/60`    | `99`       |
+| `/70`    | `B3`       |
+| `/80`    | `CC`       |
+| `/90`    | `E6`       |
 
 #### Size
 
-| Tailwind | RN |
-|---|---|
-| `size-2` | `width: 8, height: 8` |
-| `size-2.5` | `width: 10, height: 10` |
-| `size-8` | `width: 32, height: 32` |
-| `size-9` | `width: 36, height: 36` |
-| `size-10` | `width: 40, height: 40` |
-| `size-12` | `width: 48, height: 48` |
-| `size-14` | `width: 56, height: 56` |
-| `size-16` | `width: 64, height: 64` |
-| `size-20` | `width: 80, height: 80` |
-| `size-24` | `width: 96, height: 96` |
-| `size-32` | `width: 128, height: 128` |
-| `size-64` | `width: 256, height: 256` |
-| `size-80` | `width: 320, height: 320` |
-| `h-16` | `height: 64` |
-| `h-20` | `height: 80` |
-| `h-48` | `height: 192` |
-| `w-64` | `width: 256` |
-| `min-h-[120px]` | `minHeight: 120` |
-| `min-h-[140px]` | `minHeight: 140` |
-| `min-h-[600px]` | `minHeight: 600` |
+| Tailwind        | RN                        |
+| --------------- | ------------------------- |
+| `size-2`        | `width: 8, height: 8`     |
+| `size-2.5`      | `width: 10, height: 10`   |
+| `size-8`        | `width: 32, height: 32`   |
+| `size-9`        | `width: 36, height: 36`   |
+| `size-10`       | `width: 40, height: 40`   |
+| `size-12`       | `width: 48, height: 48`   |
+| `size-14`       | `width: 56, height: 56`   |
+| `size-16`       | `width: 64, height: 64`   |
+| `size-20`       | `width: 80, height: 80`   |
+| `size-24`       | `width: 96, height: 96`   |
+| `size-32`       | `width: 128, height: 128` |
+| `size-64`       | `width: 256, height: 256` |
+| `size-80`       | `width: 320, height: 320` |
+| `h-16`          | `height: 64`              |
+| `h-20`          | `height: 80`              |
+| `h-48`          | `height: 192`             |
+| `w-64`          | `width: 256`              |
+| `min-h-[120px]` | `minHeight: 120`          |
+| `min-h-[140px]` | `minHeight: 140`          |
+| `min-h-[600px]` | `minHeight: 600`          |
 
 #### 其他精确转换
 
-| Web (Tailwind) | React Native |
-|---|---|
-| `font-mono` | `Platform.select({ ios: { fontFamily: "Menlo" }, android: { fontFamily: "monospace" } })` |
-| `font-sans` | 不设置（RN 默认即 sans-serif） |
-| `line-through` | `{ textDecorationLine: "line-through" }` |
-| `line-clamp-1` | `numberOfLines={1}` |
-| `line-clamp-2` | `numberOfLines={2}` |
-| `truncate` | `numberOfLines={1}` |
-| `leading-relaxed` | `{ lineHeight: fontSize * 1.625 }` |
-| `leading-tight` | `{ lineHeight: fontSize * 1.25 }` |
-| `leading-snug` | `{ lineHeight: fontSize * 1.375 }` |
-| `hover:...` | `TouchableOpacity` activeOpacity={0.7} |
-| `active:scale-95` | `TouchableOpacity` activeOpacity={0.8} (scale 需 Animated) |
-| `animate-pulse` | RN `Animated` loop (opacity 0.4→1→0.4, 2s) |
-| `<img src="...">` | `<Image source={{ uri: "..." }} resizeMode="cover" />` |
-| `backdrop-blur-*` | 跳过，用半透明背景色近似 |
-| `bg-gradient-*` / `radial-gradient` | 大尺寸半透明圆形 View 模拟（不引入 gradient 库） |
-| `env(safe-area-inset-bottom)` | `SafeAreaView` edges / `useSafeAreaInsets()` |
-| `shadow-lg shadow-primary/20` | `{ shadowColor: "#10B981", shadowOffset: {width:0, height:4}, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 }` |
-| `shadow-2xl` | `{ shadowOffset: {width:0, height:8}, shadowOpacity: 0.25, shadowRadius: 16, elevation: 8 }` |
+| Web (Tailwind)                      | React Native                                                                                                       |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `font-mono`                         | `Platform.select({ ios: { fontFamily: "Menlo" }, android: { fontFamily: "monospace" } })`                          |
+| `font-sans`                         | 不设置（RN 默认即 sans-serif）                                                                                     |
+| `line-through`                      | `{ textDecorationLine: "line-through" }`                                                                           |
+| `line-clamp-1`                      | `numberOfLines={1}`                                                                                                |
+| `line-clamp-2`                      | `numberOfLines={2}`                                                                                                |
+| `truncate`                          | `numberOfLines={1}`                                                                                                |
+| `leading-relaxed`                   | `{ lineHeight: fontSize * 1.625 }`                                                                                 |
+| `leading-tight`                     | `{ lineHeight: fontSize * 1.25 }`                                                                                  |
+| `leading-snug`                      | `{ lineHeight: fontSize * 1.375 }`                                                                                 |
+| `hover:...`                         | `TouchableOpacity` activeOpacity={0.7}                                                                             |
+| `active:scale-95`                   | `TouchableOpacity` activeOpacity={0.8} (scale 需 Animated)                                                         |
+| `animate-pulse`                     | RN `Animated` loop (opacity 0.4→1→0.4, 2s)                                                                         |
+| `<img src="...">`                   | `<Image source={{ uri: "..." }} resizeMode="cover" />`                                                             |
+| `backdrop-blur-*`                   | 跳过，用半透明背景色近似                                                                                           |
+| `bg-gradient-*` / `radial-gradient` | 大尺寸半透明圆形 View 模拟（不引入 gradient 库）                                                                   |
+| `env(safe-area-inset-bottom)`       | `SafeAreaView` edges / `useSafeAreaInsets()`                                                                       |
+| `shadow-lg shadow-primary/20`       | `{ shadowColor: "#10B981", shadowOffset: {width:0, height:4}, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 }` |
+| `shadow-2xl`                        | `{ shadowOffset: {width:0, height:8}, shadowOpacity: 0.25, shadowRadius: 16, elevation: 8 }`                       |
 
 ### 5.2 Center FAB 实现
 
@@ -459,6 +472,7 @@ function CustomTabBar({ state, descriptors, navigation, insets }: BottomTabBarPr
 ### 5.3 屏幕 Header 模式
 
 所有新屏幕沿用 today-screen/weekly-screen 的模式：
+
 - React Navigation `headerShown: false`
 - 屏幕内部自绘 header（`SafeAreaView` edges={["top"]} + 自定义 View）
 - 统一 HUD 风格：icon + 标题 + mono subtitle
@@ -466,6 +480,7 @@ function CustomTabBar({ state, descriptors, navigation, insets }: BottomTabBarPr
 ### 5.4 Onboarding 图片处理
 
 参考项目使用外部 Google 图片 URL。在 RN 中：
+
 - 使用 `<Image source={{ uri }} resizeMode="cover" />` 加载
 - 设置合理的 fallback（纯色/渐变背景代替，图片加载失败不影响布局）
 - Onboarding4 日历图片同理

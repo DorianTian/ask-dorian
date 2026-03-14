@@ -95,7 +95,7 @@
 
 @layer base {
   * {
-    @apply border-border-dark outline-ring/50;
+    @apply border-border-dark;
   }
   body {
     @apply bg-bg-dark text-text-main antialiased transition-colors duration-300;
@@ -104,6 +104,11 @@
     @apply font-sans;
   }
 }
+
+/* --- Focus Mode --- */
+body.focus-mode aside { display: none !important; }
+body.focus-mode [data-capture-bar] { opacity: 0.3; pointer-events: none; transition: opacity 0.3s; }
+body.focus-mode [data-capture-bar]:hover { opacity: 1; pointer-events: auto; }
 
 /* --- Downloads Glass Panel --- */
 .glass-panel {

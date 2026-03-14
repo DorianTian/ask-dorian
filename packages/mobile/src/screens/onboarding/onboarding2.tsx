@@ -26,9 +26,9 @@ export function Onboarding2() {
       {/* Header — X skip + title */}
       <View style={s.header}>
         <TouchableOpacity onPress={handleSkip} style={s.closeBtn} activeOpacity={0.7}>
-          <X size={24} color="#94A3B8" />
+          <X size={24} color={colors.textTertiary} />
         </TouchableOpacity>
-        <Text style={[s.headerTitle, { color: "#F1F5F9" }]}>Ask Dorian</Text>
+        <Text style={[s.headerTitle, { color: colors.textPrimary }]}>Ask Dorian</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -50,10 +50,10 @@ export function Onboarding2() {
       {/* Bottom content */}
       <View style={s.bottomContent}>
         {/* Title — text-3xl font-bold leading-tight mb-4 tracking-tight */}
-        <Text style={[s.title, { color: "#F1F5F9" }]}>Fragment-First Philosophy</Text>
+        <Text style={[s.title, { color: colors.textPrimary }]}>Fragment-First Philosophy</Text>
 
         {/* Subtitle — text-lg text-slate-400 font-normal leading-relaxed mb-10 max-w-[280px] */}
-        <Text style={s.subtitle}>
+        <Text style={[s.subtitle, { color: colors.textTertiary }]}>
           Stop losing fragments. Our system{" "}
           <Text style={{ color: colors.brandFrom, fontWeight: "500" }}>auto-converts</Text>
           {" "}every thought into immediate action.
@@ -69,7 +69,7 @@ export function Onboarding2() {
 
         {/* Continue button */}
         <TouchableOpacity
-          style={[s.ctaButton, { backgroundColor: colors.brandFrom }]}
+          style={[s.ctaButton, { backgroundColor: colors.brandFrom, shadowColor: colors.brandFrom }]}
           onPress={() => navigation.navigate("Onboarding3")}
           activeOpacity={0.8}
         >
@@ -79,7 +79,7 @@ export function Onboarding2() {
 
         {/* Skip button */}
         <TouchableOpacity onPress={handleSkip} style={s.skipBtn} activeOpacity={0.7}>
-          <Text style={s.skipText}>Skip Intro</Text>
+          <Text style={[s.skipText, { color: colors.textMuted }]}>Skip Intro</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -107,7 +107,7 @@ const s = StyleSheet.create({
   // text-3xl font-bold leading-tight mb-4 tracking-tight
   title: { fontSize: 30, fontWeight: "700", lineHeight: 37.5, marginBottom: 16, letterSpacing: -0.75, textAlign: "center" },
   // text-lg text-slate-400 font-normal leading-relaxed mb-10 max-w-[280px]
-  subtitle: { fontSize: 18, color: "#94A3B8", fontWeight: "400", lineHeight: 29.25, marginBottom: 40, maxWidth: 280, textAlign: "center" },
+  subtitle: { fontSize: 18, fontWeight: "400", lineHeight: 29.25, marginBottom: 40, maxWidth: 280, textAlign: "center" },
   // flex gap-2.5 mb-10
   progressDots: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 40 },
   // h-1.5 w-1.5 (6x6)
@@ -118,10 +118,10 @@ const s = StyleSheet.create({
   ctaButton: {
     width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
     paddingVertical: 16, paddingHorizontal: 24, borderRadius: 12,
-    shadowColor: "#10B981", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4,
+    shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4,
   },
   ctaText: { color: "#FFFFFF", fontWeight: "600", fontSize: 16 },
   // mt-4 text-slate-500 font-medium text-sm uppercase tracking-widest
   skipBtn: { marginTop: 16, paddingVertical: 8, marginBottom: 24 },
-  skipText: { color: "#64748B", fontWeight: "500", fontSize: 14, textTransform: "uppercase", letterSpacing: 1.6 },
+  skipText: { fontWeight: "500", fontSize: 14, textTransform: "uppercase", letterSpacing: 1.6 },
 })

@@ -1,6 +1,7 @@
 import Router from "@koa/router";
 import { fragmentController } from "../controllers/fragment-controller.js";
 import { authGuard } from "../middleware/auth-guard.js";
+import { validateUuidParam } from "../middleware/validate-uuid.js";
 import { uploadAudio, uploadImage } from "../middleware/upload.js";
 
 export const fragmentRoutes = new Router({ prefix: "/fragments" });
@@ -17,7 +18,8 @@ fragmentRoutes.post("/voice", uploadAudio, fragmentController.createFromVoice);
 fragmentRoutes.post("/image", uploadImage, fragmentController.createFromImage);
 
 fragmentRoutes.get("/", fragmentController.list);
-fragmentRoutes.get("/:id", fragmentController.getById);
-fragmentRoutes.post("/:id/confirm", fragmentController.confirm);
-fragmentRoutes.post("/:id/reject", fragmentController.reject);
-fragmentRoutes.delete("/:id", fragmentController.delete);
+fragmentRoutes.get("/:id", validateUuidParam, fragmentController.getById);
+fragmentRoutes.patch("/:id", validateUuidParam, fragmentController.update);
+fragmentRoutes.post("/:id/confirm", validateUuidParam, fragmentController.confirm);
+fragmentRoutes.post("/:id/reject", validateUuidParam, fragmentController.reject);
+fragmentRoutes.delete("/:id", validateUuidParam, fragmentController.delete);

@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useCallback } from "react"
 import { useTranslations } from "next-intl"
 import { motion } from "framer-motion"
 import {
@@ -12,11 +13,18 @@ import {
   Share2,
   Download,
   Loader2,
+  Check,
+  Clock,
 } from "lucide-react"
 import { useWeekReview, useRitualStats } from "@ask-dorian/core/hooks"
 
 export default function ReviewPage() {
   const t = useTranslations("review")
+
+  const [shareCopied, setShareCopied] = useState(false)
+  const [expandedStat, setExpandedStat] = useState<number | null>(null)
+  const [checkedTasks, setCheckedTasks] = useState<Set<string>>(new Set())
+  const [scheduledEvents, setScheduledEvents] = useState<Set<string>>(new Set())
 
   // Calculate current week start (Monday)
   const now = new Date()
@@ -33,6 +41,43 @@ export default function ReviewPage() {
   const isLoading = reviewLoading || statsLoading
 
   const completedTasks = review?.completed ?? []
+
+  const handleShare = useCallback(() => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      setShareCopied(true)
+      setTimeout(() => setShareCopied(false), 2000)
+    })
+  }, [])
+
+  const handleToggleTask = useCallback((taskId: string) => {
+    setCheckedTasks((prev) => {
+      const next = new Set(prev)
+      if (next.has(taskId)) {
+        next.delete(taskId)
+      } else {
+        next.add(taskId)
+      }
+      return next
+    })
+  }, [])
+
+  const handleScheduleEvent = useCallback((eventId: string) => {
+    setScheduledEvents((prev) => {
+      const next = new Set(prev)
+      if (next.has(eventId)) {
+        next.delete(eventId)
+      } else {
+        next.add(eventId)
+      }
+      return next
+    })
+  }, [])
+
+  const statDetails = [
+    "Completion rate based on ritual consistency this week",
+    "Days with at least one ritual completed",
+    "Total tasks marked as done during this review period",
+  ]
 
   const stats = [
     {
@@ -67,6 +112,42 @@ export default function ReviewPage() {
     d.total > 0 ? Math.round((d.completed / d.total) * 100) : 0
   )
 
+  const handleExport = () => {
+    const lines: string[] = [
+      `Ask Dorian — Weekly Review`,
+      `Week: ${weekStart} ~ ${weekEnd}`,
+      ``,
+      `--- Stats ---`,
+    ]
+    for (const s of stats) {
+      lines.push(`${s.label}: ${s.value}${s.unit ? ` ${s.unit}` : ""}${s.trend ? ` (${s.trend})` : ""}`)
+    }
+    lines.push(``, `--- Accomplishments ---`)
+    if (completedTasks.length === 0) {
+      lines.push(`(none)`)
+    } else {
+      for (const task of completedTasks) {
+        lines.push(`- ${task.title}`)
+      }
+    }
+    const upcomingEvents = review?.events ?? []
+    lines.push(``, `--- Upcoming Focus ---`)
+    if (upcomingEvents.length === 0) {
+      lines.push(`(none)`)
+    } else {
+      for (const event of upcomingEvents) {
+        lines.push(`- ${event.title}`)
+      }
+    }
+    const blob = new Blob([lines.join("\n")], { type: "text/plain" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `dorian-review-${weekStart}.txt`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 space-y-8">
       <div className="max-w-4xl mx-auto space-y-8">
@@ -78,10 +159,20 @@ export default function ReviewPage() {
             <p className="text-slate-500">{t("subtitle")}</p>
           </div>
           <div className="flex gap-2">
-            <button className="bg-surface-dark border border-border-dark px-4 py-2 rounded-lg text-sm font-medium text-text-main flex items-center gap-2 hover:bg-white/5 hover:border-primary/50 transition-all">
-              <Share2 size={16} className="text-primary" /> {t("share")}
+            <button
+              onClick={handleShare}
+              className="bg-surface-dark border border-border-dark px-4 py-2 rounded-lg text-sm font-medium text-text-main flex items-center gap-2 hover:bg-white/5 hover:border-primary/50 transition-all"
+            >
+              {shareCopied ? (
+                <><Check size={16} className="text-emerald-400" /> Copied!</>
+              ) : (
+                <><Share2 size={16} className="text-primary" /> {t("share")}</>
+              )}
             </button>
-            <button className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20">
+            <button
+              onClick={handleExport}
+              className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20"
+            >
               <Download size={16} /> {t("exportReport")}
             </button>
           </div>
@@ -97,6 +188,7 @@ export default function ReviewPage() {
               {stats.map((stat, i) => (
                 <div
                   key={i}
+                  onClick={() => setExpandedStat(expandedStat === i ? null : i)}
                   className="bg-surface-dark/40 border border-border-dark rounded-2xl p-6 space-y-4 hover:border-primary/30 transition-all group cursor-pointer"
                 >
                   <div className="flex items-center gap-2 text-primary group-hover:scale-110 transition-transform origin-left">
@@ -120,6 +212,11 @@ export default function ReviewPage() {
                     )}
                   </div>
                   <p className="text-xs text-slate-500">{stat.sub}</p>
+                  {expandedStat === i && (
+                    <p className="text-xs text-primary/70 border-t border-border-dark pt-3 mt-1">
+                      {statDetails[i]}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -177,17 +274,25 @@ export default function ReviewPage() {
                   {t("keyAccomplishments")}
                 </h3>
                 <div className="space-y-3">
-                  {completedTasks.slice(0, 6).map((task) => (
-                    <div
-                      key={task.id}
-                      className="flex items-center gap-3 p-4 rounded-xl bg-surface-dark/40 border border-border-dark/50 hover:border-primary/20 hover:bg-white/5 transition-all cursor-pointer group"
-                    >
-                      <div className="size-2 rounded-full bg-primary group-hover:scale-150 transition-transform" />
-                      <span className="text-sm text-slate-300 group-hover:text-text-main transition-colors">
-                        {task.title}
-                      </span>
-                    </div>
-                  ))}
+                  {completedTasks.slice(0, 6).map((task) => {
+                    const isChecked = checkedTasks.has(task.id)
+                    return (
+                      <div
+                        key={task.id}
+                        onClick={() => handleToggleTask(task.id)}
+                        className="flex items-center gap-3 p-4 rounded-xl bg-surface-dark/40 border border-border-dark/50 hover:border-primary/20 hover:bg-white/5 transition-all cursor-pointer group"
+                      >
+                        {isChecked ? (
+                          <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
+                        ) : (
+                          <div className="size-4 rounded-full border border-slate-600 group-hover:border-primary shrink-0 transition-colors" />
+                        )}
+                        <span className={`text-sm transition-colors ${isChecked ? "text-slate-500 line-through" : "text-slate-300 group-hover:text-text-main"}`}>
+                          {task.title}
+                        </span>
+                      </div>
+                    )
+                  })}
                   {completedTasks.length === 0 && (
                     <p className="text-sm text-slate-600 text-center py-4">{t("noCompletedTasks")}</p>
                   )}
@@ -200,25 +305,38 @@ export default function ReviewPage() {
                   {t("upcomingFocus")}
                 </h3>
                 <div className="space-y-3">
-                  {(review?.events ?? []).slice(0, 4).map((event) => (
-                    <div
-                      key={event.id}
-                      className="flex items-center gap-3 p-4 rounded-xl bg-surface-dark/40 border border-border-dark/50 hover:border-primary/20 hover:bg-white/5 transition-all cursor-pointer group"
-                    >
-                      <ArrowRight
-                        size={16}
-                        className="text-primary group-hover:translate-x-1 transition-transform"
-                      />
-                      <span className="text-sm text-slate-300 group-hover:text-text-main transition-colors">
-                        {event.title}
-                      </span>
-                    </div>
-                  ))}
+                  {(review?.events ?? []).slice(0, 4).map((event) => {
+                    const isScheduled = scheduledEvents.has(event.id)
+                    return (
+                      <div
+                        key={event.id}
+                        onClick={() => handleScheduleEvent(event.id)}
+                        className={`flex items-center gap-3 p-4 rounded-xl bg-surface-dark/40 border transition-all cursor-pointer group ${isScheduled ? "border-emerald-500/30 bg-emerald-500/5" : "border-border-dark/50 hover:border-primary/20 hover:bg-white/5"}`}
+                      >
+                        {isScheduled ? (
+                          <Clock size={16} className="text-emerald-400 shrink-0" />
+                        ) : (
+                          <ArrowRight
+                            size={16}
+                            className="text-primary group-hover:translate-x-1 transition-transform shrink-0"
+                          />
+                        )}
+                        <span className={`text-sm flex-1 transition-colors ${isScheduled ? "text-slate-300" : "text-slate-300 group-hover:text-text-main"}`}>
+                          {event.title}
+                        </span>
+                        {isScheduled && (
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">
+                            Scheduled
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             </div>
 
-            {/* Dorian's Weekly Insight */}
+            {/* Weekly Summary */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -232,16 +350,20 @@ export default function ReviewPage() {
                   <h3 className="text-xl font-bold text-text-main group-hover:text-primary transition-colors">
                     {t("weeklyInsightTitle")}
                   </h3>
-                  <p className="text-slate-400 text-base leading-relaxed whitespace-pre-line">
-                    {t("weeklyInsightBody")}
-                  </p>
-                  <button className="text-primary font-bold text-sm flex items-center gap-2 hover:underline group/link">
-                    {t("viewPatterns")}{" "}
-                    <ArrowRight
-                      size={14}
-                      className="group-hover/link:translate-x-1 transition-transform"
-                    />
-                  </button>
+                  <div className="space-y-2 text-slate-400 text-base leading-relaxed">
+                    <p>
+                      {t("insightTasks", { count: completedTasks.length })}
+                      {ritualStats && ritualStats.completionRate > 0 && (
+                        <>{" "}{t("insightRituals", { rate: Math.round(ritualStats.completionRate * 100) })}</>
+                      )}
+                    </p>
+                    {ritualStats && ritualStats.currentStreak > 0 && (
+                      <p>{t("insightStreak", { days: ritualStats.currentStreak })}</p>
+                    )}
+                    {review && review.fragmentsProcessed > 0 && (
+                      <p>{t("insightFragments", { count: review.fragmentsProcessed })}</p>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="absolute -right-20 -bottom-20 size-64 bg-primary/10 rounded-full blur-[100px] group-hover:bg-primary/20 transition-all duration-700" />

@@ -84,7 +84,8 @@ export const fragments = pgTable(
       "fragments_input_source_check",
       sql`${t.inputSource} IN (
         'cmd_k', 'inbox', 'voice', 'wechat', 'slack', 'telegram',
-        'email', 'chrome_ext', 'api', 'import', 'shortcut', 'share_sheet'
+        'email', 'chrome_ext', 'api', 'import', 'shortcut', 'share_sheet',
+        'web_capture_bar'
       )`,
     ),
     check(

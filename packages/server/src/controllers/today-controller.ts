@@ -6,7 +6,6 @@ import { fragmentService } from "../services/fragment-service.js";
 import { ritualService } from "../services/ritual-service.js";
 
 const todayQuerySchema = z.object({
-  timezone: z.string().max(50).default("UTC"),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format, expected YYYY-MM-DD").optional(),
 });
 
@@ -15,12 +14,13 @@ export const todayController = {
   async getDashboard(ctx: Context) {
     const query = todayQuerySchema.parse(ctx.query);
     const userId = ctx.state.userId;
+    const timezone = ctx.get("X-Timezone") || "UTC";
 
     // Determine target date
     const now = new Date();
     const dateStr =
       query.date ??
-      now.toLocaleDateString("en-CA", { timeZone: query.timezone }); // YYYY-MM-DD
+      now.toLocaleDateString("en-CA", { timeZone: timezone }); // YYYY-MM-DD
 
     // Run all queries in parallel
     const [
@@ -33,7 +33,7 @@ export const todayController = {
     ] = await Promise.all([
       taskService.getScheduledForDate(userId, dateStr),
       taskService.getOverdue(userId, dateStr),
-      eventService.getToday(userId, query.timezone),
+      eventService.getToday(userId, timezone),
       fragmentService.list(userId, { status: "pending", limit: 20 }),
       taskService.getStatusCounts(userId),
       ritualService.list(userId, dateStr),
@@ -41,7 +41,7 @@ export const todayController = {
 
     ctx.body = {
       date: dateStr,
-      timezone: query.timezone,
+      timezone,
       tasks: {
         scheduled: scheduledTasks,
         overdue: overdueTasks,

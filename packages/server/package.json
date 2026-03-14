@@ -8,8 +8,10 @@
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "dev:rds": "DOTENV_CONFIG_PATH=.env.production tsx watch src/index.ts",
     "build": "tsup src/index.ts --format esm --dts",
     "start": "node dist/index.js",
+    "start:rds": "DOTENV_CONFIG_PATH=.env.production node dist/index.js",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:migrate:force": "tsx src/db/migrate.ts --force",
     "db:push": "drizzle-kit push",

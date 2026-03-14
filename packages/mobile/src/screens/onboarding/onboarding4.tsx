@@ -1,11 +1,12 @@
 // packages/mobile/src/screens/onboarding/onboarding4.tsx
 import React from "react"
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native"
+import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useNavigation } from "@react-navigation/native"
-import { ArrowLeft, CheckCircle, Calendar as CalendarIcon } from "lucide-react-native"
+import { ArrowLeft, CheckCircle, Calendar as CalendarIcon, Mail } from "lucide-react-native"
 import type { OnboardingScreenProps } from "../../navigation/types"
 import { useColors } from "../../theme"
+import { GoogleLogo } from "../../components/google-logo"
 import { completeOnboarding } from "../../navigation/root-navigator"
 
 export function Onboarding4() {
@@ -25,13 +26,13 @@ export function Onboarding4() {
       {/* Header */}
       <View style={s.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn} activeOpacity={0.7}>
-          <ArrowLeft size={24} color="#F1F5F9" />
+          <ArrowLeft size={24} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={s.headerLabel}>Step 3 of 3</Text>
+        <Text style={[s.headerLabel, { color: colors.textPrimary }]}>Step 3 of 3</Text>
       </View>
 
       {/* Main content */}
-      <View style={s.mainContent}>
+      <ScrollView contentContainerStyle={s.mainContent}>
         {/* CheckCircle icon with glow — size-24 (96x96) */}
         <View style={s.iconArea}>
           <View style={[s.iconGlow, { backgroundColor: colors.brandFrom }]} />
@@ -41,13 +42,13 @@ export function Onboarding4() {
         </View>
 
         {/* Title — text-4xl font-bold leading-tight mb-4 */}
-        <Text style={[s.title, { color: "#F1F5F9" }]}>You're all set!</Text>
-        <Text style={s.subtitle}>
+        <Text style={[s.title, { color: colors.textPrimary }]}>You're all set!</Text>
+        <Text style={[s.subtitle, { color: colors.textTertiary }]}>
           Your account has been created. Connect your calendar to start synchronizing your schedule.
         </Text>
 
         {/* Calendar card — bg-white/5 border border-white/10 rounded-xl p-6 */}
-        <View style={[s.calendarCard, { backgroundColor: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" }]}>
+        <View style={[s.calendarCard, { backgroundColor: colors.card + "0D", borderColor: colors.border }]}>
           {/* Calendar image area */}
           <View style={s.calendarImageArea}>
             <Image
@@ -63,13 +64,13 @@ export function Onboarding4() {
           </View>
 
           <View style={s.calendarTextArea}>
-            <Text style={[s.calendarTitle, { color: "#F1F5F9" }]}>Sync your schedule</Text>
-            <Text style={s.calendarDesc}>Keep track of all your appointments in one place and avoid double-booking.</Text>
+            <Text style={[s.calendarTitle, { color: colors.textPrimary }]}>Sync your schedule</Text>
+            <Text style={[s.calendarDesc, { color: colors.textTertiary }]}>Keep track of all your appointments in one place and avoid double-booking.</Text>
           </View>
 
           {/* Connect button — h-14 (56px) */}
           <TouchableOpacity
-            style={[s.connectButton, { backgroundColor: colors.brandFrom }]}
+            style={[s.connectButton, { backgroundColor: colors.brandFrom, shadowColor: colors.brandFrom }]}
             onPress={handleComplete}
             activeOpacity={0.8}
           >
@@ -78,11 +79,40 @@ export function Onboarding4() {
           </TouchableOpacity>
         </View>
 
+        {/* Login section — divider + auth buttons */}
+        <View style={s.loginSection}>
+          <View style={s.dividerRow}>
+            <View style={[s.dividerLine, { backgroundColor: colors.border }]} />
+            <Text style={[s.dividerText, { color: colors.textMuted }]}>or sign in to continue</Text>
+            <View style={[s.dividerLine, { backgroundColor: colors.border }]} />
+          </View>
+
+          {/* Google OAuth */}
+          <TouchableOpacity
+            style={[s.authButton, { backgroundColor: colors.card + "0D", borderColor: colors.border }]}
+            onPress={handleComplete}
+            activeOpacity={0.7}
+          >
+            <GoogleLogo size={20} />
+            <Text style={[s.authButtonText, { color: colors.textPrimary }]}>Continue with Google</Text>
+          </TouchableOpacity>
+
+          {/* Email */}
+          <TouchableOpacity
+            style={[s.authButton, { backgroundColor: colors.card + "0D", borderColor: colors.border }]}
+            onPress={handleComplete}
+            activeOpacity={0.7}
+          >
+            <Mail size={20} color={colors.textPrimary} />
+            <Text style={[s.authButtonText, { color: colors.textPrimary }]}>Continue with Email</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Skip button */}
         <TouchableOpacity onPress={handleComplete} style={s.skipBtn} activeOpacity={0.7}>
-          <Text style={s.skipText}>Skip for now</Text>
+          <Text style={[s.skipText, { color: colors.textTertiary }]}>Skip for now</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   )
 }
@@ -95,9 +125,9 @@ const s = StyleSheet.create({
   header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 16 },
   backBtn: { width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center" },
   // text-xs opacity-60 uppercase tracking-widest — flex-1 text-center pr-12
-  headerLabel: { flex: 1, textAlign: "center", paddingRight: 48, fontSize: 12, fontWeight: "700", color: "#F1F5F9", opacity: 0.6, textTransform: "uppercase", letterSpacing: 1.6 },
+  headerLabel: { flex: 1, textAlign: "center", paddingRight: 48, fontSize: 12, fontWeight: "700", opacity: 0.6, textTransform: "uppercase", letterSpacing: 1.6 },
   // flex-1 flex-col px-6 pt-8 pb-12 items-center text-center
-  mainContent: { flex: 1, paddingHorizontal: 24, paddingTop: 32, alignItems: "center" },
+  mainContent: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 32, alignItems: "center", paddingBottom: 24 },
   // mb-10 relative
   iconArea: { marginBottom: 40, alignItems: "center", justifyContent: "center" },
   // absolute -inset-4 blur-3xl rounded-full opacity-50
@@ -107,7 +137,7 @@ const s = StyleSheet.create({
   // text-4xl font-bold leading-tight mb-4
   title: { fontSize: 36, fontWeight: "700", lineHeight: 45, marginBottom: 16, textAlign: "center" },
   // text-base text-slate-400 font-normal leading-relaxed max-w-xs
-  subtitle: { fontSize: 16, color: "#94A3B8", fontWeight: "400", lineHeight: 26, maxWidth: 320, textAlign: "center" },
+  subtitle: { fontSize: 16, fontWeight: "400", lineHeight: 26, maxWidth: 320, textAlign: "center" },
   // mt-12 w-full max-w-sm bg-white/5 border border-white/10 rounded-xl p-6 gap-6
   calendarCard: { marginTop: 48, width: "100%", maxWidth: 380, borderRadius: 12, padding: 24, gap: 24, borderWidth: 1 },
   // w-full aspect-video rounded-lg overflow-hidden
@@ -122,16 +152,30 @@ const s = StyleSheet.create({
   // text-lg font-bold
   calendarTitle: { fontSize: 18, fontWeight: "700" },
   // text-sm text-slate-400 leading-normal text-center
-  calendarDesc: { fontSize: 14, color: "#94A3B8", lineHeight: 21, textAlign: "center" },
+  calendarDesc: { fontSize: 14, lineHeight: 21, textAlign: "center" },
   // w-full flex-row items-center justify-center gap-3 rounded-lg h-14 px-6 bg-primary shadow-lg
   connectButton: {
     width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12,
     height: 56, borderRadius: 8, paddingHorizontal: 24,
-    shadowColor: "#10B981", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4,
+    shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4,
   },
   // text-base font-bold
   connectText: { color: "#FFFFFF", fontSize: 16, fontWeight: "700" },
+  // Login section
+  loginSection: { width: "100%", maxWidth: 380, marginTop: 24, gap: 12 },
+  // Divider: line — text — line
+  dividerRow: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 4 },
+  dividerLine: { flex: 1, height: 1 },
+  // text-xs font-mono text-slate-500 uppercase tracking-widest
+  dividerText: { fontSize: 12, fontWeight: "500", letterSpacing: 0.5 },
+  // Auth button: h-14 (56px) rounded-lg border flex-row gap-3
+  authButton: {
+    width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12,
+    height: 56, borderRadius: 8, borderWidth: 1, paddingHorizontal: 24,
+  },
+  // text-base font-medium text-slate-100
+  authButtonText: { fontSize: 16, fontWeight: "500" },
   // mt-auto pt-8 h-12 text-slate-400 font-medium
-  skipBtn: { marginTop: "auto", paddingTop: 32, paddingBottom: 24, height: 48, justifyContent: "center" },
-  skipText: { color: "#94A3B8", fontSize: 16, fontWeight: "500", textAlign: "center" },
+  skipBtn: { paddingTop: 16, paddingBottom: 24, height: 48, justifyContent: "center" },
+  skipText: { fontSize: 16, fontWeight: "500", textAlign: "center" },
 })

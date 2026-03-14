@@ -21,8 +21,8 @@
 ```
 src/app/(landing)/page.tsx                      # Landing page (public, no locale prefix)
 src/app/(landing)/layout.tsx                    # Landing layout (minimal, no providers)
-src/app/[locale]/(app)/stream/page.tsx          # Fragment Stream (replaces inbox)
-src/app/[locale]/(app)/knowledge/page.tsx       # Knowledge Library
+src/app/[locale]/(app)/stream/page.tsx          # Stream (replaces inbox)
+src/app/[locale]/(app)/knowledge/page.tsx       # Library
 src/app/[locale]/(app)/settings/page.tsx        # Settings
 src/app/[locale]/(app)/support/page.tsx         # Support & Help
 src/components/layout/sidebar.tsx               # Desktop sidebar + mobile bottom nav
@@ -489,7 +489,7 @@ All English text extracted verbatim from Downloads components:
     "energyPeak": "Energy Peak"
   },
   "stream": {
-    "title": "Fragment Stream",
+    "title": "Stream",
     "subtitle": "Real-time AI processing of your incoming data.",
     "allFragments": "All Fragments",
     "pendingReview": "Pending Review",
@@ -498,14 +498,14 @@ All English text extracted verbatim from Downloads components:
     "dropMoreDesc": "Dorian will automatically extract tasks and data for you."
   },
   "knowledge": {
-    "title": "Knowledge Library",
+    "title": "Library",
     "subtitle": "AI-curated fragments of your collective intelligence.",
     "searchPlaceholder": "Search your knowledge base...",
     "filter": "Filter",
     "noResults": "No fragments found matching"
   },
   "review": {
-    "title": "Weekly Review",
+    "title": "Review",
     "subtitle": "Your accomplishments, delayed tasks, and key insights from the past week.",
     "share": "Share",
     "exportReport": "Export Report",
@@ -745,7 +745,7 @@ Port Downloads `GlobalSearch.tsx`:
 - Props: `isOpen: boolean`, `onClose: () => void`
 - framer-motion AnimatePresence for enter/exit
 - Search input with focus styling
-- Results: navigation items (Dashboard, Knowledge Library, Weekly Review, Settings) + mock fragments
+- Results: navigation items (Dashboard, Library, Review, Settings) + mock fragments
 - Keyboard hint footer (↑↓ navigate, ↵ select)
 - Navigation uses next-intl `useRouter()` + `router.push()`
 - i18n: `useTranslations("search")`
@@ -1033,7 +1033,7 @@ git commit -m "feat(web): rewrite Today dashboard with Downloads design"
 
 ## Chunk 4: Pages (Part 2 — Stream, Knowledge, Review)
 
-### Task 14: Create Fragment Stream page
+### Task 14: Create Stream page
 
 **Files:**
 - Create: `packages/web/src/app/[locale]/(app)/stream/page.tsx`
@@ -1041,7 +1041,7 @@ git commit -m "feat(web): rewrite Today dashboard with Downloads design"
 - [ ] **Step 1: Create stream page**
 
 Port Downloads `FragmentStream.tsx`:
-- Header: "Fragment Stream" title + subtitle
+- Header: "Stream" title + subtitle
 - View toggle: List/Grid
 - Tabs: "All Fragments", "Pending Review", "Processed"
 - Fragment cards using FragmentCard component
@@ -1059,7 +1059,7 @@ git commit -m "feat(web): add Fragment Stream page from Downloads"
 
 ---
 
-### Task 15: Create Knowledge Library page
+### Task 15: Create Library page
 
 **Files:**
 - Create: `packages/web/src/app/[locale]/(app)/knowledge/page.tsx`
@@ -1084,7 +1084,7 @@ git commit -m "feat(web): add Knowledge Library page from Downloads"
 
 ---
 
-### Task 16: Rewrite Weekly Review page
+### Task 16: Rewrite Review page
 
 **Files:**
 - Modify: `packages/web/src/app/[locale]/(app)/review/page.tsx`
@@ -1092,7 +1092,7 @@ git commit -m "feat(web): add Knowledge Library page from Downloads"
 - [ ] **Step 1: Rewrite review page**
 
 Port Downloads `WeeklyReview.tsx`:
-- Header: "Weekly Review" + subtitle + Share/Export buttons
+- Header: "Review" + subtitle + Share/Export buttons
 - 3 stat cards: Focus Score, Deep Work, Completed
 - Focus Intensity bar chart (pure CSS, 7 bars Mon-Sun)
 - Key Accomplishments (4 items)

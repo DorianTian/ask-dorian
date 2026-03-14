@@ -25,6 +25,7 @@ export const users = pgTable(
 
     // OAuth
     googleSub: varchar("google_sub", { length: 255 }).unique(),
+    githubId: varchar("github_id", { length: 64 }).unique(),
     wechatOpenid: varchar("wechat_openid", { length: 128 }).unique(),
     appleSub: varchar("apple_sub", { length: 255 }).unique(),
 

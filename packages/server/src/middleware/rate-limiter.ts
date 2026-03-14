@@ -4,6 +4,8 @@ import { env } from "../config/env.js";
 /** Timestamps of requests within the current window */
 const store = new Map<string, number[]>();
 
+/** Hard cap to prevent OOM under DDoS */
+const MAX_STORE_SIZE = 50_000;
 const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
 
 /** Periodically purge keys whose entries are all outside the window */
@@ -42,6 +44,14 @@ export async function rateLimiter(ctx: Context, next: Next) {
   // Drop entries outside the sliding window
   const windowStart = now - windowMs;
   const fresh = timestamps.filter((t) => t > windowStart);
+
+  // Reject if store is full (DDoS protection)
+  if (!store.has(key) && store.size >= MAX_STORE_SIZE) {
+    ctx.status = 429;
+    ctx.set("Retry-After", "60");
+    ctx.body = { error: { code: "RATE_LIMITED", message: "Too many requests" } };
+    return;
+  }
 
   if (fresh.length >= maxRequests) {
     // Oldest timestamp in window determines when the next slot opens

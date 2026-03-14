@@ -14,10 +14,18 @@ const createFragmentSchema = z.object({
   sourceApp: z.string().max(100).optional(),
   sourceRef: z.string().max(500).optional(),
   locale: z.string().max(10).optional(),
-  timezone: z.string().max(50).optional(),
+  timezone: z.string().max(50).optional(), // deprecated: prefer X-Timezone header
   location: z.record(z.unknown()).optional(),
   clientContext: z.record(z.unknown()).optional(),
+  metadata: z.record(z.unknown()).optional(),
   parentId: z.string().uuid().optional(),
+});
+
+const updateFragmentSchema = z.object({
+  isPinned: z.boolean().optional(),
+  isArchived: z.boolean().optional(),
+}).refine((data) => data.isPinned !== undefined || data.isArchived !== undefined, {
+  message: "At least one field (isPinned or isArchived) must be provided",
 });
 
 const listFragmentsSchema = z.object({
@@ -33,6 +41,7 @@ export const fragmentController = {
 
     const fragment = await fragmentService.create(userId, {
       ...body,
+      timezone: body.timezone || ctx.get("X-Timezone") || undefined,
       deviceId,
     });
 
@@ -70,6 +79,16 @@ export const fragmentController = {
     ctx.body = fragment;
   },
 
+  async update(ctx: Context) {
+    const body = updateFragmentSchema.parse(ctx.request.body);
+    const fragment = await fragmentService.update(
+      ctx.state.userId,
+      ctx.params.id,
+      body,
+    );
+    ctx.body = fragment;
+  },
+
   async delete(ctx: Context) {
     await fragmentService.delete(ctx.state.userId, ctx.params.id);
     ctx.status = 204;
@@ -93,7 +112,7 @@ export const fragmentController = {
         inputSource: (ctx.request.body as Record<string, string>)?.inputSource ?? "voice",
         inputDevice: (ctx.request.body as Record<string, string>)?.inputDevice,
         locale,
-        timezone: (ctx.request.body as Record<string, string>)?.timezone,
+        timezone: ctx.get("X-Timezone") || undefined,
         deviceId: ctx.state.deviceId,
       });
 
@@ -125,7 +144,7 @@ export const fragmentController = {
         inputSource: (ctx.request.body as Record<string, string>)?.inputSource ?? "share_sheet",
         inputDevice: (ctx.request.body as Record<string, string>)?.inputDevice,
         locale: (ctx.request.body as Record<string, string>)?.locale,
-        timezone: (ctx.request.body as Record<string, string>)?.timezone,
+        timezone: ctx.get("X-Timezone") || undefined,
         clientContext: { mimeType: file.mimetype, fileSize: file.size, imageBase64: base64 },
         deviceId: ctx.state.deviceId,
       });

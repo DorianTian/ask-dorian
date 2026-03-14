@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useTranslations } from "next-intl"
 import { useTheme } from "next-themes"
-import { Search, Bell, Zap, Moon, Sun, Command } from "lucide-react"
+import { Search, Bell, Zap, Moon, Sun, Command, BellOff } from "lucide-react"
 
 interface HeaderProps {
   title: string
@@ -13,12 +13,36 @@ interface HeaderProps {
 
 export function Header({ title, subtitle, onSearchOpen }: HeaderProps) {
   const [isFocusMode, setIsFocusMode] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
+  const notificationRef = useRef<HTMLDivElement>(null)
   const { resolvedTheme, setTheme } = useTheme()
   const t = useTranslations("header")
+
+  // Close notification dropdown when clicking outside
+  useEffect(() => {
+    if (!showNotifications) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (notificationRef.current && !notificationRef.current.contains(e.target as Node)) {
+        setShowNotifications(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [showNotifications])
 
   const toggleTheme = () => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark")
   }
+
+  // Focus Mode: toggle body class to hide sidebar, capture bar, and dim non-essential UI
+  useEffect(() => {
+    if (isFocusMode) {
+      document.body.classList.add("focus-mode")
+    } else {
+      document.body.classList.remove("focus-mode")
+    }
+    return () => document.body.classList.remove("focus-mode")
+  }, [isFocusMode])
 
   return (
     <header className="h-16 border-b border-border-dark flex items-center justify-between px-4 md:px-8 bg-surface-dark/30 backdrop-blur-md sticky top-0 z-50">
@@ -75,10 +99,27 @@ export function Header({ title, subtitle, onSearchOpen }: HeaderProps) {
           {resolvedTheme === "light" ? <Moon size={18} /> : <Sun size={18} />}
         </button>
 
-        <button className="size-9 flex items-center justify-center rounded-xl hover:bg-white/5 transition-colors relative text-slate-400">
-          <Bell size={18} />
-          <span className="absolute top-2.5 right-2.5 size-1.5 bg-primary rounded-full" />
-        </button>
+        <div className="relative" ref={notificationRef}>
+          <button
+            onClick={() => setShowNotifications((prev) => !prev)}
+            className="size-9 flex items-center justify-center rounded-xl hover:bg-white/5 transition-colors relative text-slate-400"
+          >
+            <Bell size={18} />
+            <span className="absolute top-2.5 right-2.5 size-1.5 bg-primary rounded-full" />
+          </button>
+          {showNotifications && (
+            <div className="absolute right-0 top-full mt-2 w-72 bg-surface-dark border border-border-dark rounded-xl p-4 shadow-2xl z-50">
+              <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-3">
+                Notifications
+              </p>
+              <div className="flex flex-col items-center justify-center py-6 text-slate-500">
+                <BellOff size={24} className="mb-2 opacity-50" />
+                <p className="text-sm font-medium">No new notifications</p>
+                <p className="text-[10px] mt-1 text-slate-600">You&apos;re all caught up</p>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="size-8 rounded-lg bg-slate-800 border border-border-dark overflow-hidden lg:hidden">
           <div className="w-full h-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-primary text-[10px] font-bold">

@@ -1,12 +1,31 @@
 // packages/mobile/src/App.tsx
 import React from "react"
 import { Platform, StatusBar } from "react-native"
-import { NavigationContainer } from "@react-navigation/native"
+import { NavigationContainer, type Theme } from "@react-navigation/native"
 import { SafeAreaProvider } from "react-native-safe-area-context"
 import { SWRConfig } from "swr"
 import { ThemeProvider } from "./theme"
 import { AuthProvider } from "./providers/auth-provider"
 import { RootNavigator } from "./navigation/root-navigator"
+
+// Dark theme matching our design tokens — removes default card background/border
+const navTheme: Theme = {
+  dark: true,
+  colors: {
+    primary: "#10B981",
+    background: "#09090B",
+    card: "#09090B",
+    text: "#F8FAFC",
+    border: "transparent",
+    notification: "#10B981",
+  },
+  fonts: {
+    regular: { fontFamily: "System", fontWeight: "400" },
+    medium: { fontFamily: "System", fontWeight: "500" },
+    bold: { fontFamily: "System", fontWeight: "700" },
+    heavy: { fontFamily: "System", fontWeight: "900" },
+  },
+}
 
 const linking = {
   prefixes: [],
@@ -20,6 +39,7 @@ const linking = {
           Onboarding4: "onboarding/4",
         },
       },
+      Login: "login",
       Main: {
         screens: {
           Today: "",
@@ -44,7 +64,12 @@ export default function App() {
             )}
             <NavigationContainer
               linking={linking}
-              documentTitle={{ enabled: Platform.OS === "web" }}
+              theme={navTheme}
+              documentTitle={{
+                enabled: Platform.OS === "web",
+                formatter: (options, route) =>
+                  options?.title ?? route?.name ?? "Ask Dorian",
+              }}
             >
               <RootNavigator />
             </NavigationContainer>

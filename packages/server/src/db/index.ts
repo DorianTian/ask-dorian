@@ -5,6 +5,10 @@ import { env } from "../config/env.js";
 import { logger } from "../config/logger.js";
 import * as schema from "./schema/index.js";
 
+const isRdsConnection =
+  env.DATABASE_URL.includes("rds.amazonaws.com") ||
+  env.DATABASE_URL.includes(":15432");
+
 const sslConfig =
   env.NODE_ENV === "production"
     ? {
@@ -15,7 +19,9 @@ const sslConfig =
             : undefined,
         },
       }
-    : {};
+    : isRdsConnection
+      ? { ssl: { rejectUnauthorized: false } }
+      : {};
 
 const queryClient = postgres(env.DATABASE_URL, {
   max: env.NODE_ENV === "production" ? 20 : 5,

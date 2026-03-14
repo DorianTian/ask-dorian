@@ -2,8 +2,11 @@ import { useSWRApi } from "./use-swr-api"
 import { dashboardApi } from "../api/dashboard"
 import type { ReviewParams } from "../types/requests"
 
-export function useTodayDashboard() {
-  return useSWRApi("/today", () => dashboardApi.today())
+export function useTodayDashboard(date?: string) {
+  const key = date ? `/today?date=${date}` : "/today"
+  return useSWRApi(key, () => dashboardApi.today(date), {
+    keepPreviousData: true, // Avoid flash when switching dates
+  })
 }
 
 export function useWeeklyDashboard() {

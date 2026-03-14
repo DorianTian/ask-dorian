@@ -20,6 +20,9 @@ export const fragmentApi = {
   getById: (id: string) =>
     api.get<Fragment>(`${BASE}/${id}`),
 
+  update: (id: string, data: { isPinned?: boolean; isArchived?: boolean }) =>
+    api.patch<Fragment>(`${BASE}/${id}`, data),
+
   confirm: (id: string) =>
     api.post<Fragment>(`${BASE}/${id}/confirm`),
 

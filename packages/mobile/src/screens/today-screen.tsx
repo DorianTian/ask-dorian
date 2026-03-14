@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from "react"
+import React, { useState, useCallback, useMemo, useEffect, useRef } from "react"
 import {
   View,
   Text,
@@ -23,123 +23,31 @@ import {
 } from "lucide-react-native"
 import { useTodayDashboard } from "@ask-dorian/core/hooks"
 import { ritualApi, taskApi } from "@ask-dorian/core/api"
-import type { CalendarEvent, Task } from "@ask-dorian/core/types"
+import { buildTimelineBlocks, hourToPercent, type TimelineBlock } from "@ask-dorian/core/utils"
 import { useColors, spacing, radii } from "../theme"
-import { QuickCapture } from "../components/quick-capture"
+import { QuickCapture, type QuickCaptureHandle } from "../components/quick-capture"
 
 // --- Constants ---
 
-const TL_START = 6
+const TL_START = 0
 const TL_END = 24
-const TL_RANGE = TL_END - TL_START // 18
-const TIMELINE_HEIGHT = 720
+const TIMELINE_HEIGHT = 900
+const TIMELINE_VISIBLE_HEIGHT = 480
 const TIME_AXIS_WIDTH = 60
 const WIDE_BREAKPOINT = 768
 
-const TIME_LABELS = [6, 8, 10, 12, 14, 16, 18, 20, 22, 24]
-
-// --- Timeline helpers ---
-
-interface TimelineBlock {
-  id: string
-  startHour: number
-  endHour: number
-  time: string
-  title: string
-  sub: string
-  type: "event" | "task"
-  status: "completed" | "active" | "future"
-  col: number
-  totalCols: number
-}
-
-function formatTime(iso: string): string {
-  const d = new Date(iso)
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`
-}
-
-function toHourFraction(iso: string): number {
-  const d = new Date(iso)
-  return d.getHours() + d.getMinutes() / 60
-}
-
-/** Convert an hour fraction to a percentage offset within the timeline. */
-function pct(hour: number): number {
-  return ((Math.max(TL_START, Math.min(TL_END, hour)) - TL_START) / TL_RANGE) * 100
-}
-
-function buildTimelineBlocks(
-  events: CalendarEvent[],
-  tasks: Task[],
-  now: Date,
-): TimelineBlock[] {
-  const blocks: Omit<TimelineBlock, "col" | "totalCols">[] = []
-  const nowHour = now.getHours() + now.getMinutes() / 60
-
-  for (const ev of events) {
-    if (!ev.startTime) continue
-    const start = toHourFraction(ev.startTime)
-    const end = ev.endTime ? toHourFraction(ev.endTime) : start + 1
-    blocks.push({
-      id: ev.id,
-      startHour: start,
-      endHour: end,
-      time: formatTime(ev.startTime),
-      title: ev.title,
-      sub: ev.location ?? ev.type,
-      type: "event",
-      status: end <= nowHour ? "completed" : start <= nowHour && end > nowHour ? "active" : "future",
-    })
-  }
-
-  for (const task of tasks) {
-    if (task.scheduledStart) {
-      const start = toHourFraction(task.scheduledStart)
-      const duration = task.estimatedMinutes ? task.estimatedMinutes / 60 : 0.5
-      const end = start + duration
-      blocks.push({
-        id: task.id,
-        startHour: start,
-        endHour: end,
-        time: formatTime(task.scheduledStart),
-        title: task.title,
-        sub: task.estimatedMinutes ? `${task.estimatedMinutes}min` : "",
-        type: "task",
-        status: task.status === "done" ? "completed" : start <= nowHour && end > nowHour ? "active" : "future",
-      })
-    }
-  }
-
-  blocks.sort((a, b) => a.startHour - b.startHour)
-
-  // Collision detection: assign column index for overlapping blocks
-  const assigned: TimelineBlock[] = blocks.map((b) => ({ ...b, col: 0, totalCols: 1 }))
-  for (let i = 0; i < assigned.length; i++) {
-    const group = [i]
-    for (let j = i + 1; j < assigned.length; j++) {
-      if (assigned[j].startHour < assigned[i].endHour) {
-        group.push(j)
-      }
-    }
-    if (group.length > 1) {
-      group.forEach((idx, col) => {
-        assigned[idx].col = col
-        assigned[idx].totalCols = Math.max(assigned[idx].totalCols, group.length)
-      })
-    }
-  }
-  return assigned
-}
+const TIME_LABELS = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24]
 
 // --- Main Component ---
 
 export function TodayScreen() {
   const colors = useColors()
+  const captureRef = useRef<QuickCaptureHandle>(null)
   const { width: windowWidth } = useWindowDimensions()
   const isWide = windowWidth >= WIDE_BREAKPOINT
   const { data: dashboard, mutate: mutateDashboard } = useTodayDashboard()
 
-  const [blocksWidth, setBlocksWidth] = useState(0)
+
 
   // Real-time clock for countdown & current-time indicator
   const [now, setNow] = useState(() => new Date())
@@ -185,14 +93,14 @@ export function TodayScreen() {
 
   // Current time position on timeline
   const nowHour = now.getHours() + now.getMinutes() / 60
-  const nowPercent = pct(nowHour)
+  const nowPercent = hourToPercent(nowHour, TL_START, TL_END)
   const showNowLine = nowHour >= TL_START && nowHour <= TL_END
   const nowTimeLabel = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`
 
   // Active block remaining time
   const activeBlock = timelineBlocks.find((b) => b.status === "active")
   const activeRemainingMin = activeBlock
-    ? Math.max(0, Math.round((activeBlock.endHour - nowHour) * 60))
+    ? Math.max(0, Math.round((activeBlock.end - nowHour) * 60))
     : 0
 
   const mono = Platform.select({
@@ -206,13 +114,9 @@ export function TodayScreen() {
 
   const renderTimelineBlock = useCallback(
     (block: TimelineBlock) => {
-      const topPct = pct(Math.max(block.startHour, TL_START))
-      const bottomPct = pct(Math.min(block.endHour, TL_END))
+      const topPct = hourToPercent(Math.max(block.start, TL_START), TL_START, TL_END)
+      const bottomPct = hourToPercent(Math.min(block.end, TL_END), TL_START, TL_END)
       const heightPct = Math.max(bottomPct - topPct, 3) // min 3% so tiny blocks are visible
-
-      // Collision-aware pixel positioning
-      const leftPx = blocksWidth > 0 ? (block.col / block.totalCols) * blocksWidth : 0
-      const widthPx = blocksWidth > 0 ? (blocksWidth / block.totalCols) - 4 : undefined
 
       if (block.status === "completed") {
         return (
@@ -223,10 +127,9 @@ export function TodayScreen() {
               {
                 top: `${topPct}%`,
                 height: `${heightPct}%`,
-                backgroundColor: colors.muted + "99",
+                backgroundColor: "rgba(0,0,0,0.4)",
                 borderColor: colors.border + "80",
-                opacity: 0.7,
-                ...(widthPx != null ? { left: leftPx, width: widthPx } : {}),
+                opacity: 0.6,
               },
             ]}
           >
@@ -258,7 +161,6 @@ export function TodayScreen() {
                 minHeight: 140,
                 backgroundColor: colors.brandFrom + "1A",
                 borderColor: colors.brandFrom + "80",
-                ...(widthPx != null ? { left: leftPx, width: widthPx } : {}),
               },
             ]}
           >
@@ -282,21 +184,21 @@ export function TodayScreen() {
               {block.title}
             </Text>
             <Text style={[s.activeSub, { color: colors.textTertiary }, mono]} numberOfLines={1}>
-              {block.sub}
+              {block.subtitle}
             </Text>
 
             {/* Action buttons */}
             <View style={s.activeActions}>
               <TouchableOpacity
                 style={[s.completeBtn, { backgroundColor: colors.brandFrom }]}
-                onPress={() => completeTask(block.id)}
+                onPress={() => block.type === "task" ? completeTask(block.id) : mutateDashboard()}
                 activeOpacity={0.8}
               >
                 <Check size={12} color={colors.background} />
-                <Text style={[s.completeBtnText, mono]}>COMPLETE</Text>
+                <Text style={[s.completeBtnText, mono]}>{block.type === "task" ? "COMPLETE" : "DONE"}</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[s.extendBtn, { backgroundColor: colors.muted + "99", borderColor: colors.border + "80" }]}
+                style={[s.extendBtn, { backgroundColor: "rgba(0,0,0,0.4)", borderColor: colors.border + "80" }]}
                 activeOpacity={0.8}
               >
                 <Text style={[s.extendBtnText, { color: colors.textSecondary }, mono]}>
@@ -317,14 +219,13 @@ export function TodayScreen() {
             {
               top: `${topPct}%`,
               height: `${heightPct}%`,
-              backgroundColor: colors.surfaceElevated,
-              borderColor: colors.border,
-              ...(widthPx != null ? { left: leftPx, width: widthPx } : {}),
+              backgroundColor: colors.card + "66",
+              borderColor: colors.border + "80",
             },
           ]}
         >
           <View style={s.posBlockInner}>
-            <Clock size={14} color={colors.textTertiary} />
+            <Clock size={14} color={colors.textMuted} />
             <Text style={[s.posBlockTitle, { color: colors.textSecondary }, mono]} numberOfLines={1}>
               {block.title}
             </Text>
@@ -332,7 +233,7 @@ export function TodayScreen() {
         </View>
       )
     },
-    [colors, mono, activeRemainingMin, completeTask, blocksWidth],
+    [colors, mono, activeRemainingMin, completeTask],
   )
 
   // -----------------------------------------------------------------------
@@ -340,7 +241,19 @@ export function TodayScreen() {
   // -----------------------------------------------------------------------
 
   const renderTimeline = () => (
-    <View style={[s.timelineCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.border + "80" }]}>
+    <View style={[s.timelineCard, { backgroundColor: colors.card + "4D", borderColor: colors.border + "80" }]}>
+      <ScrollView
+        nestedScrollEnabled
+        showsVerticalScrollIndicator={false}
+        style={{ flex: 1 }}
+        ref={(ref) => {
+          if (ref) {
+            setTimeout(() => {
+              ref.scrollTo({ y: Math.max(0, (nowPercent / 100) * TIMELINE_HEIGHT - 150), animated: false })
+            }, 100)
+          }
+        }}
+      >
       {/* Dot grid background (subtle) */}
       <View style={s.dotGridOverlay} />
 
@@ -370,7 +283,7 @@ export function TodayScreen() {
                 {
                   color: colors.textMuted,
                   position: "absolute",
-                  top: `${pct(h)}%`,
+                  top: `${hourToPercent(h, TL_START, TL_END)}%`,
                   right: 0,
                   transform: [{ translateY: -6 }],
                 },
@@ -385,7 +298,7 @@ export function TodayScreen() {
         {/* Blocks area */}
         <View
           style={s.blocksArea}
-          onLayout={(e) => setBlocksWidth(e.nativeEvent.layout.width)}
+
         >
           {/* Current time indicator */}
           {showNowLine && (
@@ -411,13 +324,15 @@ export function TodayScreen() {
             timelineBlocks.map(renderTimelineBlock)
           )}
 
-          {/* Insert Fragment drop zone — show if there is a gap after the last block */}
-          <View
+          {/* Insert Fragment drop zone — tap to focus QuickCapture */}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => captureRef.current?.focus()}
             style={[
               s.dropZone,
               {
                 top: timelineBlocks.length > 0
-                  ? `${pct(Math.max(...timelineBlocks.map(b => b.endHour)) + 0.5)}%`
+                  ? `${hourToPercent(Math.max(...timelineBlocks.map(b => b.end)) + 0.5, TL_START, TL_END)}%`
                   : "75%",
                 height: "5%",
                 borderColor: colors.brandFrom + "4D",
@@ -429,9 +344,10 @@ export function TodayScreen() {
             <Text style={[s.dropZoneText, { color: colors.brandFrom + "80" }, mono]}>
               INSERT_FRAGMENT
             </Text>
-          </View>
+          </TouchableOpacity>
         </View>
       </View>
+      </ScrollView>
     </View>
   )
 
@@ -440,7 +356,7 @@ export function TodayScreen() {
   // -----------------------------------------------------------------------
 
   const renderBriefing = () => (
-    <View style={[s.briefingCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.brandFrom + "33" }]}>
+    <View style={[s.briefingCard, { backgroundColor: colors.card + "4D", borderColor: colors.brandFrom + "33" }]}>
       {/* Top green gradient bar */}
       <View style={[s.briefingGradientBar, { backgroundColor: colors.brandFrom }]} />
 
@@ -499,7 +415,7 @@ export function TodayScreen() {
   )
 
   const renderBootSequence = () => (
-    <View style={[s.bootCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.border + "80" }]}>
+    <View style={[s.bootCard, { backgroundColor: colors.card + "4D", borderColor: colors.border + "80" }]}>
       <View style={s.bootHeader}>
         <View style={s.bootHeaderLeft}>
           <Cpu size={14} color={colors.brandFrom} />
@@ -525,7 +441,7 @@ export function TodayScreen() {
                 style={[
                   s.ritualRow,
                   {
-                    backgroundColor: isComplete ? colors.brandFrom + "0D" : colors.muted + "66",
+                    backgroundColor: isComplete ? colors.brandFrom + "0D" : "rgba(0,0,0,0.2)",
                     borderColor: isComplete ? colors.brandFrom + "33" : colors.border + "4D",
                   },
                 ]}
@@ -582,7 +498,7 @@ export function TodayScreen() {
             key={i}
             style={[
               s.statCard,
-              { backgroundColor: colors.surfaceElevated, borderColor: colors.border + "80" },
+              { backgroundColor: colors.card + "4D", borderColor: colors.border + "80" },
             ]}
           >
             <Text style={[s.statLabel, { color: colors.textMuted }, mono]}>
@@ -668,7 +584,7 @@ export function TodayScreen() {
               USER: DORIAN // {dashboard?.date ?? now.toISOString().slice(0, 10)}
             </Text>
           </View>
-          <View style={[s.timerBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border + "80" }]}>
+          <View style={[s.timerBox, { backgroundColor: colors.card + "4D", borderColor: colors.border + "80" }]}>
             <Clock size={14} color={colors.textTertiary} />
             <Text style={[s.timerText, { color: colors.textSecondary }, mono]}>
               T-{String(remainingH).padStart(2, "0")}:{String(remainingM).padStart(2, "0")}:{String(remainingS).padStart(2, "0")}
@@ -707,7 +623,7 @@ export function TodayScreen() {
 
       {/* Quick Capture — fixed above tab bar */}
       <View style={s.captureFixed}>
-        <QuickCapture />
+        <QuickCapture ref={captureRef} />
       </View>
     </SafeAreaView>
   )
@@ -769,7 +685,7 @@ const s = StyleSheet.create({
     borderRadius: radii.xl,
     borderWidth: 1,
     padding: spacing.lg,
-    minHeight: TIMELINE_HEIGHT + 80,
+    height: TIMELINE_VISIBLE_HEIGHT,
     overflow: "hidden",
   },
   dotGridOverlay: {
@@ -820,7 +736,8 @@ const s = StyleSheet.create({
   posBlock: {
     position: "absolute",
     left: 0,
-    right: 0,
+    right: spacing.md,
+    minHeight: 48,
     borderWidth: 1,
     borderRadius: radii.xl,
     padding: spacing.md,
@@ -837,7 +754,8 @@ const s = StyleSheet.create({
   posBlockActive: {
     position: "absolute",
     left: 0,
-    right: 0,
+    right: spacing.md,
+    zIndex: 20,
     borderWidth: 1,
     borderRadius: radii.xl,
     padding: spacing.lg,
@@ -942,6 +860,7 @@ const s = StyleSheet.create({
     position: "absolute",
     left: 0,
     right: spacing.md,
+    zIndex: 0,
     borderWidth: 1,
     borderStyle: "dashed",
     borderRadius: radii.xl,

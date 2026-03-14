@@ -6,7 +6,6 @@ import { knowledgeService } from "../services/knowledge-service.js";
 import { fragmentService } from "../services/fragment-service.js";
 
 const reviewQuerySchema = z.object({
-  timezone: z.string().max(50).default("UTC"),
   weekStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format, expected YYYY-MM-DD"),
 });
 
@@ -42,7 +41,7 @@ export const reviewController = {
     ctx.body = {
       weekStart,
       weekEnd: weekEndInclusive,
-      timezone: query.timezone,
+      timezone: ctx.get("X-Timezone") || "UTC",
       completed: completedTasks,
       events: weekEvents,
       knowledge: knowledgeItems,

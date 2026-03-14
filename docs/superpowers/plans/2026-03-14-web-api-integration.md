@@ -868,7 +868,7 @@ Replace hardcoded knowledge cards with useFragments({ status:
 use real Fragment data."
 ```
 
-### Task 5: Review Page — Weekly Review Integration
+### Task 5: Review Page — Review Integration
 
 Replace hardcoded stats, accomplishments, and chart data with `useWeekReview()` and `useRitualStats()`.
 

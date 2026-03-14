@@ -31,6 +31,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const { title, subtitle } = usePageMeta(pathname)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [isFocusMode, setIsFocusMode] = useState(false)
 
   const isSettingsPage = pathname.includes("/settings")
 

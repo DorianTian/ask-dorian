@@ -348,7 +348,7 @@ Add the following top-level sections to `zh.json`:
   "now": "现在"
 },
 "weeklyQuad": {
-  "title": "本周面板",
+  "title": "Review",
   "weekRange": "{start} — {end}",
   "focusTitle": "本周焦点",
   "focusDesc": "AI 挑选的最重要任务",
@@ -963,7 +963,7 @@ Replace entire file with four-quadrant layout:
 
 ```
 <div className="p-6 space-y-6">
-  <h1>本周面板 · 3/9 — 3/15</h1>
+  <h1>Review · 3/9 — 3/15</h1>
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
     <Card> 🎯 本周焦点 — AI 挑选的 Top 任务 </Card>
     <Card> 📅 时间分配 — 7天紧凑视图 </Card>

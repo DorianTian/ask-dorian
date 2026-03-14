@@ -1,10 +1,10 @@
-import Anthropic from "@anthropic-ai/sdk";
-import { env } from "../config/env.js";
-import { logger } from "../config/logger.js";
-import { taskRepo } from "../repositories/task-repo.js";
-import { eventRepo } from "../repositories/event-repo.js";
-import { knowledgeRepo } from "../repositories/knowledge-repo.js";
-import { entityRelationshipRepo } from "../repositories/entity-relationship-repo.js";
+import Anthropic from '@anthropic-ai/sdk';
+import { env } from '../config/env.js';
+import { logger } from '../config/logger.js';
+import { taskRepo } from '../repositories/task-repo.js';
+import { eventRepo } from '../repositories/event-repo.js';
+import { knowledgeRepo } from '../repositories/knowledge-repo.js';
+import { entityRelationshipRepo } from '../repositories/entity-relationship-repo.js';
 
 const anthropic = new Anthropic({
   apiKey: env.ANTHROPIC_API_KEY,
@@ -12,14 +12,14 @@ const anthropic = new Anthropic({
 });
 
 export interface ClassifyResult {
-  classification: "task" | "event" | "knowledge" | "note" | "mixed";
+  classification: 'task' | 'event' | 'knowledge' | 'note' | 'mixed';
   normalizedContent: string;
   ftsContent: string;
   generatedEntities: GeneratedEntity[];
 }
 
 export interface GeneratedEntity {
-  type: "task" | "event" | "knowledge";
+  type: 'task' | 'event' | 'knowledge';
   data: Record<string, unknown>;
 }
 
@@ -68,7 +68,7 @@ export const aiService = {
   ): Promise<ClassifyResult> {
     const now = new Date().toISOString();
     const userPrompt = `Content type: ${contentType}
-Timezone: ${context.timezone || "UTC"}
+Timezone: ${context.timezone || 'UTC'}
 Current time: ${now}
 
 Fragment:
@@ -78,11 +78,11 @@ ${rawContent}`;
       model: env.CLAUDE_HAIKU_MODEL,
       max_tokens: 1024,
       system: CLASSIFY_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: userPrompt }],
+      messages: [{ role: 'user', content: userPrompt }],
     });
 
     const text =
-      response.content[0]?.type === "text" ? response.content[0].text : "";
+      response.content[0]?.type === 'text' ? response.content[0].text : '';
 
     try {
       // Extract JSON from response (handle markdown code blocks)
@@ -99,15 +99,15 @@ ${rawContent}`;
           outputTokens: response.usage.output_tokens,
           classification: parsed.classification,
         },
-        "AI classification complete",
+        'AI classification complete',
       );
 
       return parsed;
     } catch (err) {
-      logger.error({ err, rawResponse: text }, "Failed to parse AI response");
+      logger.error({ err, rawResponse: text }, 'Failed to parse AI response');
       // Fallback: treat as note
       return {
-        classification: "note",
+        classification: 'note',
         normalizedContent: rawContent,
         ftsContent: rawContent,
         generatedEntities: [],
@@ -127,7 +127,7 @@ ${rawContent}`;
         let createdId: string | undefined;
 
         switch (entity.type) {
-          case "task": {
+          case 'task': {
             const data = entity.data as {
               title: string;
               description?: string;
@@ -140,16 +140,22 @@ ${rawContent}`;
               userId,
               title: data.title,
               description: data.description,
-              priority: (data.priority as "urgent" | "high" | "medium" | "low" | "none") ?? "none",
+              priority:
+                (data.priority as
+                  | 'urgent'
+                  | 'high'
+                  | 'medium'
+                  | 'low'
+                  | 'none') ?? 'none',
               dueDate: data.dueDate,
               estimatedMinutes: data.estimatedMinutes,
               tags: data.tags ?? [],
-              source: "ai_generated",
+              source: 'ai_generated',
             });
             createdId = task.id;
             break;
           }
-          case "event": {
+          case 'event': {
             const data = entity.data as {
               title: string;
               description?: string;
@@ -166,12 +172,12 @@ ${rawContent}`;
                 ? new Date(data.endTime)
                 : new Date(Date.now() + 60 * 60 * 1000),
               location: data.location,
-              source: "ai_generated",
+              source: 'ai_generated',
             });
             createdId = event.id;
             break;
           }
-          case "knowledge": {
+          case 'knowledge': {
             const data = entity.data as {
               title: string;
               content: string;
@@ -182,9 +188,9 @@ ${rawContent}`;
               userId,
               title: data.title,
               content: data.content,
-              type: data.knowledgeType ?? "note",
+              type: data.knowledgeType ?? 'note',
               tags: data.tags ?? [],
-              source: "ai_generated",
+              source: 'ai_generated',
             });
             createdId = k.id;
             break;
@@ -197,9 +203,9 @@ ${rawContent}`;
           await entityRelationshipRepo.create({
             fromEntityType: entity.type,
             fromEntityId: createdId,
-            toEntityType: "fragment",
+            toEntityType: 'fragment',
             toEntityId: fragmentId,
-            relationType: "generated_from",
+            relationType: 'generated_from',
           });
         }
       }
@@ -207,7 +213,7 @@ ${rawContent}`;
       // Log and surface the error — partial entities may exist, caller needs to know
       logger.error(
         { err, fragmentId, createdIds },
-        "Failed to create generated entities, partial cleanup needed",
+        'Failed to create generated entities, partial cleanup needed',
       );
       throw err;
     }
@@ -223,22 +229,22 @@ ${rawContent}`;
       max_tokens: 2048,
       messages: [
         {
-          role: "user",
+          role: 'user',
           content: [
             {
-              type: "image",
+              type: 'image',
               source: {
-                type: "base64",
+                type: 'base64',
                 media_type: mimeType as
-                  | "image/jpeg"
-                  | "image/png"
-                  | "image/gif"
-                  | "image/webp",
+                  | 'image/jpeg'
+                  | 'image/png'
+                  | 'image/gif'
+                  | 'image/webp',
                 data: imageBase64,
               },
             },
             {
-              type: "text",
+              type: 'text',
               text: "Extract all text from this image. If it's a screenshot of a message, note, or document, extract the full content. If it contains a task, event, or important information, include all details. Respond with the extracted text only, no explanations.",
             },
           ],
@@ -247,13 +253,13 @@ ${rawContent}`;
     });
 
     const text =
-      response.content[0]?.type === "text" ? response.content[0].text : "";
+      response.content[0]?.type === 'text' ? response.content[0].text : '';
     logger.debug(
       {
         inputTokens: response.usage.input_tokens,
         outputTokens: response.usage.output_tokens,
       },
-      "Vision OCR complete",
+      'Vision OCR complete',
     );
     return text;
   },

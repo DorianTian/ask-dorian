@@ -7,7 +7,6 @@ const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
 const listRitualsSchema = z.object({
   date: z.string().regex(dateRegex, "Expected YYYY-MM-DD").optional(),
-  timezone: z.string().max(50).default("UTC"),
 });
 
 const createRitualSchema = z.object({
@@ -26,7 +25,6 @@ const updateRitualSchema = z.object({
 
 const toggleCompleteSchema = z.object({
   date: z.string().regex(dateRegex, "Expected YYYY-MM-DD").optional(),
-  timezone: z.string().max(50).default("UTC"),
 });
 
 const statsQuerySchema = z.object({
@@ -42,7 +40,7 @@ export const ritualController = {
   /** GET /rituals — list with completion status */
   async list(ctx: Context) {
     const query = listRitualsSchema.parse(ctx.query);
-    const date = query.date ?? todayDateStr(query.timezone);
+    const date = query.date ?? todayDateStr(ctx.get("X-Timezone") || "UTC");
     const result = await ritualService.list(ctx.state.userId, date);
     ctx.body = result;
   },
@@ -75,7 +73,7 @@ export const ritualController = {
   /** POST /rituals/:id/toggle-complete — toggle check-in */
   async toggleComplete(ctx: Context) {
     const body = toggleCompleteSchema.parse(ctx.request.body ?? {});
-    const date = body.date ?? todayDateStr(body.timezone);
+    const date = body.date ?? todayDateStr(ctx.get("X-Timezone") || "UTC");
     const result = await ritualService.toggleComplete(
       ctx.state.userId,
       ctx.params.id,

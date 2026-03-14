@@ -86,6 +86,13 @@ async function request<T>(
     ...options.headers,
   }
 
+  // Auto-inject client timezone via header
+  try {
+    headers["X-Timezone"] = Intl.DateTimeFormat().resolvedOptions().timeZone
+  } catch {
+    // Intl not available (rare), server will fallback to UTC
+  }
+
   if (!options.skipAuth) {
     const token = cfg.tokenProvider.getAccessToken()
     if (token) {
@@ -98,11 +105,26 @@ async function request<T>(
   }
 
   // Execute
-  const res = await fetch(url.toString(), {
-    method,
-    headers,
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-  })
+  let res: Response
+  try {
+    res = await fetch(url.toString(), {
+      method,
+      headers,
+      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+    })
+  } catch {
+    // Network error (CORS block, offline, etc.)
+    // If we had a token, treat as unauthorized (likely expired/revoked)
+    if (!options.skipAuth && cfg.tokenProvider.getAccessToken()) {
+      cfg.tokenProvider.clearTokens()
+      cfg.onUnauthorized?.()
+    }
+    return {
+      ok: false,
+      status: 0,
+      error: { code: "NETWORK_ERROR", message: "Failed to fetch" },
+    }
+  }
 
   // Handle 401 — attempt token refresh (once)
   if (res.status === 401 && !options.skipAuth) {

@@ -4,7 +4,6 @@ import { taskService } from "../services/task-service.js";
 import { eventService } from "../services/event-service.js";
 
 const weeklyQuerySchema = z.object({
-  timezone: z.string().max(50).default("UTC"),
   weekStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format, expected YYYY-MM-DD").optional(),
 });
 
@@ -31,8 +30,9 @@ export const weeklyController = {
   async getDashboard(ctx: Context) {
     const query = weeklyQuerySchema.parse(ctx.query);
     const userId = ctx.state.userId;
+    const timezone = ctx.get("X-Timezone") || "UTC";
 
-    const weekStart = query.weekStart ?? getCurrentMonday(query.timezone);
+    const weekStart = query.weekStart ?? getCurrentMonday(timezone);
     const weekEnd = addDays(weekStart, 7); // Monday to next Monday (exclusive end)
     const weekEndInclusive = addDays(weekStart, 6); // Sunday
 
@@ -67,7 +67,7 @@ export const weeklyController = {
     ctx.body = {
       weekStart,
       weekEnd: weekEndInclusive,
-      timezone: query.timezone,
+      timezone,
       tasks: {
         scheduled: scheduledTasks,
         due: dueTasks,

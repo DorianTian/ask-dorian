@@ -1,3 +1,6 @@
+// Must be first — patches RNW 0.19.x + React 19 style compat issue
+import "./web-stubs/patch-style"
+
 import { AppRegistry } from "react-native"
 import App from "./App"
 

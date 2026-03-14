@@ -141,7 +141,7 @@ ask-dorian/
 │   │   │   │   ├── today-screen.tsx          # Daily Telemetry (HUD)
 │   │   │   │   ├── weekly-screen.tsx         # Cognitive Report (HUD)
 │   │   │   │   ├── daily-review-screen.tsx   # Card-based fragment review
-│   │   │   │   ├── knowledge-screen.tsx      # Knowledge Library (search + grid/list)
+│   │   │   │   ├── knowledge-screen.tsx      # Library (search + grid/list)
 │   │   │   │   ├── settings-screen.tsx       # User settings + logout
 │   │   │   │   └── onboarding/              # 4-step onboarding flow
 │   │   │   │       ├── onboarding1.tsx       # Welcome
@@ -491,25 +491,25 @@ erDiagram
 
 **18 表概览**
 
-| 表                    | 用途                              |
-| --------------------- | --------------------------------- |
-| users                 | 用户主表                          |
-| user_settings         | 用户偏好设置（1:1）               |
-| devices               | 跨端设备管理 + sync_cursor        |
-| sessions              | 登录会话 + refresh token          |
-| projects              | 项目/主题                         |
-| fragments             | 碎片输入（不可变）                |
-| tasks                 | 任务                              |
-| events                | 日程/事件                         |
-| knowledge             | 知识沉淀                          |
-| entity_relationship   | 多态关联（万能关系图）            |
-| embeddings            | 向量存储                          |
-| ai_process_logs       | AI 处理全量记录                   |
-| notifications         | 通知                              |
-| integrations          | 第三方集成                        |
-| attachments           | 附件                              |
-| **rituals**           | 晨间仪式模板（可选关联 Task）     |
-| **ritual_completions**| 仪式每日打卡记录（支持 streak 统计）|
+| 表                     | 用途                                 |
+| ---------------------- | ------------------------------------ |
+| users                  | 用户主表                             |
+| user_settings          | 用户偏好设置（1:1）                  |
+| devices                | 跨端设备管理 + sync_cursor           |
+| sessions               | 登录会话 + refresh token             |
+| projects               | 项目/主题                            |
+| fragments              | 碎片输入（不可变）                   |
+| tasks                  | 任务                                 |
+| events                 | 日程/事件                            |
+| knowledge              | 知识沉淀                             |
+| entity_relationship    | 多态关联（万能关系图）               |
+| embeddings             | 向量存储                             |
+| ai_process_logs        | AI 处理全量记录                      |
+| notifications          | 通知                                 |
+| integrations           | 第三方集成                           |
+| attachments            | 附件                                 |
+| **rituals**            | 晨间仪式模板（可选关联 Task）        |
+| **ritual_completions** | 仪式每日打卡记录（支持 streak 统计） |
 
 **核心设计模式**
 
@@ -541,9 +541,10 @@ erDiagram
 **rituals + ritual_completions — 晨间仪式**
 
 独立轻量表，不复用 tasks 表（语义不同：ritual 是每日重复模板，task 是一次性待办）。
+
 - `rituals` 存仪式模板，可选通过 `task_id` 关联 Task（SET NULL on delete，桥接不耦合）
 - `ritual_completions` 独立记录每日打卡，`(ritual_id, completed_date)` UNIQUE，支持 streak/完成率统计
-- 纯清单型，无时间绑定，在 Today Dashboard 中作为整体 block 渲染
+- 纯清单型，无时间绑定，在 Today 中作为整体 block 渲染
 - 设计详见 `docs/superpowers/specs/2026-03-14-rituals-design.md`
 
 **embeddings 表 — 向量存储**
@@ -899,7 +900,7 @@ const enriched = await loadEntityDetails(similar);
   POST   /api/v1/rituals/:id/toggle-complete  Toggle 打卡（幂等切换）
   GET    /api/v1/rituals/stats          统计（完成率、streak、每日明细）
 
-今日面板
+Today（今日）
   GET    /api/v1/today                  聚合接口（today tasks + events + rituals + recent fragments + stats）
 ```
 
@@ -1130,11 +1131,11 @@ graph TB
 
 ## 关联文档索引
 
-| 文档                 | 路径                         | 说明                  |
-| -------------------- | ---------------------------- | --------------------- |
-| 数据库 Schema (SSoT) | `database-schema.sql`        | 完整 18 表 DDL        |
-| Rituals 设计方案     | `../superpowers/specs/2026-03-14-rituals-design.md` | 晨间仪式功能设计 |
-| 多态关联设计         | `polymorphic-association.md` | FK + 多态混合策略     |
-| 认证设计方案         | `auth-design.md`             | 方案 C 完整设计       |
-| API 返回格式规范     | `api-response-format.md`     | 裸数据 + 错误信封     |
-| 基础设施与部署       | `../infra.md`                | AWS + Cloudflare 部署 |
+| 文档                 | 路径                                                | 说明                  |
+| -------------------- | --------------------------------------------------- | --------------------- |
+| 数据库 Schema (SSoT) | `database-schema.sql`                               | 完整 18 表 DDL        |
+| Rituals 设计方案     | `../superpowers/specs/2026-03-14-rituals-design.md` | 晨间仪式功能设计      |
+| 多态关联设计         | `polymorphic-association.md`                        | FK + 多态混合策略     |
+| 认证设计方案         | `auth-design.md`                                    | 方案 C 完整设计       |
+| API 返回格式规范     | `api-response-format.md`                            | 裸数据 + 错误信封     |
+| 基础设施与部署       | `../infra.md`                                       | AWS + Cloudflare 部署 |

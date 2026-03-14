@@ -1,13 +1,13 @@
-import type { Context } from "koa";
-import { z } from "zod";
-import { authService } from "../services/auth-service.js";
+import type { Context } from 'koa';
+import { z } from 'zod';
+import { authService } from '../services/auth-service.js';
 
 // -- Validation schemas --
 
 const deviceInfoSchema = z.object({
   deviceName: z.string().max(200).optional(),
-  deviceType: z.enum(["desktop", "mobile", "tablet", "watch"]),
-  platform: z.enum(["web", "pwa", "tauri", "ios", "android", "wechat_mini"]),
+  deviceType: z.enum(['desktop', 'mobile', 'tablet', 'watch']),
+  platform: z.enum(['web', 'pwa', 'tauri', 'ios', 'android', 'wechat_mini']),
   appVersion: z.string().max(50).optional(),
   osInfo: z.string().max(100).optional(),
   deviceFingerprint: z.string().max(255).optional(),
@@ -31,6 +31,11 @@ const googleOAuthSchema = z.object({
   deviceInfo: deviceInfoSchema,
 });
 
+const githubOAuthSchema = z.object({
+  code: z.string().min(1),
+  deviceInfo: deviceInfoSchema,
+});
+
 const refreshSchema = z.object({
   refreshToken: z.string().min(1),
   deviceId: z.string().uuid(),
@@ -42,7 +47,7 @@ export const authController = {
   async register(ctx: Context) {
     const body = registerSchema.parse(ctx.request.body);
     const ip = ctx.ip;
-    const ua = ctx.get("User-Agent");
+    const ua = ctx.get('User-Agent');
 
     const result = await authService.register(
       body.email,
@@ -60,7 +65,7 @@ export const authController = {
   async login(ctx: Context) {
     const body = loginSchema.parse(ctx.request.body);
     const ip = ctx.ip;
-    const ua = ctx.get("User-Agent");
+    const ua = ctx.get('User-Agent');
 
     const result = await authService.login(
       body.email,
@@ -76,10 +81,25 @@ export const authController = {
   async googleOAuth(ctx: Context) {
     const body = googleOAuthSchema.parse(ctx.request.body);
     const ip = ctx.ip;
-    const ua = ctx.get("User-Agent");
+    const ua = ctx.get('User-Agent');
 
     const result = await authService.googleOAuth(
       body.idToken,
+      body.deviceInfo,
+      ip,
+      ua,
+    );
+
+    ctx.body = result;
+  },
+
+  async githubOAuth(ctx: Context) {
+    const body = githubOAuthSchema.parse(ctx.request.body);
+    const ip = ctx.ip;
+    const ua = ctx.get('User-Agent');
+
+    const result = await authService.githubOAuth(
+      body.code,
       body.deviceInfo,
       ip,
       ua,
@@ -105,7 +125,9 @@ export const authController = {
     const { userId, deviceId } = ctx.state;
     if (!deviceId) {
       ctx.status = 400;
-      ctx.body = { error: { code: "NO_DEVICE", message: "No device ID in token" } };
+      ctx.body = {
+        error: { code: 'NO_DEVICE', message: 'No device ID in token' },
+      };
       return;
     }
     await authService.logout(userId, deviceId);

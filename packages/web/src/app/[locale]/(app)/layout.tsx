@@ -11,6 +11,7 @@ export default function AppLayout({
   children: React.ReactNode
 }) {
   const isAuthenticated = useAuth((s) => s.isAuthenticated)
+  const accessToken = useAuth((s) => s.accessToken)
   const router = useRouter()
 
   useEffect(() => {
@@ -19,7 +20,8 @@ export default function AppLayout({
     }
   }, [isAuthenticated, router])
 
-  if (!isAuthenticated) return null
+  // Not authenticated — redirect is pending, show nothing
+  if (!isAuthenticated || !accessToken) return null
 
   return <AppShell>{children}</AppShell>
 }

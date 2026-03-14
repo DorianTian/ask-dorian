@@ -19,6 +19,10 @@ export function useSWRApi<T>(
     async () => {
       const result = await fetcher()
       if (!result.ok) {
+        // Don't throw auth errors — the auth layer handles redirect
+        if (result.status === 401 || result.status === 0) {
+          return undefined as T
+        }
         throw result.error
       }
       return result.data

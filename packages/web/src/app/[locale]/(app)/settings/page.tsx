@@ -4,6 +4,8 @@ import { useState } from "react"
 import { useTranslations } from "next-intl"
 import { useAuth } from "@/providers/auth-provider"
 import { motion, AnimatePresence } from "framer-motion"
+import { useUserSettings } from "@ask-dorian/core/hooks"
+import { userApi } from "@ask-dorian/core/api"
 import {
   User,
   Bell,
@@ -25,26 +27,42 @@ function SettingItem({
   icon: Icon,
   title,
   subtitle,
+  expandedContent,
+  isExpanded,
+  onToggle,
 }: {
   icon: LucideIcon
   title: string
   subtitle: string
+  expandedContent?: React.ReactNode
+  isExpanded?: boolean
+  onToggle?: () => void
 }) {
   return (
-    <div className="flex items-center justify-between p-4 border-b border-white/5 last:border-none hover:bg-white/5 cursor-pointer transition-colors group">
-      <div className="flex items-center gap-4">
-        <div className="size-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 group-hover:text-primary group-hover:bg-primary/10 transition-all">
-          <Icon size={20} />
+    <div className="border-b border-white/5 last:border-none">
+      <div
+        onClick={onToggle}
+        className="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-colors group"
+      >
+        <div className="flex items-center gap-4">
+          <div className={`size-10 rounded-xl flex items-center justify-center transition-all ${isExpanded ? "bg-primary/10 text-primary" : "bg-white/5 text-slate-400 group-hover:text-primary group-hover:bg-primary/10"}`}>
+            <Icon size={20} />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-text-main">{title}</p>
+            <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>
+          </div>
         </div>
-        <div>
-          <p className="text-sm font-bold text-text-main">{title}</p>
-          <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>
-        </div>
+        <ChevronRight
+          size={18}
+          className={`text-slate-600 transition-all ${isExpanded ? "rotate-90 text-primary" : "group-hover:text-text-main"}`}
+        />
       </div>
-      <ChevronRight
-        size={18}
-        className="text-slate-600 group-hover:text-text-main transition-colors"
-      />
+      {isExpanded && expandedContent && (
+        <div className="px-4 pb-4 pl-[72px] space-y-3 text-sm text-slate-400 border-t border-white/5 pt-3 animate-in slide-in-from-top-1 fade-in duration-200">
+          {expandedContent}
+        </div>
+      )}
     </div>
   )
 }
@@ -56,6 +74,22 @@ export default function SettingsPage() {
   const [threshold, setThreshold] = useState(85)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [autoCrystallize, setAutoCrystallize] = useState(true)
+  const [expandedItem, setExpandedItem] = useState<string | null>(null)
+  const toggleItem = (id: string) => setExpandedItem(prev => prev === id ? null : id)
+
+  const { data: settings, mutate: mutateSettings } = useUserSettings()
+
+  const toggleNotification = async (key: string) => {
+    const current = (settings?.notificationSettings ?? {}) as Record<string, boolean>
+    const updated = { ...current, [key]: !current[key] }
+    await userApi.updateSettings({ notificationSettings: updated })
+    mutateSettings()
+  }
+
+  const changeLanguage = async (lang: string) => {
+    await userApi.updateSettings({ language: lang })
+    mutateSettings()
+  }
 
   return (
     <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8">
@@ -100,21 +134,56 @@ export default function SettingsPage() {
                 icon={User}
                 title={t("profileInfo")}
                 subtitle={user?.email ?? ""}
+                isExpanded={expandedItem === "profile"}
+                onToggle={() => toggleItem("profile")}
+                expandedContent={
+                  <div className="space-y-3">
+                    <div className="flex justify-between"><span className="text-slate-500">Name</span><span className="text-text-main font-medium">{user?.name ?? "—"}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">Email</span><span className="text-text-main font-medium">{user?.email ?? "—"}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">Timezone</span><span className="text-text-main font-medium">{user?.timezone ?? "UTC"}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">Locale</span><span className="text-text-main font-medium">{user?.locale ?? "en"}</span></div>
+                  </div>
+                }
               />
               <SettingItem
                 icon={Shield}
                 title={t("securityPrivacy")}
                 subtitle={t("twoFactorActive")}
+                isExpanded={expandedItem === "security"}
+                onToggle={() => toggleItem("security")}
+                expandedContent={
+                  <div className="space-y-3">
+                    <div className="flex justify-between"><span className="text-slate-500">Two-Factor Auth</span><span className="text-primary font-medium">Active</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">Password</span><span className="text-text-main font-medium">••••••••</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">Login Sessions</span><span className="text-text-main font-medium">1 device</span></div>
+                    <p className="text-xs text-slate-600 pt-1">Password change and 2FA management coming in Phase 2.</p>
+                  </div>
+                }
               />
               <SettingItem
                 icon={ImageIcon}
                 title={t("customIcons")}
                 subtitle={t("customIconsDesc")}
+                isExpanded={expandedItem === "icons"}
+                onToggle={() => toggleItem("icons")}
+                expandedContent={
+                  <p className="text-slate-500">Custom icon packs for fragments and projects. Coming in Phase 2.</p>
+                }
               />
               <SettingItem
                 icon={Zap}
                 title={t("subscription")}
                 subtitle={t("subscriptionDesc")}
+                isExpanded={expandedItem === "subscription"}
+                onToggle={() => toggleItem("subscription")}
+                expandedContent={
+                  <div className="space-y-3">
+                    <div className="flex justify-between"><span className="text-slate-500">Plan</span><span className="text-primary font-bold">Pro</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">Price</span><span className="text-text-main font-medium">$12/mo</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">Status</span><span className="text-green-400 font-medium">Active</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">Next Billing</span><span className="text-text-main font-medium">Apr 14, 2026</span></div>
+                  </div>
+                }
               />
             </div>
           </section>
@@ -194,21 +263,99 @@ export default function SettingsPage() {
                 icon={Bell}
                 title={t("notifications")}
                 subtitle={t("notificationsDesc")}
+                isExpanded={expandedItem === "notifications"}
+                onToggle={() => toggleItem("notifications")}
+                expandedContent={
+                  <div className="space-y-3">
+                    {(["taskDueReminders", "fragmentProcessing", "weeklyReview", "emailDigest"] as const).map((key) => {
+                      const labels: Record<string, string> = {
+                        taskDueReminders: "Task Due Reminders",
+                        fragmentProcessing: "Fragment Processing",
+                        weeklyReview: "Weekly Review",
+                        emailDigest: "Email Digest",
+                      }
+                      const notifSettings = (settings?.notificationSettings ?? {}) as Record<string, boolean>
+                      const isOn = notifSettings[key] ?? key !== "emailDigest"
+                      return (
+                        <div key={key} className="flex justify-between items-center">
+                          <span className="text-slate-500">{labels[key]}</span>
+                          <div
+                            onClick={(e) => { e.stopPropagation(); toggleNotification(key) }}
+                            className={`w-10 h-5 rounded-full relative cursor-pointer transition-colors duration-300 ${isOn ? "bg-primary" : "bg-slate-700"}`}
+                          >
+                            <div className={`absolute top-1 size-3 bg-white rounded-full transition-all duration-300 ${isOn ? "right-1" : "right-6"}`} />
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                }
               />
               <SettingItem
                 icon={Globe}
                 title={t("language")}
                 subtitle={t("languageDesc")}
+                isExpanded={expandedItem === "language"}
+                onToggle={() => toggleItem("language")}
+                expandedContent={
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-slate-500 text-xs mb-2">Display Language</p>
+                      <div className="flex gap-2">
+                        {[
+                          { value: "en", label: "English" },
+                          { value: "zh", label: "中文" },
+                        ].map((opt) => {
+                          const isActive = (settings?.language ?? "en") === opt.value
+                          return (
+                            <button
+                              key={opt.value}
+                              onClick={(e) => { e.stopPropagation(); changeLanguage(opt.value) }}
+                              className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all border ${
+                                isActive
+                                  ? "bg-primary/10 text-primary border-primary/30"
+                                  : "bg-white/5 text-text-main border-white/10 hover:border-primary/20"
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                    <div className="flex justify-between"><span className="text-slate-500">AI Response Language</span><span className="text-text-main font-medium">Match Input</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">Timezone</span><span className="text-text-main font-medium">{Intl.DateTimeFormat().resolvedOptions().timeZone}</span></div>
+                  </div>
+                }
               />
               <SettingItem
                 icon={Smartphone}
                 title={t("connectedDevices")}
                 subtitle={t("connectedDevicesDesc")}
+                isExpanded={expandedItem === "devices"}
+                onToggle={() => toggleItem("devices")}
+                expandedContent={
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <div><span className="text-text-main font-medium">This Browser</span><p className="text-xs text-slate-600 mt-0.5">Web • Active now</p></div>
+                      <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">Current</span>
+                    </div>
+                  </div>
+                }
               />
               <SettingItem
                 icon={Database}
                 title={t("dataManagement")}
                 subtitle={t("dataManagementDesc")}
+                isExpanded={expandedItem === "data"}
+                onToggle={() => toggleItem("data")}
+                expandedContent={
+                  <div className="space-y-3">
+                    <div className="flex justify-between"><span className="text-slate-500">Fragments</span><span className="text-text-main font-medium">Local + Cloud</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">Auto-backup</span><span className="text-primary text-xs font-bold">ON</span></div>
+                    <p className="text-xs text-slate-600 pt-1">Data export and account deletion available in Phase 2.</p>
+                  </div>
+                }
               />
             </div>
           </section>

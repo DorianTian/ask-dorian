@@ -21,6 +21,7 @@ export interface CreateFragmentInput {
   timezone?: string;
   location?: Record<string, unknown>;
   clientContext?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
   parentId?: string;
   deviceId?: string;
 }
@@ -69,7 +70,7 @@ export const fragmentService = {
       clientContext: input.clientContext ?? {},
       parentId: input.parentId,
       deviceId: input.deviceId,
-      metadata: {},
+      metadata: input.metadata ?? {},
     });
 
     // Trigger async AI processing (fire-and-forget)
@@ -153,6 +154,19 @@ export const fragmentService = {
 
   async getConfirmedInRange(userId: string, start: string, end: string): Promise<Fragment[]> {
     return fragmentRepo.findConfirmedInRange(userId, start, end);
+  },
+
+  async update(
+    userId: string,
+    id: string,
+    data: { isPinned?: boolean; isArchived?: boolean },
+  ): Promise<Fragment> {
+    await this.findById(userId, id);
+    const updated = await fragmentRepo.updateById(id, data);
+    if (!updated) {
+      throw new AppError(404, "FRAGMENT_NOT_FOUND", "Fragment not found");
+    }
+    return updated;
   },
 
   async delete(userId: string, id: string): Promise<void> {

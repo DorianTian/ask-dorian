@@ -1,106 +1,317 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { useTranslations } from "next-intl"
 import { useSWRConfig } from "swr"
 import { useFragments } from "@ask-dorian/core/hooks"
 import { fragmentApi } from "@ask-dorian/core/api"
-import type { FragmentStatus } from "@ask-dorian/core/types"
+import type { Fragment, FragmentStatus } from "@ask-dorian/core/types"
+import { FragmentDetail } from "@/components/shared/fragment-detail"
 import {
   UploadCloud,
   LayoutList,
   LayoutGrid,
   Loader2,
-  Send,
   Mic,
   Image as ImageIcon,
+  Link as LinkIcon,
   MessageSquare,
+  Sparkles,
+  Clock,
   CheckCircle2,
-  XCircle,
+  ArrowRight,
+  Bookmark,
+  MoreHorizontal,
+  Archive,
+  Trash2,
 } from "lucide-react"
 
-function getContentTypeIcon(type: string) {
+function getTypeIcon(type: string, size = 24) {
   switch (type) {
     case "voice":
-      return Mic
+      return <Mic size={size} className="text-primary" />
     case "image":
-      return ImageIcon
+      return <ImageIcon size={size} className="text-primary" />
+    case "url":
+      return <LinkIcon size={size} className="text-primary" />
     default:
-      return MessageSquare
+      return <Sparkles size={size} className="text-primary" />
   }
 }
 
-function getStatusLabel(status: FragmentStatus, t: (key: string) => string) {
-  const map: Record<FragmentStatus, string> = {
-    pending: t("statusPending"),
-    processing: t("statusProcessing"),
-    processed: t("statusProcessed"),
-    confirmed: t("statusConfirmed"),
-    rejected: t("statusRejected"),
-    failed: t("statusFailed"),
-  }
-  return map[status] ?? status
+function formatTimestamp(iso: string): string {
+  return new Date(iso).toLocaleTimeString("en", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).toUpperCase()
 }
 
-function formatTime(iso: string): string {
-  const now = Date.now()
-  const then = new Date(iso).getTime()
-  const diffMs = now - then
+function fragmentToDetail(f: Fragment) {
+  return {
+    id: f.id,
+    type: f.contentType,
+    content: f.normalizedContent || f.rawContent,
+    status: f.status,
+    timestamp: new Date(f.capturedAt).toLocaleDateString(),
+    extractedData: {
+      title: (f.metadata?.title as string) || undefined,
+      tasks: Array.isArray(f.metadata?.tasks) ? (f.metadata.tasks as string[]) : undefined,
+      calendarEvent: f.metadata?.calendarEvent as { date: string; time: string } | undefined,
+      tags: Array.isArray(f.metadata?.tags) ? (f.metadata.tags as string[]) : undefined,
+    },
+  }
+}
 
-  if (diffMs < 0) return new Date(iso).toLocaleDateString()
+function FragmentCard({
+  fragment,
+  openMenuId,
+  onMenuToggle,
+  menuRef,
+  onConfirm,
+  onReject,
+  onSelect,
+  onPin,
+  onArchive,
+  onDelete,
+  t,
+  tFragment,
+}: {
+  fragment: Fragment
+  openMenuId: string | null
+  onMenuToggle: (id: string) => void
+  menuRef: React.RefObject<HTMLDivElement | null>
+  onConfirm: (id: string) => void
+  onReject: (id: string) => void
+  onSelect: (f: Fragment) => void
+  onPin: (id: string, currentPinned: boolean) => void
+  onArchive: (id: string) => void
+  onDelete: (id: string) => void
+  t: (key: string) => string
+  tFragment: (key: string) => string
+}) {
+  const isProcessing = fragment.status === "processing" || fragment.status === "pending"
+  const title = (fragment.normalizedContent || fragment.rawContent).split("\n")[0].slice(0, 80)
+  const isMenuOpen = openMenuId === fragment.id
 
-  const minutes = Math.floor(diffMs / 60_000)
-  if (minutes < 1) return "just now"
-  if (minutes < 60) return `${minutes}m ago`
+  return (
+    <div onClick={() => onSelect(fragment)} className="group relative bg-surface-dark/40 border border-border-dark/50 rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl hover:border-primary/30 hover:-translate-y-1 hover:scale-[1.01] transition-all duration-300 cursor-pointer active:scale-[0.99]">
+      <div className="flex flex-col md:flex-row">
+        {/* Visual / Source Area */}
+        <div className="w-full md:w-1/3 aspect-video md:aspect-auto bg-slate-900/50 relative overflow-hidden flex items-center justify-center p-4 min-h-[200px]">
+          <div className="size-16 rounded-2xl bg-primary/5 flex items-center justify-center border border-primary/10">
+            {getTypeIcon(fragment.contentType)}
+          </div>
+          <div className="absolute top-3 left-3 px-2 py-1 bg-bg-dark/80 backdrop-blur rounded text-[10px] font-bold uppercase tracking-wider text-primary border border-primary/20 hover:bg-primary hover:text-white cursor-pointer transition-all">
+            {fragment.contentType}
+          </div>
+        </div>
 
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
+        {/* Content Area */}
+        <div className="flex-1 p-6 flex flex-col justify-between">
+          <div>
+            <div className="flex justify-between items-start mb-2">
+              <div className="flex items-center gap-2 text-primary">
+                <Sparkles size={14} />
+                <p className="text-[10px] font-bold uppercase tracking-widest">
+                  {isProcessing ? tFragment("aiExtracting") : tFragment("knowledgeExtracted")}
+                </p>
+              </div>
+              <span className="text-[11px] text-slate-500 font-medium">
+                {formatTimestamp(fragment.capturedAt)}
+              </span>
+            </div>
 
-  const days = Math.floor(hours / 24)
-  if (days < 7) return `${days}d ago`
+            <h3 className="text-text-main text-lg font-bold mb-3 tracking-tight leading-snug group-hover:text-primary transition-colors">
+              {title || tFragment("fragmentAnalysis")}
+            </h3>
 
-  return new Date(iso).toLocaleDateString()
+            <div className="bg-bg-dark/40 rounded-xl p-3 border-l-4 border-primary/40 mb-4 group-hover:bg-bg-dark/60 transition-colors">
+              <p className="text-slate-400 text-sm italic leading-relaxed">
+                &quot;{fragment.rawContent}&quot;
+              </p>
+            </div>
+
+            {isProcessing ? (
+              <div className="flex items-center gap-2 text-slate-500 mb-4 animate-pulse">
+                <Clock size={16} />
+                <span className="text-xs font-medium italic">{tFragment("identifying")}</span>
+              </div>
+            ) : (
+              fragment.inputSource && (
+                <div className="flex items-center gap-4 text-xs text-slate-400">
+                  <div className="flex items-center gap-1.5">
+                    <Clock size={14} className="text-primary" />
+                    {new Date(fragment.capturedAt).toLocaleDateString()}
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+
+          <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/5">
+            <div className="flex flex-wrap gap-2">
+              <span className="text-[10px] font-bold text-primary uppercase bg-primary/5 px-2 py-0.5 rounded border border-primary/10 hover:bg-primary hover:text-white cursor-pointer transition-all">
+                #{fragment.contentType}
+              </span>
+              {fragment.inputSource && (
+                <span className="text-[10px] font-bold text-primary uppercase bg-primary/5 px-2 py-0.5 rounded border border-primary/10 hover:bg-primary hover:text-white cursor-pointer transition-all">
+                  #{fragment.inputSource}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {fragment.status === "processed" && (
+                <>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onConfirm(fragment.id) }}
+                    className="p-2 text-emerald-500 hover:text-emerald-400 hover:bg-white/5 rounded-lg transition-all"
+                    title={t("confirm")}
+                  >
+                    <CheckCircle2 size={16} />
+                  </button>
+                </>
+              )}
+              {/* Bookmark / Pin toggle */}
+              <button
+                onClick={(e) => { e.stopPropagation(); onPin(fragment.id, fragment.isPinned) }}
+                className={`p-2 rounded-lg transition-all ${
+                  fragment.isPinned
+                    ? "text-primary bg-primary/10"
+                    : "text-slate-500 hover:text-primary hover:bg-white/5"
+                }`}
+                title={fragment.isPinned ? t("unpinned") : t("pinned")}
+              >
+                <Bookmark size={16} fill={fragment.isPinned ? "currentColor" : "none"} />
+              </button>
+              {/* More menu */}
+              <div className="relative" ref={isMenuOpen ? menuRef : undefined}>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onMenuToggle(fragment.id) }}
+                  className={`p-2 rounded-lg transition-all ${
+                    isMenuOpen
+                      ? "text-primary bg-white/5"
+                      : "text-slate-500 hover:text-primary hover:bg-white/5"
+                  }`}
+                >
+                  <MoreHorizontal size={16} />
+                </button>
+                {isMenuOpen && (
+                  <div className="absolute right-0 bottom-full mb-1 z-50 w-40 bg-slate-900 border border-border-dark/80 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-1 duration-150">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onArchive(fragment.id) }}
+                      className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-slate-300 hover:bg-white/5 hover:text-text-main transition-colors"
+                    >
+                      <Archive size={14} />
+                      <span>{t("archive")}</span>
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onDelete(fragment.id) }}
+                      className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+                    >
+                      <Trash2 size={14} />
+                      <span>{t("delete")}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); onSelect(fragment) }}
+                className="flex items-center gap-2 bg-primary/10 hover:bg-primary text-primary hover:text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-all border border-primary/20"
+              >
+                <span>{tFragment("viewDetails")}</span>
+                <ArrowRight size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function StreamPage() {
   const t = useTranslations("stream")
+  const tFragment = useTranslations("fragment")
   const { mutate } = useSWRConfig()
 
   const [activeTab, setActiveTab] = useState<"all" | "pending" | "processed">("all")
   const [viewMode, setViewMode] = useState<"list" | "grid">("list")
-  const [newContent, setNewContent] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [selectedFragment, setSelectedFragment] = useState<Fragment | null>(null)
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
+
+  const menuRef = useRef<HTMLDivElement | null>(null)
 
   const statusFilter = activeTab === "all" ? undefined : { status: activeTab }
   const { data: fragments, isLoading } = useFragments(statusFilter)
 
-  const handleSubmit = useCallback(async () => {
-    const trimmed = newContent.trim()
-    if (!trimmed || isSubmitting) return
-
-    setIsSubmitting(true)
-    try {
-      await fragmentApi.create({
-        rawContent: trimmed,
-        contentType: "text",
-        inputSource: "web",
-      })
-      setNewContent("")
-      mutate((key: unknown) => typeof key === "string" && key.startsWith("/fragments"))
-    } finally {
-      setIsSubmitting(false)
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!openMenuId) return
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenuId(null)
+      }
     }
-  }, [newContent, isSubmitting, mutate])
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [openMenuId])
+
+  // Auto-dismiss toast
+  useEffect(() => {
+    if (!toast) return
+    const timer = setTimeout(() => setToast(null), 2000)
+    return () => clearTimeout(timer)
+  }, [toast])
+
+  const invalidateFragments = useCallback(() => {
+    mutate((key: unknown) => typeof key === "string" && key.startsWith("/fragments"))
+  }, [mutate])
 
   const handleConfirm = useCallback(async (id: string) => {
     await fragmentApi.confirm(id)
-    mutate((key: unknown) => typeof key === "string" && key.startsWith("/fragments"))
-  }, [mutate])
+    invalidateFragments()
+  }, [invalidateFragments])
 
   const handleReject = useCallback(async (id: string) => {
     await fragmentApi.reject(id)
-    mutate((key: unknown) => typeof key === "string" && key.startsWith("/fragments"))
-  }, [mutate])
+    invalidateFragments()
+  }, [invalidateFragments])
+
+  const handlePin = useCallback(async (id: string, currentPinned: boolean) => {
+    const result = await fragmentApi.update(id, { isPinned: !currentPinned })
+    if (result.ok) {
+      setToast(currentPinned ? t("unpinned") : t("pinned"))
+      invalidateFragments()
+    }
+  }, [invalidateFragments, t])
+
+  const handleArchive = useCallback(async (id: string) => {
+    setOpenMenuId(null)
+    const result = await fragmentApi.update(id, { isArchived: true })
+    if (result.ok) {
+      setToast(t("archived"))
+      invalidateFragments()
+    }
+  }, [invalidateFragments, t])
+
+  const handleDelete = useCallback(async (id: string) => {
+    setOpenMenuId(null)
+    const result = await fragmentApi.delete(id)
+    if (result.ok) {
+      setToast(t("deleted"))
+      invalidateFragments()
+    }
+  }, [invalidateFragments, t])
+
+  const handleMenuToggle = useCallback((id: string) => {
+    setOpenMenuId((prev) => (prev === id ? null : id))
+  }, [])
+
+  const handleDropZoneClick = useCallback(() => {
+    setToast(t("dropZoneHint"))
+  }, [t])
 
   const tabs = [
     { id: "all" as const, label: t("allFragments") },
@@ -138,40 +349,6 @@ export default function StreamPage() {
               }`}
             >
               <LayoutGrid size={18} />
-            </button>
-          </div>
-        </div>
-
-        {/* Quick capture */}
-        <div className="relative bg-surface-dark/40 border border-border-dark/50 rounded-2xl p-4">
-          <textarea
-            value={newContent}
-            onChange={(e) => setNewContent(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                e.preventDefault()
-                handleSubmit()
-              }
-            }}
-            placeholder={t("capturePlaceholder")}
-            rows={2}
-            className="w-full bg-transparent text-text-main placeholder:text-slate-500 text-sm resize-none outline-none"
-          />
-          <div className="flex items-center justify-between mt-2">
-            <span className="text-[11px] text-slate-600">
-              &#x2318;+Enter {t("toSend")}
-            </span>
-            <button
-              onClick={handleSubmit}
-              disabled={!newContent.trim() || isSubmitting}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              {isSubmitting ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <Send size={14} />
-              )}
-              {t("capture")}
             </button>
           </div>
         </div>
@@ -217,61 +394,29 @@ export default function StreamPage() {
                 : ""
             }`}
           >
-            {fragments.map((f) => {
-              const Icon = getContentTypeIcon(f.contentType)
-              return (
-                <div
-                  key={f.id}
-                  className="group relative bg-surface-dark/40 border border-border-dark/50 rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl hover:border-primary/30 hover:-translate-y-1 hover:scale-[1.01] transition-all duration-300 cursor-pointer active:scale-[0.99] p-6"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-2 text-primary">
-                      <Icon size={14} />
-                      <span className="text-[10px] font-bold uppercase tracking-widest">
-                        {getStatusLabel(f.status, t)}
-                      </span>
-                    </div>
-                    <span className="text-[11px] text-slate-500 font-medium">
-                      {formatTime(f.capturedAt)}
-                    </span>
-                  </div>
-
-                  <div className="bg-bg-dark/40 rounded-xl p-3 border-l-4 border-primary/40 mb-4 group-hover:bg-bg-dark/60 transition-colors">
-                    <p className="text-slate-400 text-sm leading-relaxed whitespace-pre-wrap">
-                      {f.normalizedContent || f.rawContent}
-                    </p>
-                  </div>
-
-                  {f.status === "processed" && (
-                    <div className="flex items-center gap-2 mt-3">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleConfirm(f.id)
-                        }}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-medium hover:bg-emerald-500/20 transition-colors"
-                      >
-                        <CheckCircle2 size={12} />
-                        {t("confirm")}
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleReject(f.id)
-                        }}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 text-xs font-medium hover:bg-red-500/20 transition-colors"
-                      >
-                        <XCircle size={12} />
-                        {t("reject")}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+            {fragments.map((f) => (
+              <FragmentCard
+                key={f.id}
+                fragment={f}
+                openMenuId={openMenuId}
+                onMenuToggle={handleMenuToggle}
+                menuRef={menuRef}
+                onConfirm={handleConfirm}
+                onReject={handleReject}
+                onSelect={setSelectedFragment}
+                onPin={handlePin}
+                onArchive={handleArchive}
+                onDelete={handleDelete}
+                t={t}
+                tFragment={tFragment}
+              />
+            ))}
 
             {/* Drop Zone */}
-            <div className="border-2 border-dashed border-border-dark rounded-2xl p-12 flex flex-col items-center justify-center text-center gap-4 group hover:border-primary/40 hover:bg-primary/5 transition-all bg-surface-dark/20 cursor-pointer">
+            <div
+              onClick={handleDropZoneClick}
+              className="border-2 border-dashed border-border-dark rounded-2xl p-12 flex flex-col items-center justify-center text-center gap-4 group hover:border-primary/40 hover:bg-primary/5 transition-all bg-surface-dark/20 cursor-pointer"
+            >
               <div className="size-16 rounded-full bg-surface-dark flex items-center justify-center text-slate-500 group-hover:bg-primary/10 group-hover:text-primary group-hover:scale-110 transition-all">
                 <UploadCloud size={32} />
               </div>
@@ -287,6 +432,18 @@ export default function StreamPage() {
           </div>
         )}
       </div>
+
+      <FragmentDetail
+        fragment={selectedFragment ? fragmentToDetail(selectedFragment) : null}
+        onClose={() => setSelectedFragment(null)}
+      />
+
+      {/* Toast notification */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 bg-slate-900 border border-border-dark/80 rounded-lg shadow-xl text-sm text-text-main font-medium animate-in fade-in slide-in-from-bottom-2 duration-200">
+          {toast}
+        </div>
+      )}
     </div>
   )
 }

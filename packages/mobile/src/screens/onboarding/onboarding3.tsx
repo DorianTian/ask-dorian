@@ -19,9 +19,9 @@ export function Onboarding3() {
       {/* Header — back + title */}
       <View style={s.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn} activeOpacity={0.7}>
-          <ArrowLeft size={24} color="#F1F5F9" />
+          <ArrowLeft size={24} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={[s.headerTitle, { color: "#F1F5F9" }]}>First Value</Text>
+        <Text style={[s.headerTitle, { color: colors.textPrimary }]}>First Value</Text>
       </View>
 
       {/* Progress dots — 3rd active */}
@@ -33,8 +33,8 @@ export function Onboarding3() {
 
       {/* Title area — px-6 text-center */}
       <View style={s.titleArea}>
-        <Text style={[s.title, { color: "#F1F5F9" }]}>Magic Processing</Text>
-        <Text style={s.titleDesc}>See how we turn messy notes into organized tasks in seconds.</Text>
+        <Text style={[s.title, { color: colors.textPrimary }]}>Magic Processing</Text>
+        <Text style={[s.titleDesc, { color: colors.textTertiary }]}>See how we turn messy notes into organized tasks in seconds.</Text>
       </View>
 
       {/* Demo card — mx-6 p-6 rounded-xl bg-primary/5 border border-primary/20 */}
@@ -46,8 +46,8 @@ export function Onboarding3() {
         {/* Input section */}
         <View style={s.inputSection}>
           <Text style={[s.sectionLabel, { color: colors.brandFrom }]}>Input Note</Text>
-          <View style={[s.inputCard, { backgroundColor: "#1E293B", borderColor: "#334155" }]}>
-            <Text style={[s.inputText, { color: "#E2E8F0" }]}>"Meeting with Sarah at 4pm about UI"</Text>
+          <View style={[s.inputCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.borderLight }]}>
+            <Text style={[s.inputText, { color: colors.textSecondary }]}>"Meeting with Sarah at 4pm about UI"</Text>
           </View>
         </View>
 
@@ -64,17 +64,17 @@ export function Onboarding3() {
         {/* Output section */}
         <View style={s.outputSection}>
           <Text style={[s.sectionLabel, { color: colors.brandFrom }]}>Structured Task</Text>
-          <View style={[s.outputCard, { backgroundColor: "#1E293B", borderColor: "#334155", borderLeftColor: colors.brandFrom }]}>
+          <View style={[s.outputCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.borderLight, borderLeftColor: colors.brandFrom }]}>
             <View style={s.outputHeader}>
               <View style={{ flex: 1 }}>
-                <Text style={[s.outputTitle, { color: "#F1F5F9" }]}>UI Review Meeting</Text>
+                <Text style={[s.outputTitle, { color: colors.textPrimary }]}>UI Review Meeting</Text>
                 <View style={s.outputDetail}>
-                  <Calendar size={12} color="#94A3B8" />
-                  <Text style={s.outputDetailText}>Today, 4:00 PM</Text>
+                  <Calendar size={12} color={colors.textTertiary} />
+                  <Text style={[s.outputDetailText, { color: colors.textTertiary }]}>Today, 4:00 PM</Text>
                 </View>
                 <View style={s.outputDetail}>
-                  <User size={12} color="#94A3B8" />
-                  <Text style={s.outputDetailText}>Sarah</Text>
+                  <User size={12} color={colors.textTertiary} />
+                  <Text style={[s.outputDetailText, { color: colors.textTertiary }]}>Sarah</Text>
                 </View>
               </View>
               <View style={[s.checkBadge, { backgroundColor: colors.brandFrom + "1A" }]}>
@@ -88,7 +88,7 @@ export function Onboarding3() {
       {/* Bottom buttons */}
       <View style={s.bottomButtons}>
         <TouchableOpacity
-          style={[s.ctaButton, { backgroundColor: colors.brandFrom }]}
+          style={[s.ctaButton, { backgroundColor: colors.brandFrom, shadowColor: colors.brandFrom }]}
           onPress={() => navigation.navigate("Onboarding4")}
           activeOpacity={0.8}
         >
@@ -100,7 +100,7 @@ export function Onboarding3() {
           style={s.skipBtn}
           activeOpacity={0.7}
         >
-          <Text style={s.skipText}>Skip for now</Text>
+          <Text style={[s.skipText, { color: colors.textTertiary }]}>Skip for now</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -123,7 +123,7 @@ const s = StyleSheet.create({
   // text-2xl font-bold leading-tight pb-2 pt-5
   title: { fontSize: 24, fontWeight: "700", lineHeight: 30, paddingBottom: 8, paddingTop: 20, textAlign: "center" },
   // text-base text-slate-400 font-normal leading-normal pb-6
-  titleDesc: { fontSize: 16, color: "#94A3B8", fontWeight: "400", lineHeight: 24, paddingBottom: 24, textAlign: "center" },
+  titleDesc: { fontSize: 16, fontWeight: "400", lineHeight: 24, paddingBottom: 24, textAlign: "center" },
   // mx-6 p-6 rounded-xl overflow-hidden
   demoCard: { marginHorizontal: 24, padding: 24, borderRadius: 12, borderWidth: 1, overflow: "hidden" },
   // absolute -bottom-12 -right-12 w-32 h-32 opacity-20
@@ -156,7 +156,7 @@ const s = StyleSheet.create({
   // flex-row items-center gap-2 mt-2
   outputDetail: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8 },
   // text-xs text-slate-400
-  outputDetailText: { fontSize: 12, color: "#94A3B8" },
+  outputDetailText: { fontSize: 12 },
   // bg-primary/10 p-1 rounded
   checkBadge: { padding: 4, borderRadius: 4 },
   // mt-auto p-6 pb-safe gap-4
@@ -165,10 +165,10 @@ const s = StyleSheet.create({
   ctaButton: {
     width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
     paddingVertical: 16, borderRadius: 12,
-    shadowColor: "#10B981", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4,
+    shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4,
   },
   ctaText: { color: "#FFFFFF", fontWeight: "700", fontSize: 16 },
   // text-slate-400 font-medium py-2 text-sm text-center
   skipBtn: { alignItems: "center", paddingVertical: 8 },
-  skipText: { color: "#94A3B8", fontWeight: "500", fontSize: 14 },
+  skipText: { fontWeight: "500", fontSize: 14 },
 })

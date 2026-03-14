@@ -9,6 +9,7 @@ export const authRoutes = new Router({ prefix: "/auth" });
 authRoutes.post("/register", authRateLimiter, authController.register);
 authRoutes.post("/login", authRateLimiter, authController.login);
 authRoutes.post("/google", authRateLimiter, authController.googleOAuth);
+authRoutes.post("/github", authRateLimiter, authController.githubOAuth);
 authRoutes.post("/refresh", authRateLimiter, authController.refresh);
 
 // Protected routes

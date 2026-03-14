@@ -1,9 +1,11 @@
 "use client"
 
+import { useState, useRef, useEffect } from "react"
 import { usePathname } from "@/i18n/navigation"
-import { Link } from "@/i18n/navigation"
+import { Link, useRouter } from "@/i18n/navigation"
 import { useTranslations } from "next-intl"
 import { useAuth } from "@/providers/auth-provider"
+import { useTodayDashboard } from "@ask-dorian/core/hooks"
 import {
   LayoutDashboard,
   Zap,
@@ -16,6 +18,7 @@ import {
   ChevronRight,
   Sparkles,
   HelpCircle,
+  X,
 } from "lucide-react"
 
 const navItems = [
@@ -27,12 +30,34 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
   const t = useTranslations("nav")
   const tSidebar = useTranslations("sidebar")
   const logout = useAuth((s) => s.logout)
   const user = useAuth((s) => s.user)
+  const { data: dashboard } = useTodayDashboard()
+  const [showChangelog, setShowChangelog] = useState(false)
+  const changelogRef = useRef<HTMLDivElement>(null)
+
+  // Ritual progress for daily goal
+  const ritualProgress = dashboard?.rituals?.progress
+  const goalCompleted = ritualProgress?.completed ?? 0
+  const goalTotal = ritualProgress?.total ?? 0
+  const goalPercent = goalTotal > 0 ? Math.round((goalCompleted / goalTotal) * 100) : 0
 
   const isActive = (href: string) => pathname.includes(href)
+
+  // Close changelog popover when clicking outside
+  useEffect(() => {
+    if (!showChangelog) return
+    const handleClickOutside = (e: MouseEvent) => {
+      if (changelogRef.current && !changelogRef.current.contains(e.target as Node)) {
+        setShowChangelog(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [showChangelog])
 
   return (
     <>
@@ -47,9 +72,6 @@ export function Sidebar() {
               Dorian
             </span>
           </Link>
-          <button className="p-1.5 text-slate-500 hover:text-text-main hover:bg-white/5 rounded-lg transition-all">
-            <PlusCircle size={18} />
-          </button>
         </div>
 
         <nav className="flex-1 px-4 space-y-1">
@@ -76,7 +98,7 @@ export function Sidebar() {
                       : "group-hover:text-primary transition-colors"
                   }
                 />
-                <span className="text-sm">{t(item.id as "today" | "stream" | "library" | "review")}</span>
+                <span className="text-sm">{t(item.id as typeof navItems[number]["id"])}</span>
                 {active && <ChevronRight size={14} className="ml-auto" />}
               </Link>
             )
@@ -107,26 +129,58 @@ export function Sidebar() {
                 <ChevronRight size={14} className="ml-auto" />
               )}
             </Link>
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-text-main hover:bg-white/5 transition-all group">
-              <Sparkles
-                size={20}
-                className="group-hover:text-primary transition-colors"
-              />
-              <span className="text-sm">{t("whatsNew")}</span>
-            </button>
+            <div className="relative" ref={changelogRef}>
+              <button
+                onClick={() => setShowChangelog((prev) => !prev)}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-text-main hover:bg-white/5 transition-all group"
+              >
+                <Sparkles
+                  size={20}
+                  className="group-hover:text-primary transition-colors"
+                />
+                <span className="text-sm">{t("whatsNew")}</span>
+              </button>
+              {showChangelog && (
+                <div className="absolute left-full top-0 ml-2 w-72 bg-surface-dark border border-border-dark rounded-xl p-4 shadow-2xl z-50">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-black uppercase tracking-widest text-primary">
+                      Changelog
+                    </span>
+                    <button
+                      onClick={() => setShowChangelog(false)}
+                      className="text-slate-500 hover:text-text-main transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm font-bold text-text-main">v0.1.0</p>
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      Initial release. Fragment capture, rituals, knowledge library.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </nav>
 
         <div className="p-4 mt-auto space-y-4">
-          <button className="w-full bg-primary/10 rounded-xl p-4 border border-primary/20 text-left hover:bg-primary/15 transition-all group">
+          <button
+            onClick={() => router.push("/review")}
+            className="w-full bg-primary/10 rounded-xl p-4 border border-primary/20 text-left hover:bg-primary/15 transition-all group"
+          >
             <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-2">
               {tSidebar("dailyGoal")}
             </p>
             <div className="w-full bg-border-dark h-1.5 rounded-full overflow-hidden">
-              <div className="bg-primary h-full w-[65%] group-hover:w-[70%] transition-all duration-500" />
+              <div
+                className="bg-primary h-full transition-all duration-500"
+                style={{ width: `${goalPercent}%` }}
+              />
             </div>
             <p className="text-[10px] mt-2 text-slate-400">
-              {tSidebar("dailyGoalProgress")}
+              {goalCompleted}/{goalTotal} {tSidebar("ritualsComplete")}
             </p>
           </button>
 
@@ -185,7 +239,7 @@ export function Sidebar() {
           >
             <item.icon size={20} />
             <span className="text-[10px] font-bold uppercase tracking-tighter">
-              {t(item.id as "today" | "stream" | "library" | "review")}
+              {t(item.id as typeof navItems[number]["id"])}
             </span>
           </Link>
         ))}

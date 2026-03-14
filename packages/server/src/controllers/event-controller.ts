@@ -91,7 +91,7 @@ export const eventController = {
   },
 
   async getToday(ctx: Context) {
-    const tz = (ctx.query.timezone as string) || "UTC";
+    const tz = ctx.get("X-Timezone") || "UTC";
     const events = await eventService.getToday(ctx.state.userId, tz);
     ctx.body = events;
   },

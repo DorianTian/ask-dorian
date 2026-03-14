@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useTranslations } from "next-intl"
 import {
   Search,
@@ -15,10 +15,76 @@ import {
   ChevronDown,
   Loader2,
   X,
+  Eye,
+  Archive,
+  Trash2,
 } from "lucide-react"
 import { FragmentDetail } from "@/components/shared/fragment-detail"
+import { useAuth } from "@/providers/auth-provider"
 import { useFragments } from "@ask-dorian/core/hooks"
 import type { Fragment } from "@ask-dorian/core/types"
+
+const SYSTEM_EMAILS = new Set(["mock@askdorian.com", "test@askdorian.com"])
+
+function mockFragment(id: string, contentType: Fragment["contentType"], inputSource: string, meta: { project: string; title: string; summary: string; tags: string[]; tasks?: string[] }, content: string, timestamp: string): Fragment {
+  return {
+    id, userId: "", deviceId: null, rawContent: content, contentType,
+    contentHash: null, normalizedContent: content, inputSource,
+    inputDevice: null, sourceApp: null, sourceRef: null,
+    status: "confirmed", processingAttempts: 0, lastError: null,
+    processedAt: timestamp, confirmedAt: timestamp,
+    locale: null, timezone: null, location: null, clientContext: {},
+    parentId: null, isPinned: false, isArchived: false,
+    metadata: meta, version: 1,
+    capturedAt: timestamp, createdAt: timestamp, updatedAt: timestamp,
+    deletedAt: null, ftsContent: null,
+  }
+}
+
+/** Generate relative ISO timestamp: daysAgo=0 is today, hours/minutes set the time */
+function relativeTs(daysAgo: number, hours: number, minutes: number): string {
+  const d = new Date()
+  d.setDate(d.getDate() - daysAgo)
+  d.setHours(hours, minutes, 0, 0)
+  return d.toISOString()
+}
+
+const MOCK_FRAGMENTS: Fragment[] = [
+  mockFragment("demo-1", "text", "Phoenix", {
+    project: "Phoenix", title: "Neural Synapse Mapping",
+    summary: "Extracted findings regarding the latency of signal propagation between synthetic nodes.",
+    tags: ["Neuroscience", "AI"],
+    tasks: ["Verify scaling laws on G-900 cluster", "Document non-linear relationship findings"],
+  }, "Detailed analysis of propagation delay in synthetic neural architectures. Observations indicate a non-linear relationship between node density and signal attenuation. Further testing required on the G-900 cluster to verify scaling laws.", relativeTs(0, 14, 20)),
+  mockFragment("demo-2", "image", "Research", {
+    project: "Research", title: "Visual Cortex Simulation",
+    summary: "Latest simulation results from the G-900 cluster. High fidelity textures rendered.",
+    tags: ["Simulation", "VRAM"],
+    tasks: ["Optimize Crystalline cache for lower VRAM usage"],
+  }, "Simulation run #842. Parameters: 4K resolution, 120fps target. VRAM usage peaked at 22GB. Texture streaming efficiency improved by 15% using the new Crystalline cache algorithm.", relativeTs(1, 9, 45)),
+  mockFragment("demo-3", "text", "Bio-Gen", {
+    project: "Bio-Gen", title: "CRISPR Editing Log",
+    summary: "Automated sequence verification for the last batch. All markers within 0.01% deviation.",
+    tags: ["Genomics", "CRISPR"],
+  }, "Verification of sequence batch B-99. All 48 markers confirmed. Deviation is minimal, suggesting high stability in the current editing medium. Recommended for Phase 2 trials.", relativeTs(2, 18, 12)),
+  mockFragment("demo-4", "url", "Q-Link", {
+    project: "Q-Link", title: "Quantum Entanglement Protocol",
+    summary: "Initial tests on long-range entanglement stability. Coherence maintained for 4.2ms.",
+    tags: ["Quantum", "Networking"],
+    tasks: ["Scale entanglement distance to 50km", "Benchmark throughput against classical link"],
+  }, "Protocol Q-1.2. Established stable link between nodes A and B (distance: 12km). Coherence time exceeded previous records. Data throughput reached 1.2 Gbps.", relativeTs(3, 11, 30)),
+  mockFragment("demo-5", "voice", "Eco-Net", {
+    project: "Eco-Net", title: "Sustainable Energy Grid",
+    summary: "Optimization algorithms for distributed solar arrays. Efficiency increased by 12%.",
+    tags: ["Energy", "SmartGrid"],
+  }, "Voice memo transcript: \"The new array optimization seems to be working. We are seeing a significant jump in efficiency during peak hours. Need to check the inverter logs for any thermal issues.\"", relativeTs(4, 16, 55)),
+  mockFragment("demo-6", "text", "NLP-X", {
+    project: "NLP-X", title: "Linguistic Pattern Analysis",
+    summary: "Cross-lingual semantic drift observed in multi-modal training sets.",
+    tags: ["Linguistics", "LLM"],
+    tasks: ["Adjust loss function weights for Romance languages", "Run comparison against V3 embeddings"],
+  }, "Analysis of training set V4. Semantic drift detected in high-dimensional embeddings. Drift is most prominent in abstract concepts across Romance languages. Adjusting loss function weights.", relativeTs(5, 13, 10)),
+]
 
 type FragmentType = "all" | "text" | "image" | "voice" | "url"
 
@@ -37,6 +103,24 @@ function getTypeIcon(type: string) {
   }
 }
 
+function getProject(f: Fragment): string {
+  return (f.metadata?.project as string) || f.inputSource
+}
+
+function getTitle(f: Fragment): string {
+  return (f.metadata?.title as string) || (f.normalizedContent || f.rawContent).split("\n")[0].slice(0, 80)
+}
+
+function getSummary(f: Fragment): string {
+  return (f.metadata?.summary as string) || f.rawContent
+}
+
+function getTags(f: Fragment): string[] {
+  const tags = f.metadata?.tags
+  if (Array.isArray(tags)) return tags as string[]
+  return [f.contentType]
+}
+
 function fragmentToDetail(f: Fragment) {
   return {
     id: f.id,
@@ -44,6 +128,12 @@ function fragmentToDetail(f: Fragment) {
     content: f.normalizedContent || f.rawContent,
     status: f.status,
     timestamp: new Date(f.capturedAt).toLocaleDateString(),
+    extractedData: {
+      title: (f.metadata?.title as string) || undefined,
+      tasks: Array.isArray(f.metadata?.tasks) ? (f.metadata.tasks as string[]) : undefined,
+      calendarEvent: f.metadata?.calendarEvent as { date: string; time: string } | undefined,
+      tags: Array.isArray(f.metadata?.tags) ? (f.metadata.tags as string[]) : undefined,
+    },
   }
 }
 
@@ -56,7 +146,14 @@ export default function KnowledgePage() {
   const [isFocused, setIsFocused] = useState(false)
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [selectedFragment, setSelectedFragment] = useState<Fragment | null>(null)
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const user = useAuth((s) => s.user)
   const { data: fragments, isLoading } = useFragments({ status: "confirmed" })
+
+  // Demo/system accounts: fallback to mock data when no real fragments
+  const isSystemAccount = !!user?.email && SYSTEM_EMAILS.has(user.email)
+  const apiItems = fragments ?? []
+  const items = apiItems.length > 0 ? apiItems : isSystemAccount ? MOCK_FRAGMENTS : apiItems
 
   useEffect(() => {
     if (searchQuery) {
@@ -66,11 +163,44 @@ export default function KnowledgePage() {
     }
   }, [searchQuery])
 
-  const items = fragments ?? []
+  // Close card menu on outside click
+  const menuRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    if (!openMenuId) return
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenuId(null)
+      }
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [openMenuId])
+
+  const handleArchive = useCallback((f: Fragment, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setOpenMenuId(null)
+    // TODO: call archive API — for now show browser confirm
+    if (window.confirm(`Archive "${getTitle(f)}"?`)) {
+      // archiveFragment(f.id)
+    }
+  }, [])
+
+  const handleDelete = useCallback((f: Fragment, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setOpenMenuId(null)
+    if (window.confirm(`Delete "${getTitle(f)}"? This action cannot be undone.`)) {
+      // deleteFragment(f.id)
+    }
+  }, [])
   const filteredItems = items.filter((f) => {
-    const content = f.normalizedContent || f.rawContent
+    const title = getTitle(f)
+    const summary = getSummary(f)
+    const tags = getTags(f)
     const matchesSearch =
-      !searchQuery || content.toLowerCase().includes(searchQuery.toLowerCase())
+      !searchQuery ||
+      title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
     const matchesType = selectedType === "all" || f.contentType === selectedType
     return matchesSearch && matchesType
   })
@@ -234,39 +364,84 @@ export default function KnowledgePage() {
                 >
                   <div className="flex items-center gap-2">
                     <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider border border-primary/20">
-                      {f.contentType}
+                      {getProject(f)}
                     </span>
                     <div className="text-slate-500 opacity-50">
                       {getTypeIcon(f.contentType)}
                     </div>
                   </div>
-                  <button
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-slate-500 hover:text-white transition-colors"
-                  >
-                    <MoreHorizontal size={18} />
-                  </button>
+                  <div className="relative" ref={openMenuId === f.id ? menuRef : undefined}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setOpenMenuId(openMenuId === f.id ? null : f.id)
+                      }}
+                      className={`text-slate-500 hover:text-white transition-colors ${openMenuId === f.id ? "text-white" : ""}`}
+                    >
+                      <MoreHorizontal size={18} />
+                    </button>
+
+                    {openMenuId === f.id && (
+                      <div className="absolute right-0 mt-2 w-44 bg-surface-dark border border-border-dark rounded-xl shadow-2xl z-50 overflow-hidden">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setOpenMenuId(null)
+                            setSelectedFragment(f)
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-xs text-left text-slate-400 hover:bg-white/5 hover:text-white transition-colors"
+                        >
+                          <Eye size={14} />
+                          <span>View Details</span>
+                        </button>
+                        <button
+                          onClick={(e) => handleArchive(f, e)}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-xs text-left text-slate-400 hover:bg-white/5 hover:text-white transition-colors"
+                        >
+                          <Archive size={14} />
+                          <span>Archive</span>
+                        </button>
+                        <div className="border-t border-white/5" />
+                        <button
+                          onClick={(e) => handleDelete(f, e)}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-xs text-left text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+                        >
+                          <Trash2 size={14} />
+                          <span>Delete</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div
                   className={`flex-1 ${viewMode === "list" ? "px-4" : ""}`}
                 >
                   <h3 className="text-lg font-bold text-text-main group-hover:text-primary transition-colors">
-                    {f.normalizedContent?.slice(0, 80) || f.rawContent.slice(0, 80)}
+                    {getTitle(f)}
                   </h3>
                   <p className="text-sm text-slate-400 line-clamp-1 leading-relaxed mt-1">
-                    {f.rawContent}
+                    {getSummary(f)}
                   </p>
                 </div>
                 <div
-                  className={`flex items-center ${
+                  className={`flex flex-wrap gap-2 ${
                     viewMode === "list"
                       ? "mt-0 pt-0 border-t-0"
                       : "mt-auto pt-4 border-t border-white/5"
                   }`}
                 >
-                  <span className="text-[10px] text-slate-500 font-mono">
-                    {new Date(f.capturedAt).toLocaleDateString()}
-                  </span>
+                  {getTags(f).map((tag) => (
+                    <span
+                      key={tag}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setSearchQuery(tag)
+                      }}
+                      className="text-[10px] text-slate-500 font-mono hover:text-primary cursor-pointer transition-colors"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
                 </div>
               </div>
             ))

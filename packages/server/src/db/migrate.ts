@@ -7,6 +7,7 @@
  *
  * In production, use `db:push` (drizzle-kit push) or apply the SQL manually.
  */
+import "dotenv/config";
 import { readFile } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -26,7 +27,7 @@ async function migrate() {
 
   try {
     // Read the SSoT DDL
-    const ddlPath = resolve(__dirname, "../../../docs/architecture/database-schema.sql");
+    const ddlPath = resolve(__dirname, "../../../../docs/architecture/database-schema.sql");
     const ddl = await readFile(ddlPath, "utf-8");
 
     if (force) {

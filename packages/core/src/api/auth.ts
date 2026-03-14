@@ -4,6 +4,7 @@ import type {
   RegisterRequest,
   LoginRequest,
   GoogleOAuthRequest,
+  GitHubOAuthRequest,
   RefreshTokenRequest,
 } from "../types/requests"
 
@@ -18,6 +19,9 @@ export const authApi = {
 
   googleOAuth: (body: GoogleOAuthRequest) =>
     api.public.post<AuthResponse>(`${BASE}/google`, body),
+
+  githubOAuth: (body: GitHubOAuthRequest) =>
+    api.public.post<AuthResponse>(`${BASE}/github`, body),
 
   refresh: (body: RefreshTokenRequest) =>
     api.public.post<RefreshResponse>(`${BASE}/refresh`, body),

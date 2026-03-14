@@ -44,5 +44,6 @@ export type MainTabScreenProps<T extends keyof MainTabParamList> =
 
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>
+  Login: undefined
   Main: NavigatorScreenParams<MainTabParamList>
 }

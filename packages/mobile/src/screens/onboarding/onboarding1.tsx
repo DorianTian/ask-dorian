@@ -37,23 +37,23 @@ export function Onboarding1() {
         </View>
 
         {/* Title — text-4xl font-bold tracking-tight text-white mb-4 */}
-        <Text style={[s.title, { color: "#FFFFFF" }]}>Ask Dorian.</Text>
+        <Text style={[s.title, { color: colors.foreground }]}>Ask Dorian.</Text>
 
         {/* Subtitle — text-xl text-slate-400 font-light leading-relaxed */}
-        <Text style={s.subtitle}>
+        <Text style={[s.subtitle, { color: colors.textTertiary }]}>
           Stop losing{" "}
           <Text style={{ color: colors.brandFrom, fontWeight: "500" }}>fragments</Text>
           {" "}of your brilliance.
         </Text>
 
         {/* Description — text-sm text-slate-500 mb-10 */}
-        <Text style={s.description}>
+        <Text style={[s.description, { color: colors.textMuted }]}>
           Every thought, captured and crystallized into a structured knowledge base. Your second brain, refined.
         </Text>
 
         {/* CTA */}
         <TouchableOpacity
-          style={[s.ctaButton, { backgroundColor: colors.brandFrom }]}
+          style={[s.ctaButton, { backgroundColor: colors.brandFrom, shadowColor: colors.brandFrom }]}
           onPress={() => navigation.navigate("Onboarding2")}
           activeOpacity={0.8}
         >
@@ -63,8 +63,8 @@ export function Onboarding1() {
         {/* Progress dots — bar + 2 dots */}
         <View style={s.progressDots}>
           <View style={[s.progressBar, { backgroundColor: colors.brandFrom }]} />
-          <View style={[s.progressDot, { backgroundColor: "#334155" }]} />
-          <View style={[s.progressDot, { backgroundColor: "#334155" }]} />
+          <View style={[s.progressDot, { backgroundColor: colors.surfaceHover }]} />
+          <View style={[s.progressDot, { backgroundColor: colors.surfaceHover }]} />
         </View>
       </View>
     </SafeAreaView>
@@ -145,14 +145,12 @@ const s = StyleSheet.create({
     fontSize: 20,
     fontWeight: "300",
     lineHeight: 32.5, // 20 * 1.625
-    color: "#94A3B8",
     textAlign: "center",
     maxWidth: 280,
   },
   // text-sm text-slate-500 mb-10 max-w-[300px]
   description: {
     fontSize: 14,
-    color: "#64748B",
     textAlign: "center",
     maxWidth: 300,
     marginBottom: 40,
@@ -165,7 +163,6 @@ const s = StyleSheet.create({
     paddingHorizontal: 32,
     borderRadius: 12,
     alignItems: "center",
-    shadowColor: "#10B981",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,

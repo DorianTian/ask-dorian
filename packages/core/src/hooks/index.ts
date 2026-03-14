@@ -8,3 +8,4 @@ export { useTodayDashboard, useWeeklyDashboard, useWeekReview } from "./use-dash
 export { useNotifications, useUnreadCount } from "./use-notifications"
 export { useUserProfile, useUserSettings } from "./use-user"
 export { useRituals, useRitualStats } from "./use-rituals"
+export { useKnowledge, useKnowledgeItem } from "./use-knowledge"
