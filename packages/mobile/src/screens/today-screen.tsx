@@ -223,9 +223,9 @@ export function TodayScreen() {
               {
                 top: `${topPct}%`,
                 height: `${heightPct}%`,
-                backgroundColor: "rgba(0,0,0,0.4)",
+                backgroundColor: colors.muted + "99",
                 borderColor: colors.border + "80",
-                opacity: 0.6,
+                opacity: 0.7,
                 ...(widthPx != null ? { left: leftPx, width: widthPx } : {}),
               },
             ]}
@@ -235,7 +235,7 @@ export function TodayScreen() {
               <Text
                 style={[
                   s.posBlockTitle,
-                  { color: colors.textMuted, textDecorationLine: "line-through" },
+                  { color: colors.textTertiary, textDecorationLine: "line-through" },
                   mono,
                 ]}
                 numberOfLines={1}
@@ -296,7 +296,7 @@ export function TodayScreen() {
                 <Text style={[s.completeBtnText, mono]}>COMPLETE</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[s.extendBtn, { backgroundColor: "rgba(0,0,0,0.4)", borderColor: colors.border + "80" }]}
+                style={[s.extendBtn, { backgroundColor: colors.muted + "99", borderColor: colors.border + "80" }]}
                 activeOpacity={0.8}
               >
                 <Text style={[s.extendBtnText, { color: colors.textSecondary }, mono]}>
@@ -317,14 +317,14 @@ export function TodayScreen() {
             {
               top: `${topPct}%`,
               height: `${heightPct}%`,
-              backgroundColor: colors.card + "66",
-              borderColor: colors.border + "80",
+              backgroundColor: colors.surfaceElevated,
+              borderColor: colors.border,
               ...(widthPx != null ? { left: leftPx, width: widthPx } : {}),
             },
           ]}
         >
           <View style={s.posBlockInner}>
-            <Clock size={14} color={colors.textMuted} />
+            <Clock size={14} color={colors.textTertiary} />
             <Text style={[s.posBlockTitle, { color: colors.textSecondary }, mono]} numberOfLines={1}>
               {block.title}
             </Text>
@@ -340,7 +340,7 @@ export function TodayScreen() {
   // -----------------------------------------------------------------------
 
   const renderTimeline = () => (
-    <View style={[s.timelineCard, { backgroundColor: colors.card + "4D", borderColor: colors.border + "80" }]}>
+    <View style={[s.timelineCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.border + "80" }]}>
       {/* Dot grid background (subtle) */}
       <View style={s.dotGridOverlay} />
 
@@ -440,7 +440,7 @@ export function TodayScreen() {
   // -----------------------------------------------------------------------
 
   const renderBriefing = () => (
-    <View style={[s.briefingCard, { backgroundColor: colors.card + "4D", borderColor: colors.brandFrom + "33" }]}>
+    <View style={[s.briefingCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.brandFrom + "33" }]}>
       {/* Top green gradient bar */}
       <View style={[s.briefingGradientBar, { backgroundColor: colors.brandFrom }]} />
 
@@ -499,7 +499,7 @@ export function TodayScreen() {
   )
 
   const renderBootSequence = () => (
-    <View style={[s.bootCard, { backgroundColor: colors.card + "4D", borderColor: colors.border + "80" }]}>
+    <View style={[s.bootCard, { backgroundColor: colors.surfaceElevated, borderColor: colors.border + "80" }]}>
       <View style={s.bootHeader}>
         <View style={s.bootHeaderLeft}>
           <Cpu size={14} color={colors.brandFrom} />
@@ -525,7 +525,7 @@ export function TodayScreen() {
                 style={[
                   s.ritualRow,
                   {
-                    backgroundColor: isComplete ? colors.brandFrom + "0D" : "rgba(0,0,0,0.2)",
+                    backgroundColor: isComplete ? colors.brandFrom + "0D" : colors.muted + "66",
                     borderColor: isComplete ? colors.brandFrom + "33" : colors.border + "4D",
                   },
                 ]}
@@ -582,7 +582,7 @@ export function TodayScreen() {
             key={i}
             style={[
               s.statCard,
-              { backgroundColor: colors.card + "4D", borderColor: colors.border + "80" },
+              { backgroundColor: colors.surfaceElevated, borderColor: colors.border + "80" },
             ]}
           >
             <Text style={[s.statLabel, { color: colors.textMuted }, mono]}>
@@ -668,7 +668,7 @@ export function TodayScreen() {
               USER: DORIAN // {dashboard?.date ?? now.toISOString().slice(0, 10)}
             </Text>
           </View>
-          <View style={[s.timerBox, { backgroundColor: colors.card + "4D", borderColor: colors.border + "80" }]}>
+          <View style={[s.timerBox, { backgroundColor: colors.surfaceElevated, borderColor: colors.border + "80" }]}>
             <Clock size={14} color={colors.textTertiary} />
             <Text style={[s.timerText, { color: colors.textSecondary }, mono]}>
               T-{String(remainingH).padStart(2, "0")}:{String(remainingM).padStart(2, "0")}:{String(remainingS).padStart(2, "0")}
