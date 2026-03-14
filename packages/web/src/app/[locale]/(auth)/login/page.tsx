@@ -116,7 +116,7 @@ export default function LoginPage() {
   const isRegister = mode === "register"
 
   return (
-    <div className="min-h-screen bg-[#09090B] flex items-center justify-center p-8 relative overflow-hidden">
+    <div className="min-h-screen bg-bg-dark flex items-center justify-center p-8 relative overflow-hidden">
       {GOOGLE_CLIENT_ID && (
         <Script
           src="https://accounts.google.com/gsi/client"

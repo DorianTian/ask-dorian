@@ -162,7 +162,7 @@ export default function TodayPage() {
               <Sparkles size={14} />
               <span>{t("aiSummary")}</span>
             </div>
-            <p className="text-lg md:text-xl font-medium leading-relaxed text-text-main group-hover:text-primary transition-colors">
+            <p className="text-lg md:text-xl font-medium leading-relaxed text-text-main group-hover:text-white transition-colors">
               {eventCount > 0 && (
                 <>
                   You have <span className="text-primary font-bold">{eventCount} events</span> scheduled.{" "}
@@ -543,7 +543,7 @@ export default function TodayPage() {
               <MoreHorizontal size={14} className={`transition-colors ${expandedStat === i ? "text-primary" : "text-slate-700 group-hover:text-slate-400"}`} />
             </div>
             <div className="flex items-end gap-2">
-              <span className="text-2xl font-black text-text-main group-hover:text-primary transition-colors">
+              <span className="text-2xl font-black text-text-main group-hover:text-white transition-colors">
                 {stat.value}
                 {stat.unit && <span className="text-xs font-bold text-slate-600 ml-1 uppercase">{stat.unit}</span>}
               </span>
