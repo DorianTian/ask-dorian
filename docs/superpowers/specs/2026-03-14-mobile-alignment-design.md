@@ -8,11 +8,15 @@
 
 ## 一、概述
 
-将 `packages/mobile` 的模块结构和视觉语言完全对齐参考项目。参考项目是一个 web 原型（React + Tailwind），需要转换为 React Native（StyleSheet + React Navigation）。
+将 `packages/mobile` 的模块结构和样式**像素级还原**参考项目。参考项目是一个 web 原型（React + Tailwind），需要精确转换为 React Native（StyleSheet + React Navigation）。
+
+**核心原则：像素级还原（Pixel-Perfect Alignment）**
+
+不是"风格统一"或"视觉对齐"，而是每个屏幕的**颜色值、字号、字重、间距、圆角、布局比例、元素层级**都必须与参考项目完全一致。Tailwind class 必须精确解析为对应的 RN 数值（如 `text-3xl` = `fontSize: 30`, `p-6` = `padding: 24`, `rounded-2xl` = `borderRadius: 16`, `text-slate-400` = `color: "#94A3B8"`）。
 
 **设计原则：**
+- **样式 1:1 精确转换** — 参考项目每个 Tailwind class 必须解析为精确的 RN 样式值，不允许"差不多"或"近似"
 - 模块结构 1:1 对齐参考项目（5 主屏 + 4 Onboarding）
-- 视觉语言统一 HUD/Terminal 风格（已在 today-screen / weekly-screen 建立）
 - 技术栈不变：React Native + React Navigation + Zustand + SWR + lucide-react-native
 - 不需要的旧文件直接删除
 
@@ -247,22 +251,168 @@ App 启动
 
 ## 五、技术实现约定
 
-### 5.1 RN 转换模式（沿用 today-screen / weekly-screen 已建立的模式）
+### 5.1 Tailwind → RN 精确数值映射（强制遵守）
+
+**原则：每个 Tailwind class 必须解析为精确的 RN 数值，禁止"差不多"。**
+
+#### Spacing（Tailwind 默认 1 unit = 4px）
+
+| Tailwind | RN value |
+|---|---|
+| `p-1` / `m-1` | `4` |
+| `p-1.5` | `6` |
+| `p-2` | `8` |
+| `p-2.5` | `10` |
+| `p-3` | `12` |
+| `p-4` | `16` |
+| `p-5` | `20` |
+| `p-6` | `24` |
+| `p-8` | `32` |
+| `p-12` | `48` |
+| `gap-1` | `4` |
+| `gap-1.5` | `6` |
+| `gap-2` | `8` |
+| `gap-3` | `12` |
+| `gap-4` | `16` |
+| `gap-6` | `24` |
+
+#### Font Size
+
+| Tailwind | RN fontSize |
+|---|---|
+| `text-[8px]` | `8` |
+| `text-[9px]` | `9` |
+| `text-[10px]` | `10` |
+| `text-[11px]` | `11` |
+| `text-xs` | `12` |
+| `text-sm` | `14` |
+| `text-base` | `16` |
+| `text-lg` | `18` |
+| `text-xl` | `20` |
+| `text-2xl` | `24` |
+| `text-3xl` | `30` |
+| `text-4xl` | `36` |
+| `text-5xl` | `48` |
+
+#### Font Weight
+
+| Tailwind | RN fontWeight |
+|---|---|
+| `font-normal` | `"400"` |
+| `font-medium` | `"500"` |
+| `font-semibold` | `"600"` |
+| `font-bold` | `"700"` |
+| `font-black` | `"900"` |
+
+#### Letter Spacing
+
+| Tailwind | RN letterSpacing |
+|---|---|
+| `tracking-tight` | `-0.025 * fontSize` (约 -0.3 ~ -0.5) |
+| `tracking-tighter` | `-0.05 * fontSize` |
+| `tracking-normal` | `0` |
+| `tracking-wider` | `0.5` |
+| `tracking-widest` | `1.6` |
+| `tracking-[0.2em]` | `0.2 * fontSize` |
+
+#### Border Radius
+
+| Tailwind | RN borderRadius |
+|---|---|
+| `rounded` | `4` |
+| `rounded-md` | `6` |
+| `rounded-lg` | `8` |
+| `rounded-xl` | `12` |
+| `rounded-2xl` | `16` |
+| `rounded-3xl` | `24` |
+| `rounded-full` | `9999` |
+
+#### Tailwind Colors → Hex（参考项目 dark theme 精确值）
+
+| Tailwind | Hex |
+|---|---|
+| `text-slate-100` | `#F1F5F9` |
+| `text-slate-200` | `#E2E8F0` |
+| `text-slate-300` | `#CBD5E1` |
+| `text-slate-400` | `#94A3B8` |
+| `text-slate-500` | `#64748B` |
+| `text-slate-600` | `#475569` |
+| `text-slate-700` | `#334155` |
+| `text-slate-800` | `#1E293B` |
+| `text-white` | `#FFFFFF` |
+| `bg-bg` | `#09090B` (colors.background) |
+| `bg-surface` | `#18181B` (colors.card) |
+| `border-border` | `#27272A` (colors.border) |
+| `text-primary` | `#10B981` (colors.brandFrom) |
+| `bg-primary` | `#10B981` |
+| `text-red-500` | `#EF4444` |
+| `text-orange-400` | `#FB923C` |
+| `text-blue-400` | `#60A5FA` |
+| `text-purple-400` | `#C084FC` |
+
+#### Opacity 后缀 → Hex Alpha
+
+| Tailwind | Hex suffix |
+|---|---|
+| `/5` | `0D` |
+| `/10` | `1A` |
+| `/15` | `26` |
+| `/20` | `33` |
+| `/30` | `4D` |
+| `/40` | `66` |
+| `/50` | `80` |
+| `/60` | `99` |
+| `/70` | `B3` |
+| `/80` | `CC` |
+| `/90` | `E6` |
+
+#### Size
+
+| Tailwind | RN |
+|---|---|
+| `size-2` | `width: 8, height: 8` |
+| `size-2.5` | `width: 10, height: 10` |
+| `size-8` | `width: 32, height: 32` |
+| `size-9` | `width: 36, height: 36` |
+| `size-10` | `width: 40, height: 40` |
+| `size-12` | `width: 48, height: 48` |
+| `size-14` | `width: 56, height: 56` |
+| `size-16` | `width: 64, height: 64` |
+| `size-20` | `width: 80, height: 80` |
+| `size-24` | `width: 96, height: 96` |
+| `size-32` | `width: 128, height: 128` |
+| `size-64` | `width: 256, height: 256` |
+| `size-80` | `width: 320, height: 320` |
+| `h-16` | `height: 64` |
+| `h-20` | `height: 80` |
+| `h-48` | `height: 192` |
+| `w-64` | `width: 256` |
+| `min-h-[120px]` | `minHeight: 120` |
+| `min-h-[140px]` | `minHeight: 140` |
+| `min-h-[600px]` | `minHeight: 600` |
+
+#### 其他精确转换
 
 | Web (Tailwind) | React Native |
 |---|---|
-| `className="..."` | `StyleSheet.create()` |
-| `bg-surface/30` | `{ backgroundColor: colors.card + "4D" }` (hex + alpha) |
-| `border-primary/20` | `{ borderColor: colors.brandFrom + "33" }` |
 | `font-mono` | `Platform.select({ ios: { fontFamily: "Menlo" }, android: { fontFamily: "monospace" } })` |
-| `rounded-2xl` | `{ borderRadius: radii.xl }` |
-| `text-[10px] uppercase tracking-widest` | `{ fontSize: 10, fontWeight: "900", letterSpacing: 2, textTransform: "uppercase" }` |
+| `font-sans` | 不设置（RN 默认即 sans-serif） |
+| `line-through` | `{ textDecorationLine: "line-through" }` |
+| `line-clamp-1` | `numberOfLines={1}` |
+| `line-clamp-2` | `numberOfLines={2}` |
+| `truncate` | `numberOfLines={1}` |
+| `leading-relaxed` | `{ lineHeight: fontSize * 1.625 }` |
+| `leading-tight` | `{ lineHeight: fontSize * 1.25 }` |
+| `leading-snug` | `{ lineHeight: fontSize * 1.375 }` |
 | `hover:...` | `TouchableOpacity` activeOpacity={0.7} |
-| `animate-pulse` | RN `Animated` loop (opacity 0.4→1→0.4) 或静态展示 |
+| `active:scale-95` | `TouchableOpacity` activeOpacity={0.8} (scale 需 Animated) |
+| `animate-pulse` | RN `Animated` loop (opacity 0.4→1→0.4, 2s) |
 | `<img src="...">` | `<Image source={{ uri: "..." }} resizeMode="cover" />` |
 | `backdrop-blur-*` | 跳过，用半透明背景色近似 |
 | `bg-gradient-*` / `radial-gradient` | 大尺寸半透明圆形 View 模拟（不引入 gradient 库） |
 | `env(safe-area-inset-bottom)` | `SafeAreaView` edges / `useSafeAreaInsets()` |
+| `shadow-lg shadow-primary/20` | `{ shadowColor: "#10B981", shadowOffset: {width:0, height:4}, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 }` |
+| `shadow-2xl` | `{ shadowOffset: {width:0, height:8}, shadowOpacity: 0.25, shadowRadius: 16, elevation: 8 }` |
 
 ### 5.2 Center FAB 实现
 
