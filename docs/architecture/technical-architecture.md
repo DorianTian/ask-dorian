@@ -1,7 +1,7 @@
 # Ask Dorian — 技术架构方案
 
 > **定位**: 系统架构级设计文档，覆盖后端分层、数据库、AI 管道、API 设计、部署方案
-> **版本**: v1.3 — 2026-03-10
+> **版本**: v1.4 — 2026-03-14
 > **状态**: 已确认（数据库、AI 管道、向量检索、认证、API 格式、多端架构已定稿）
 
 ---
@@ -81,14 +81,14 @@ graph TB
 
 ### MySQL → PostgreSQL
 
-| 维度 | MySQL 8.0 | PostgreSQL 16 |
-|------|-----------|---------------|
-| 向量搜索 | ❌ 不支持 | ✅ pgvector 原生扩展 |
-| JSONB | JSON（字符串存储） | JSONB（二进制，可索引） |
-| 全文搜索 | 基础 | 更强（ts_vector + 应用层中文分词） |
-| Drizzle ORM | ✅ 支持 | ✅ 支持 |
-| RDS 支持 | ✅ | ✅（含 pgvector） |
-| 适合存 AI 上下文快照 | ⚠️ JSON 性能一般 | ✅ JSONB 高效查询 |
+| 维度                 | MySQL 8.0          | PostgreSQL 16                      |
+| -------------------- | ------------------ | ---------------------------------- |
+| 向量搜索             | ❌ 不支持          | ✅ pgvector 原生扩展               |
+| JSONB                | JSON（字符串存储） | JSONB（二进制，可索引）            |
+| 全文搜索             | 基础               | 更强（ts_vector + 应用层中文分词） |
+| Drizzle ORM          | ✅ 支持            | ✅ 支持                            |
+| RDS 支持             | ✅                 | ✅（含 pgvector）                  |
+| 适合存 AI 上下文快照 | ⚠️ JSON 性能一般   | ✅ JSONB 高效查询                  |
 
 **结论**: 引入向量搜索后，PostgreSQL + pgvector 是唯一能用一个数据库覆盖关系型 + 向量的方案。避免多一个独立向量数据库服务。
 
@@ -96,11 +96,11 @@ graph TB
 
 ### Embedding 模型
 
-| 模型 | 维度 | 多语言 | 价格 | 选择 |
-|------|------|--------|------|------|
+| 模型                          | 维度 | 多语言    | 价格            | 选择        |
+| ----------------------------- | ---- | --------- | --------------- | ----------- |
 | OpenAI text-embedding-3-small | 1536 | ✅ 中英文 | $0.02/1M tokens | ✅ **推荐** |
-| OpenAI text-embedding-3-large | 3072 | ✅ | $0.13/1M tokens | 备选 |
-| Cohere embed-multilingual-v3 | 1024 | ✅ | $0.10/1M tokens | 备选 |
+| OpenAI text-embedding-3-large | 3072 | ✅        | $0.13/1M tokens | 备选        |
+| Cohere embed-multilingual-v3  | 1024 | ✅        | $0.10/1M tokens | 备选        |
 
 选 text-embedding-3-small：便宜、快、中英文效果好、维度适中。
 
@@ -138,9 +138,21 @@ ask-dorian/
 │   ├── mobile/                 # 移动端（React Native, iOS 优先）
 │   │   ├── src/
 │   │   │   ├── screens/        # 页面
-│   │   │   ├── components/     # 组件
-│   │   │   ├── share-extension/ # iOS Share Extension
-│   │   │   └── services/       # API 调用
+│   │   │   │   ├── today-screen.tsx          # Daily Telemetry (HUD)
+│   │   │   │   ├── weekly-screen.tsx         # Cognitive Report (HUD)
+│   │   │   │   ├── daily-review-screen.tsx   # Card-based fragment review
+│   │   │   │   ├── knowledge-screen.tsx      # Knowledge Library (search + grid/list)
+│   │   │   │   ├── settings-screen.tsx       # User settings + logout
+│   │   │   │   └── onboarding/              # 4-step onboarding flow
+│   │   │   │       ├── onboarding1.tsx       # Welcome
+│   │   │   │       ├── onboarding2.tsx       # Fragment-First Philosophy
+│   │   │   │       ├── onboarding3.tsx       # Magic Processing Demo
+│   │   │   │       └── onboarding4.tsx       # Calendar Connect
+│   │   │   ├── components/     # 共享组件 (QuickCapture)
+│   │   │   ├── navigation/     # React Navigation (bottom tabs + onboarding stack)
+│   │   │   ├── providers/      # Auth provider
+│   │   │   ├── theme/          # Design tokens (colors, spacing, typography)
+│   │   │   └── lib/            # Config, storage
 │   │   └── package.json
 │   │
 │   ├── api/                    # 后端（Koa.js）
@@ -251,13 +263,13 @@ graph TB
 
 ### 各层职责
 
-| 层 | 职责 | 规则 |
-|---|------|------|
-| **Routes** | URL 映射 + 参数校验 | 只做路由注册，不含逻辑 |
-| **Controllers** | 请求/响应处理 | 解析入参、调用 Service、格式化返回 |
-| **Services** | 业务逻辑 | 核心逻辑在这里，可组合调用多个 Repo |
-| **Repositories** | 数据访问 | Drizzle 查询封装，一个 Repo 对应一组表 |
-| **AI Pipeline** | AI 处理专用 | Context 构建、Prompt 组装、结果解析、Embedding |
+| 层               | 职责                | 规则                                           |
+| ---------------- | ------------------- | ---------------------------------------------- |
+| **Routes**       | URL 映射 + 参数校验 | 只做路由注册，不含逻辑                         |
+| **Controllers**  | 请求/响应处理       | 解析入参、调用 Service、格式化返回             |
+| **Services**     | 业务逻辑            | 核心逻辑在这里，可组合调用多个 Repo            |
+| **Repositories** | 数据访问            | Drizzle 查询封装，一个 Repo 对应一组表         |
+| **AI Pipeline**  | AI 处理专用         | Context 构建、Prompt 组装、结果解析、Embedding |
 
 ### Middleware 链
 
@@ -472,30 +484,32 @@ erDiagram
 
 ### 权威 DDL
 
-> **完整 16 表 DDL 见**: `docs/architecture/database-schema.sql` (SSoT — Single Source of Truth)
+> **完整 18 表 DDL 见**: `docs/architecture/database-schema.sql` (SSoT — Single Source of Truth)
 > **多态关联设计文档**: `docs/architecture/polymorphic-association.md`
 
 ### 关键设计说明
 
-**16 表概览**
+**18 表概览**
 
-| 表 | 用途 |
-|---|------|
-| users | 用户主表 |
-| user_settings | 用户偏好设置（1:1） |
-| devices | 跨端设备管理 + sync_cursor |
-| sessions | 登录会话 + refresh token |
-| projects | 项目/主题 |
-| fragments | 碎片输入（不可变） |
-| tasks | 任务 |
-| events | 日程/事件 |
-| knowledge | 知识沉淀 |
-| entity_relationship | 多态关联（万能关系图） |
-| embeddings | 向量存储 |
-| ai_process_logs | AI 处理全量记录 |
-| notifications | 通知 |
-| integrations | 第三方集成 |
-| attachments | 附件 |
+| 表                    | 用途                              |
+| --------------------- | --------------------------------- |
+| users                 | 用户主表                          |
+| user_settings         | 用户偏好设置（1:1）               |
+| devices               | 跨端设备管理 + sync_cursor        |
+| sessions              | 登录会话 + refresh token          |
+| projects              | 项目/主题                         |
+| fragments             | 碎片输入（不可变）                |
+| tasks                 | 任务                              |
+| events                | 日程/事件                         |
+| knowledge             | 知识沉淀                          |
+| entity_relationship   | 多态关联（万能关系图）            |
+| embeddings            | 向量存储                          |
+| ai_process_logs       | AI 处理全量记录                   |
+| notifications         | 通知                              |
+| integrations          | 第三方集成                        |
+| attachments           | 附件                              |
+| **rituals**           | 晨间仪式模板（可选关联 Task）     |
+| **ritual_completions**| 仪式每日打卡记录（支持 streak 统计）|
 
 **核心设计模式**
 
@@ -512,17 +526,25 @@ erDiagram
 
 **entity_relationship 表 — 万能关系图**
 
-| relationship_type | 说明 | 示例 |
-|-----------|------|------|
-| `generated_from` | 碎片生成了实体 | fragment → task |
-| `depends_on` | 依赖关系 | task → task |
-| `related_to` | 相关关系 | knowledge → task |
-| `split_from` | 拆分来源 | fragment → fragment |
-| `recurrence_of` | 循环事件 | event → event |
-| `blocks` | 阻塞关系 | task → task |
+| relationship_type | 说明           | 示例                |
+| ----------------- | -------------- | ------------------- |
+| `generated_from`  | 碎片生成了实体 | fragment → task     |
+| `depends_on`      | 依赖关系       | task → task         |
+| `related_to`      | 相关关系       | knowledge → task    |
+| `split_from`      | 拆分来源       | fragment → fragment |
+| `recurrence_of`   | 循环事件       | event → event       |
+| `blocks`          | 阻塞关系       | task → task         |
 
 `source_type` + `source_id` + `target_type` + `target_id` 构成多态关联，一张表覆盖所有实体间关系。
 详见 `docs/architecture/polymorphic-association.md`。
+
+**rituals + ritual_completions — 晨间仪式**
+
+独立轻量表，不复用 tasks 表（语义不同：ritual 是每日重复模板，task 是一次性待办）。
+- `rituals` 存仪式模板，可选通过 `task_id` 关联 Task（SET NULL on delete，桥接不耦合）
+- `ritual_completions` 独立记录每日打卡，`(ritual_id, completed_date)` UNIQUE，支持 streak/完成率统计
+- 纯清单型，无时间绑定，在 Today Dashboard 中作为整体 block 渲染
+- 设计详见 `docs/superpowers/specs/2026-03-14-rituals-design.md`
 
 **embeddings 表 — 向量存储**
 
@@ -551,6 +573,7 @@ LIMIT 10;
 ### ai_process_logs — AI 全量记录
 
 每次 AI 处理都完整记录，用于：
+
 1. **调试** — 为什么 AI 做了这个判断？
 2. **优化** — 分析哪些 prompt 效果好
 3. **审计** — 用户可以回溯 AI 的决策过程
@@ -709,12 +732,14 @@ to_tsvector('simple', fts_content)
 ```
 
 所有含文本的实体表（fragments, tasks, events, knowledge）都有：
+
 - `fts_content TEXT` — 应用层分词后的内容
 - `fts_vector tsvector` — PostgreSQL GIN 索引的向量
 
 ### Rank 策略
 
 **MVP (Phase 1)**: 规则打分 + Claude 隐式 reranker
+
 - L1 结构化结果: 按时间/状态排序
 - L2 FTS 结果: ts_rank 分数
 - L3 向量结果: cosine similarity 分数
@@ -772,12 +797,12 @@ flowchart LR
 
 ### 什么内容被 Embed
 
-| 实体类型 | Embed 的内容 | 示例 |
-|----------|-------------|------|
-| fragment | `raw_content` | "3点 老板 增长" |
-| task | `title + description` | "准备 Q2 OKR 报告 — 整理各部门目标完成度数据" |
-| event | `title + description + location` | "用户增长策略讨论 — 与老板对齐 DAU 目标 — 3楼会议室" |
-| knowledge | `title + content` (截取前 500 字) | "CDC 迁移方案评审纪要 — 评估了三种方案..." |
+| 实体类型  | Embed 的内容                      | 示例                                                 |
+| --------- | --------------------------------- | ---------------------------------------------------- |
+| fragment  | `raw_content`                     | "3点 老板 增长"                                      |
+| task      | `title + description`             | "准备 Q2 OKR 报告 — 整理各部门目标完成度数据"        |
+| event     | `title + description + location`  | "用户增长策略讨论 — 与老板对齐 DAU 目标 — 3楼会议室" |
+| knowledge | `title + content` (截取前 500 字) | "CDC 迁移方案评审纪要 — 评估了三种方案..."           |
 
 ### 搜索策略
 
@@ -866,8 +891,16 @@ const enriched = await loadEntityDetails(similar);
   GET    /api/v1/user/settings          获取设置
   PATCH  /api/v1/user/settings          更新设置
 
+仪式（Rituals）
+  GET    /api/v1/rituals                仪式列表（含指定日期完成状态 + progress）
+  POST   /api/v1/rituals                创建仪式
+  PATCH  /api/v1/rituals/:id            更新仪式
+  DELETE /api/v1/rituals/:id            软删除仪式 → 204
+  POST   /api/v1/rituals/:id/toggle-complete  Toggle 打卡（幂等切换）
+  GET    /api/v1/rituals/stats          统计（完成率、streak、每日明细）
+
 今日面板
-  GET    /api/v1/today                  聚合接口（today tasks + events + recent fragments + stats）
+  GET    /api/v1/today                  聚合接口（today tasks + events + rituals + recent fragments + stats）
 ```
 
 ### 核心接口: 创建碎片
@@ -879,10 +912,12 @@ POST /api/v1/fragments
 这是产品的核心 API — 用户输入碎片，触发 AI 处理管道，返回处理结果。
 
 支持两种 Content-Type：
+
 - `application/json` — 纯文本输入
 - `multipart/form-data` — 语音/截图/文件上传
 
 **Request (文本):**
+
 ```json
 {
   "rawContent": "3点 老板 增长",
@@ -892,6 +927,7 @@ POST /api/v1/fragments
 ```
 
 **Request (语音/图片 — multipart/form-data):**
+
 ```
 file: <audio/webm or image/png>
 contentType: "voice" | "image"
@@ -902,6 +938,7 @@ inputDevice: "desktop" | "mobile"
 处理流程：voice → Whisper API 转文字 → rawContent; image → Claude Vision OCR → rawContent; 原始文件存 attachments 表。
 
 **Response:**
+
 ```json
 {
   "fragment": {
@@ -961,10 +998,10 @@ Login/Register/Google OAuth
 
 ### Token 规格
 
-| Token | 格式 | 有效期 | 存储 |
-|-------|------|--------|------|
-| Access Token | JWT HS256 `{sub, role, did}` | 15 min | 前端内存 |
-| Refresh Token | 随机 64 字节 hex | 7 天 | localStorage |
+| Token         | 格式                         | 有效期 | 存储         |
+| ------------- | ---------------------------- | ------ | ------------ |
+| Access Token  | JWT HS256 `{sub, role, did}` | 15 min | 前端内存     |
+| Refresh Token | 随机 64 字节 hex             | 7 天   | localStorage |
 
 ### 认证流程
 
@@ -1000,19 +1037,19 @@ sequenceDiagram
 
 ### 安全加固
 
-| 策略 | 实现 |
-|------|------|
-| 密码 | bcrypt (cost=12)，OAuth-only 用户存 `'OAUTH_ONLY'` |
-| Refresh Token Rotation | 每次 refresh 旧 token 作废，签发新 token |
-| Reuse Detection | `previous_token_hash` 匹配 → 判定泄露 → revoke session |
-| 设备绑定 | refreshToken 与 device_id 绑定，异设备拒绝 |
-| CSRF | 不使用 Cookie → CSRF 不存在 |
-| CORS | 白名单: askdorian.com |
-| Rate Limit | 认证路由 5~20/窗口; 碎片创建 60/min; 通用 120/min |
-| 登录锁定 | 同一 email 5 次失败 → 锁定 15 分钟 |
-| Input Validation | zod schema 校验所有入参 |
-| SQL Injection | Drizzle ORM 参数化查询 |
-| XSS | Next.js 默认转义 + CSP + Security Headers |
+| 策略                   | 实现                                                   |
+| ---------------------- | ------------------------------------------------------ |
+| 密码                   | bcrypt (cost=12)，OAuth-only 用户存 `'OAUTH_ONLY'`     |
+| Refresh Token Rotation | 每次 refresh 旧 token 作废，签发新 token               |
+| Reuse Detection        | `previous_token_hash` 匹配 → 判定泄露 → revoke session |
+| 设备绑定               | refreshToken 与 device_id 绑定，异设备拒绝             |
+| CSRF                   | 不使用 Cookie → CSRF 不存在                            |
+| CORS                   | 白名单: askdorian.com                                  |
+| Rate Limit             | 认证路由 5~20/窗口; 碎片创建 60/min; 通用 120/min      |
+| 登录锁定               | 同一 email 5 次失败 → 锁定 15 分钟                     |
+| Input Validation       | zod schema 校验所有入参                                |
+| SQL Injection          | Drizzle ORM 参数化查询                                 |
+| XSS                    | Next.js 默认转义 + CSP + Security Headers              |
 
 ### MVP 登录方式
 
@@ -1059,10 +1096,10 @@ graph TB
 
 ### 域名规划
 
-| 域名 | 指向 | 用途 |
-|------|------|------|
+| 域名            | 指向     | 用途               |
+| --------------- | -------- | ------------------ |
 | `askdorian.com` | EC2:3000 | 前端 (Next.js SSR) |
-| `aix-hub.com` | EC2:4000 | 后端 API (Koa.js) |
+| `aix-hub.com`   | EC2:4000 | 后端 API (Koa.js)  |
 
 > 详见 `docs/infra.md`
 
@@ -1070,33 +1107,34 @@ graph TB
 
 ## 十一、技术选型汇总
 
-| 层级 | 技术 | 说明 |
-|------|------|------|
-| **前端** | Next.js 16 + React 19 + TypeScript | App Router, RSC |
-| **样式** | Tailwind CSS 4 + shadcn/ui (base-nova) | |
-| **状态管理** | Zustand | 轻量，TS 友好 |
-| **i18n** | next-intl | 路由模式 /[locale]/... |
-| **后端** | Koa.js + TypeScript | 独立进程 |
-| **ORM** | Drizzle ORM + Drizzle Kit | Schema-first, 类型安全 |
-| **数据库** | PostgreSQL 16.13 + pgvector 0.8.1 | 关系型 + 向量一体, 16 表, FK+多态混合 |
-| **AI 推理** | Claude Haiku 4.5 (分类) / Sonnet 4.6 (推理) / Vision (OCR) | |
-| **语音转文字** | OpenAI Whisper API | voice → text pre-processing |
-| **Embedding** | OpenAI text-embedding-3-small (1536d) | |
-| **认证** | JWT HS256 + Refresh Token Rotation (Bearer, 无 Cookie) | 详见 `auth-design.md` |
-| **入参校验** | zod | |
-| **部署** | AWS EC2 + RDS + Cloudflare + Nginx + PM2 | |
-| **Monorepo** | pnpm workspace | |
-| **桌面端 (MVP)** | Tauri | Menubar app: 全局快捷键、截图监听、剪贴板、语音 |
-| **移动端 (MVP)** | React Native (iOS 优先) | Share Extension、语音输入、通知推送 |
+| 层级             | 技术                                                       | 说明                                            |
+| ---------------- | ---------------------------------------------------------- | ----------------------------------------------- |
+| **前端**         | Next.js 16 + React 19 + TypeScript                         | App Router, RSC                                 |
+| **样式**         | Tailwind CSS 4 + shadcn/ui (base-nova)                     |                                                 |
+| **状态管理**     | Zustand                                                    | 轻量，TS 友好                                   |
+| **i18n**         | next-intl                                                  | 路由模式 /[locale]/...                          |
+| **后端**         | Koa.js + TypeScript                                        | 独立进程                                        |
+| **ORM**          | Drizzle ORM + Drizzle Kit                                  | Schema-first, 类型安全                          |
+| **数据库**       | PostgreSQL 16.13 + pgvector 0.8.1                          | 关系型 + 向量一体, 18 表, FK+多态混合           |
+| **AI 推理**      | Claude Haiku 4.5 (分类) / Sonnet 4.6 (推理) / Vision (OCR) |                                                 |
+| **语音转文字**   | OpenAI Whisper API                                         | voice → text pre-processing                     |
+| **Embedding**    | OpenAI text-embedding-3-small (1536d)                      |                                                 |
+| **认证**         | JWT HS256 + Refresh Token Rotation (Bearer, 无 Cookie)     | 详见 `auth-design.md`                           |
+| **入参校验**     | zod                                                        |                                                 |
+| **部署**         | AWS EC2 + RDS + Cloudflare + Nginx + PM2                   |                                                 |
+| **Monorepo**     | pnpm workspace                                             |                                                 |
+| **桌面端 (MVP)** | Tauri                                                      | Menubar app: 全局快捷键、截图监听、剪贴板、语音 |
+| **移动端 (MVP)** | React Native (iOS 优先)                                    | Share Extension、语音输入、通知推送             |
 
 ---
 
 ## 关联文档索引
 
-| 文档 | 路径 | 说明 |
-|------|------|------|
-| 数据库 Schema (SSoT) | `database-schema.sql` | 完整 16 表 DDL |
-| 多态关联设计 | `polymorphic-association.md` | FK + 多态混合策略 |
-| 认证设计方案 | `auth-design.md` | 方案 C 完整设计 |
-| API 返回格式规范 | `api-response-format.md` | 裸数据 + 错误信封 |
-| 基础设施与部署 | `../infra.md` | AWS + Cloudflare 部署 |
+| 文档                 | 路径                         | 说明                  |
+| -------------------- | ---------------------------- | --------------------- |
+| 数据库 Schema (SSoT) | `database-schema.sql`        | 完整 18 表 DDL        |
+| Rituals 设计方案     | `../superpowers/specs/2026-03-14-rituals-design.md` | 晨间仪式功能设计 |
+| 多态关联设计         | `polymorphic-association.md` | FK + 多态混合策略     |
+| 认证设计方案         | `auth-design.md`             | 方案 C 完整设计       |
+| API 返回格式规范     | `api-response-format.md`     | 裸数据 + 错误信封     |
+| 基础设施与部署       | `../infra.md`                | AWS + Cloudflare 部署 |
