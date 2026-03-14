@@ -140,7 +140,12 @@
     "upcomingFocus": "下周重点",
     "weeklyInsightTitle": "Dorian 的周洞见",
     "weeklyInsightBody": "你的生产力在周四深度工作时段达到峰值。我注意到一个模式：在 15 分钟冥想后，你解决最复杂任务的速度更快。\n\n下周，我建议将「董事会会议准备」安排在周四上午，以利用这个高效窗口。",
-    "viewPatterns": "查看详细生产力模式"
+    "viewPatterns": "查看详细生产力模式",
+    "days": "天",
+    "bestStreak": "最佳连续",
+    "fragmentsProcessed": "个碎片已处理",
+    "noCompletedTasks": "本周暂无已完成任务",
+    "noChartData": "暂无打卡数据"
   },
   "settings": {
     "title": "设置",

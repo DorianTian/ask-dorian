@@ -140,7 +140,12 @@
     "upcomingFocus": "Upcoming Focus",
     "weeklyInsightTitle": "Dorian's Weekly Insight",
     "weeklyInsightBody": "Your productivity peaked on Thursday during the deep work session. I noticed a pattern: your most complex tasks are resolved faster when preceded by a 15-minute meditation.\n\nNext week, I suggest scheduling your \"Board Meeting Prep\" for Thursday morning to leverage this high-performance window.",
-    "viewPatterns": "View detailed productivity patterns"
+    "viewPatterns": "View detailed productivity patterns",
+    "days": "days",
+    "bestStreak": "best streak",
+    "fragmentsProcessed": "fragments processed",
+    "noCompletedTasks": "No completed tasks this week",
+    "noChartData": "No ritual data yet"
   },
   "settings": {
     "title": "Settings",
