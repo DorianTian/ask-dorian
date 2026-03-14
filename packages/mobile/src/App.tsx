@@ -1,3 +1,4 @@
+// packages/mobile/src/App.tsx
 import React from "react"
 import { Platform, StatusBar } from "react-native"
 import { NavigationContainer } from "@react-navigation/native"
@@ -7,24 +8,25 @@ import { ThemeProvider } from "./theme"
 import { AuthProvider } from "./providers/auth-provider"
 import { RootNavigator } from "./navigation/root-navigator"
 
-// URL-based routing for web, deep links for native
 const linking = {
   prefixes: [],
   config: {
     screens: {
-      Auth: {
+      Onboarding: {
         screens: {
-          Login: "login",
-          Register: "register",
+          Onboarding1: "onboarding",
+          Onboarding2: "onboarding/2",
+          Onboarding3: "onboarding/3",
+          Onboarding4: "onboarding/4",
         },
       },
       Main: {
         screens: {
           Today: "",
-          Inbox: "inbox",
-          Weekly: "weekly",
-          Projects: "projects",
           Review: "review",
+          DailyReview: "daily-review",
+          Library: "library",
+          Settings: "settings",
         },
       },
     },
@@ -37,7 +39,9 @@ export default function App() {
       <ThemeProvider>
         <SWRConfig value={{ revalidateOnFocus: false }}>
           <AuthProvider>
-            {Platform.OS !== "web" && <StatusBar barStyle="dark-content" />}
+            {Platform.OS !== "web" && (
+              <StatusBar barStyle="light-content" backgroundColor="#09090B" />
+            )}
             <NavigationContainer
               linking={linking}
               documentTitle={{ enabled: Platform.OS === "web" }}
