@@ -125,6 +125,9 @@ export default function LoginPage() {
         />
       )}
 
+      {/* Decorative glow circles — matching mobile login style */}
+      <div className="absolute -top-[15%] -right-[10%] w-[400px] h-[400px] rounded-full bg-primary/10 blur-[80px] pointer-events-none" />
+      <div className="absolute -bottom-[10%] -left-[15%] w-[500px] h-[500px] rounded-full bg-primary/5 blur-[100px] pointer-events-none" />
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
 
