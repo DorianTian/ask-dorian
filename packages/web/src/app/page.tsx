@@ -37,7 +37,8 @@ export default function LandingPage() {
         </div>
         <Link
           href="/en/login"
-          className="bg-white text-black px-5 py-2 rounded-full text-sm font-bold hover:bg-slate-200 transition-all active:scale-95">
+          className="bg-white text-black px-5 py-2 rounded-full text-sm font-bold hover:bg-slate-200 transition-all active:scale-95"
+        >
           Sign In
         </Link>
       </nav>
@@ -48,8 +49,12 @@ export default function LandingPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="space-y-8">
-          <div id="philosophy" className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-bold uppercase tracking-widest scroll-mt-24">
+          className="space-y-8"
+        >
+          <div
+            id="philosophy"
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-bold uppercase tracking-widest scroll-mt-24"
+          >
             <Sparkles size={14} />
             <span>Fragment-First Philosophy</span>
           </div>
@@ -70,7 +75,8 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <Link
               href="/en/login"
-              className="bg-emerald-500 text-white px-8 py-4 rounded-full text-lg font-bold shadow-2xl shadow-emerald-500/40 hover:scale-105 transition-all flex items-center gap-2 group">
+              className="bg-emerald-500 text-white px-8 py-4 rounded-full text-lg font-bold shadow-2xl shadow-emerald-500/40 hover:scale-105 transition-all flex items-center gap-2 group"
+            >
               Start Your Flow
               <ArrowRight
                 size={20}
@@ -79,7 +85,8 @@ export default function LandingPage() {
             </Link>
             <button
               onClick={() => setShowDemo(true)}
-              className="px-8 py-4 rounded-full text-lg font-bold text-white border border-white/10 hover:bg-white/5 transition-all">
+              className="px-8 py-4 rounded-full text-lg font-bold text-white border border-white/10 hover:bg-white/5 transition-all"
+            >
               Watch Demo
             </button>
           </div>
@@ -91,7 +98,8 @@ export default function LandingPage() {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.4 }}
-          className="mt-24 relative scroll-mt-24">
+          className="mt-24 relative scroll-mt-24"
+        >
           <div className="relative mx-auto max-w-5xl rounded-3xl border border-white/10 bg-[#18181b]/40 p-4 shadow-2xl backdrop-blur-sm overflow-hidden">
             <div className="rounded-2xl w-full h-[400px] md:h-[500px] bg-gradient-to-br from-[#18181b] via-emerald-500/5 to-[#18181b] flex items-center justify-center">
               <div className="text-center space-y-4 opacity-50">
@@ -131,13 +139,19 @@ export default function LandingPage() {
       </main>
 
       {/* Pricing */}
-      <section id="pricing" className="relative z-10 py-24 px-8 max-w-7xl mx-auto text-center scroll-mt-24">
-        <p className="text-xs font-bold uppercase tracking-widest text-emerald-500 mb-4">Pricing</p>
+      <section
+        id="pricing"
+        className="relative z-10 py-24 px-8 max-w-7xl mx-auto text-center scroll-mt-24"
+      >
+        <p className="text-xs font-bold uppercase tracking-widest text-emerald-500 mb-4">
+          Pricing
+        </p>
         <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white mb-4">
           Coming Soon
         </h2>
         <p className="text-slate-400 max-w-lg mx-auto">
-          Dorian is currently in early access. Sign up to get notified when pricing is announced.
+          Dorian is currently in early access. Sign up to get notified when
+          pricing is announced.
         </p>
       </section>
 
@@ -162,7 +176,9 @@ export default function LandingPage() {
               <div className="size-12 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500 mx-auto mb-4">
                 <Diamond size={24} />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Demo Coming Soon</h3>
+              <h3 className="text-xl font-bold text-white mb-2">
+                Demo Coming Soon
+              </h3>
               <p className="text-sm text-slate-400 mb-6">
                 Sign up to be notified when the full product demo is available.
               </p>
@@ -188,13 +204,22 @@ export default function LandingPage() {
             </span>
           </div>
           <div className="flex gap-8 text-xs font-bold uppercase tracking-widest text-slate-500">
-            <Link href="/en/login" className="hover:text-emerald-500 transition-colors">
+            <Link
+              href="/en/login"
+              className="hover:text-emerald-500 transition-colors"
+            >
               Privacy
             </Link>
-            <Link href="/en/login" className="hover:text-emerald-500 transition-colors">
+            <Link
+              href="/en/login"
+              className="hover:text-emerald-500 transition-colors"
+            >
               Terms
             </Link>
-            <Link href="/en/login" className="hover:text-emerald-500 transition-colors">
+            <Link
+              href="/en/login"
+              className="hover:text-emerald-500 transition-colors"
+            >
               Security
             </Link>
           </div>
